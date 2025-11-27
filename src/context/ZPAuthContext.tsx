@@ -30,21 +30,24 @@ const DEMO_USERS: Array<ZPUser & { password: string }> = [
         username: 'admin',
         password: 'admin123',
         name: 'Administrador',
-        role: 'ADMIN'
+        role: 'ADMIN',
+        cedula: '0000000001'
     },
     {
         id: 'approver-001',
         username: 'aprobador',
         password: 'aprobar123',
         name: 'Supervisor de Aprobaciones',
-        role: 'APPROVER'
+        role: 'APPROVER',
+        cedula: '0000000002'
     },
     {
         id: 'uploader-001',
         username: 'operador',
         password: 'subir123',
         name: 'Operador de Carga',
-        role: 'UPLOADER'
+        role: 'UPLOADER',
+        cedula: '0000000003'
     }
 ];
 
