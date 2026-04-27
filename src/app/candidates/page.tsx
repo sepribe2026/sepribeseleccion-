@@ -8,21 +8,29 @@ export default function CandidatesAdmin() {
   const [candidates, setCandidates] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [portalUrl, setPortalUrl] = useState('https://superdeporte.com/onboarding')
+  const [isMounted, setIsMounted] = useState(false)
 
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(portalUrl)}`
 
+  const [errorMsg, setErrorMsg] = useState('')
+
   useEffect(() => {
+    setIsMounted(true)
     fetchCandidates()
   }, [])
 
   const fetchCandidates = async () => {
     setLoading(true)
+    setErrorMsg('')
     const { data, error } = await supabase
       .from('onboarding_candidates')
       .select('*')
       .order('created_at', { ascending: false })
     
-    if (!error && data) {
+    if (error) {
+      console.error('Supabase Error:', error)
+      setErrorMsg(error.message)
+    } else if (data) {
       setCandidates(data)
     }
     setLoading(false)
@@ -48,6 +56,8 @@ export default function CandidatesAdmin() {
       alert('Error de conexión con el servidor: ' + err.message);
     }
   }
+
+  if (!isMounted) return null;
 
   return (
     <>
@@ -114,6 +124,14 @@ export default function CandidatesAdmin() {
             </div>
           </div>
         </div>
+
+        {errorMsg && (
+          <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '16px', borderRadius: '8px', marginBottom: '24px' }}>
+            <h3 style={{ fontWeight: 'bold', margin: '0 0 8px' }}>Error al conectar con Supabase:</h3>
+            <p style={{ margin: 0 }}>{errorMsg}</p>
+            <p style={{ fontSize: '13px', marginTop: '8px' }}>Verifica si corriste el script <code>setup_onboarding.sql</code> en el dashboard de Supabase y si las políticas de lectura (RLS) permiten acceso público.</p>
+          </div>
+        )}
 
         {loading ? (
           <p style={{ color: '#6b7280', textAlign: 'center', padding: '40px' }}>Cargando candidatos...</p>
