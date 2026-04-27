@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { CheckCircle2, FileText, User, Download } from 'lucide-react'
+import { CheckCircle2, FileText, User, Download, FileSpreadsheet } from 'lucide-react'
+import * as XLSX from 'xlsx'
 
 export default function CandidatesAdmin() {
   const [candidates, setCandidates] = useState<any[]>([])
@@ -11,7 +12,6 @@ export default function CandidatesAdmin() {
   const [isMounted, setIsMounted] = useState(false)
 
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(portalUrl)}`
-
   const [errorMsg, setErrorMsg] = useState('')
 
   useEffect(() => {
@@ -55,6 +55,94 @@ export default function CandidatesAdmin() {
     } catch (err: any) {
       alert('Error de conexión con el servidor: ' + err.message);
     }
+  }
+
+  const exportToExcel = () => {
+    const pendingCandidates = candidates.filter(c => c.status === 'PENDING');
+    if (pendingCandidates.length === 0) {
+      alert('No hay candidatos pendientes para exportar.');
+      return;
+    }
+
+    // Aplanar los datos para el Excel
+    const flatData = pendingCandidates.map(c => {
+      const p = c.datos_personales || {};
+      const b = c.datos_bancarios || {};
+      const fam = c.cargas_familiares || {};
+      const conyuge = fam.conyuge || {};
+      const hijos = fam.hijos || [];
+      const estudio = (c.estudios && c.estudios.length > 0) ? c.estudios[0] : {};
+
+      // Si el candidato es antiguo y no tiene apellido1 y apellido2 separado, intentamos separar el campo apellidos.
+      let ap1 = p.apellido1 || '';
+      let ap2 = p.apellido2 || '';
+      if (!ap1 && !ap2 && c.apellidos) {
+        const parts = c.apellidos.split(' ');
+        ap1 = parts[0] || '';
+        ap2 = parts.length > 1 ? parts.slice(1).join(' ') : '';
+      }
+
+      // El Excel muestra columnas para hasta DOS hijos
+      const primerHijo = hijos.length > 0 ? hijos[0] : {};
+      const segundoHijo = hijos.length > 1 ? hijos[1] : {};
+
+      return {
+        "Timestamp": new Date(c.created_at).toLocaleString(),
+        "¿Autoriza el tratamiento de sus datos personales para el proceso de selección y": "Acepto",
+        "Tratamiento": p.tratamiento || '',
+        "Ingresa tus dos Nombres:": c.nombres || '',
+        "Ingresa tu Primer Apellido:": ap1,
+        "Ingresa tu Segundo Apellido:": ap2,
+        "Ciudad de Nacimiento": p.ciudad_nacimiento || '',
+        "Fecha de Nacimiento": p.fecha_nacimiento || '',
+        "Estado Civil": p.estado_civil || '',
+        "Nacionalidad": p.nacionalidad || '',
+        "Número de cédula": c.cedula || '',
+        "Número de Cta Banco Produbanco": b.numero_cuenta || '',
+        "Tipo de Cta": b.tipo_cuenta || '',
+        "Ciudad en la que resides": p.ciudad_residencia || '',
+        "Dirección domiciliaria: Detallar Calle principal, numeración y calle transversal": p.direccion || '',
+        "N° de teléfono convencional": p.telefono_fijo || 'S/n',
+        "En el caso de contar Con cargas Familiares escoge las opciones": hijos.length.toString(),
+        "En el caso de tener Cónyuge, ingresa el nombre completo: (2 nombres)": conyuge.tiene ? `${conyuge.nombres || ''} ${conyuge.apellidos || ''}`.trim() : '',
+        "Fecha de nacimiento del Cónyuge:": conyuge.fecha_nacimiento || '',
+        "Nacionalidad del Cónyuge": conyuge.nacionalidad || '',
+        "Ciudad de Nacimiento Cónyuge": conyuge.ciudad_nacimiento || '',
+        "Número Cédula Cónyuge": conyuge.cedula || '',
+        
+        // --- HIJO 1 ---
+        "En el caso de tener Hijos, ingrese el nombre completo: (2 nombres)": primerHijo.nombres ? `${primerHijo.nombres} ${primerHijo.apellidos}`.trim() : '',
+        "Fecha de nacimiento del Hijo:": primerHijo.fecha_nacimiento || '',
+        "Nacionalidad del hijo:": primerHijo.nacionalidad || '',
+        "Ciudad de Nacimiento del Hijo": primerHijo.ciudad_nacimiento || '',
+        "Número Cédula Hijo": primerHijo.cedula || '',
+
+        // --- HIJO 2 (Columnas duplicadas) ---
+        "En el caso de tener Hijos, ingrese el nombre completo: (2 nombres) ": segundoHijo.nombres ? `${segundoHijo.nombres} ${segundoHijo.apellidos}`.trim() : '',
+        "Fecha de nacimiento del Hijo: ": segundoHijo.fecha_nacimiento || '',
+        "Nacionalidad del hijo: ": segundoHijo.nacionalidad || '',
+        "Ciudad de Nacimiento del Hijo ": segundoHijo.ciudad_nacimiento || '',
+        "Número Cédula Hijo ": segundoHijo.cedula || '',
+
+        "Estudios:": estudio.nivel || '',
+        "Título Obtenido:": estudio.titulo || '',
+        "Nombre de Institución Educativa / Universidad :": estudio.institucion || '',
+        "Fecha de inicio de estudios:": estudio.fecha_inicio || '',
+        "Fecha de fin de estudios:": estudio.fecha_fin || '',
+        "Número de celular": p.celular || c.telefono || '',
+        "Correo electrónico": c.email || '',
+        
+        // --- COLUMNAS FINALES DE APELLIDOS ---
+        "En el caso de tener Cónyuge, ingresa el apellido completo: (2 apellidos)": conyuge.tiene ? conyuge.apellidos || '' : '',
+        "En el caso de tener hijos, ingresa el apellido completo: (2 apellidos)": primerHijo.apellidos || '',
+        "En el caso de tener hijos, ingresa el apellido completo: (2 apellidos) ": segundoHijo.apellidos || ''
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(flatData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Candidatos Pendientes");
+    XLSX.writeFile(workbook, "Candidatos_Pendientes_Onboarding.xlsx");
   }
 
   if (!isMounted) return null;
@@ -104,6 +192,9 @@ export default function CandidatesAdmin() {
           <div>
             <h1 className="admin-title">Candidatos Registrados</h1>
             <p className="admin-subtitle">Portal de Onboarding - Zero Paper</p>
+            <button onClick={exportToExcel} style={{ marginTop: '16px', backgroundColor: '#10b981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FileSpreadsheet size={16} /> Exportar Pendientes (Excel)
+            </button>
           </div>
 
           <div className="qr-card">

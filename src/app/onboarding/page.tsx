@@ -8,8 +8,8 @@ const WELCOME_TEXT = `A nombre de SUPERDEPORTE S.A. es un placer darte la bienve
 
 const REQUIRED_DOCS = [
   "Hoja de vida actualizada",
-  "2 fotocopias de tamaño carnet",
-  "2 fotocopias de cédula de identidad y papeleta de votación",
+  "Fotocopias de tamaño carnet",
+  "Fotocopias de cédula de identidad y papeleta de votación",
   "Certificado de antecedentes penales",
   "Carnet de vacunación (3 dosis)",
   "Certificados de trabajos anteriores",
@@ -75,7 +75,19 @@ export default function OnboardingTabs() {
       const payload = {
         cedula: formData.cedula, nombres: formData.nombres, apellidos: `${formData.apellido1} ${formData.apellido2}`.trim(),
         email: formData.email.toLowerCase(), telefono: formData.celular || formData.telefono,
-        datos_personales: { tratamiento: formData.tratamiento, ciudad_nacimiento: formData.ciudad_nacimiento, fecha_nacimiento: formData.fecha_nacimiento, estado_civil: formData.estado_civil, nacionalidad: formData.nacionalidad, ciudad_residencia: formData.ciudad_residencia, direccion: formData.direccion, telefono_fijo: formData.telefono },
+        datos_personales: { 
+          tratamiento: formData.tratamiento, 
+          apellido1: formData.apellido1,
+          apellido2: formData.apellido2,
+          celular: formData.celular,
+          ciudad_nacimiento: formData.ciudad_nacimiento, 
+          fecha_nacimiento: formData.fecha_nacimiento, 
+          estado_civil: formData.estado_civil, 
+          nacionalidad: formData.nacionalidad, 
+          ciudad_residencia: formData.ciudad_residencia, 
+          direccion: formData.direccion, 
+          telefono_fijo: formData.telefono 
+        },
         datos_bancarios: { banco: 'PRODUBANCO', tipo_cuenta: formData.tipo_cuenta, numero_cuenta: formData.banco_produbanco },
         cargas_familiares: { conyuge: conyuge.tiene ? conyuge : null, hijos },
         estudios: [estudio], documento_pdf_url: publicUrl, status: 'PENDING'
@@ -159,7 +171,7 @@ export default function OnboardingTabs() {
 
         <main className="onboarding-main">
           <div className="onboarding-card">
-            
+
             {/* TABS */}
             <div className="tabs-container">
               {TABS.map(tab => (
@@ -212,7 +224,7 @@ export default function OnboardingTabs() {
                     <div className="form-group" style={{ gridColumn: '1 / -1' }}><label className="form-label">Dos Nombres *</label><input type="text" name="nombres" value={formData.nombres} onChange={handleChange} className="form-input" /></div>
                     <div className="form-group"><label className="form-label">Primer Apellido *</label><input type="text" name="apellido1" value={formData.apellido1} onChange={handleChange} className="form-input" /></div>
                     <div className="form-group"><label className="form-label">Segundo Apellido *</label><input type="text" name="apellido2" value={formData.apellido2} onChange={handleChange} className="form-input" /></div>
-                    <div className="form-group"><label className="form-label">Estado Civil *</label><select name="estado_civil" value={formData.estado_civil} onChange={handleChange} className="form-input"><option>Soltera/o</option><option>Casada/o</option><option>Unión Libre</option><option>Divorciada/o</option></select></div>
+                    <div className="form-group"><label className="form-label">Estado Civil *</label><select name="estado_civil" value={formData.estado_civil} onChange={handleChange} className="form-input"><option>Soltera/o</option><option>Casada/o</option><option>Unión de Hecho</option><option>Unión Libre</option><option>Divorciada/o</option></select></div>
                     <div className="form-group"><label className="form-label">Fecha Nacimiento *</label><input type="date" name="fecha_nacimiento" value={formData.fecha_nacimiento} onChange={handleChange} className="form-input" /></div>
                     <div className="form-group" style={{ gridColumn: 'span 2' }}><label className="form-label">Ciudad Nacimiento *</label><input type="text" name="ciudad_nacimiento" value={formData.ciudad_nacimiento} onChange={handleChange} className="form-input" /></div>
                   </div>
@@ -223,7 +235,7 @@ export default function OnboardingTabs() {
                     <div className="form-group"><label className="form-label">Ciudad Residencia *</label><input type="text" name="ciudad_residencia" value={formData.ciudad_residencia} onChange={handleChange} className="form-input" /></div>
                     <div className="form-group"><label className="form-label">Teléfono Fijo *</label><input type="text" name="telefono" value={formData.telefono} onChange={handleChange} className="form-input" /></div>
                     <div className="form-group"><label className="form-label">Celular *</label><input type="text" name="celular" value={formData.celular} onChange={handleChange} className="form-input" /></div>
-                    <div className="form-group"><label className="form-label">Correo Electrónico *</label><input type="email" name="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="form-input" style={{ textTransform: 'lowercase' }} /></div>
+                    <div className="form-group"><label className="form-label">Correo Electrónico *</label><input type="email" name="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="form-input" style={{ textTransform: 'lowercase' }} /></div>
                     <div className="form-group"><label className="form-label">Cuenta Produbanco *</label><input type="text" name="banco_produbanco" value={formData.banco_produbanco} onChange={handleChange} className="form-input" /></div>
                     <div className="form-group"><label className="form-label">Tipo de Cuenta *</label><select name="tipo_cuenta" value={formData.tipo_cuenta} onChange={handleChange} className="form-input"><option>Cuenta de Ahorros</option><option>Cuenta Corriente</option></select></div>
                   </div>
@@ -236,7 +248,7 @@ export default function OnboardingTabs() {
                 <div>
                   <h2 className="section-title">Cónyuge o Pareja</h2>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '6px', cursor: 'pointer', marginBottom: '24px' }}>
-                    <input type="checkbox" checked={conyuge.tiene} onChange={e => setConyuge({...conyuge, tiene: e.target.checked})} style={{ width: '18px', height: '18px' }} />
+                    <input type="checkbox" checked={conyuge.tiene} onChange={e => setConyuge({ ...conyuge, tiene: e.target.checked })} style={{ width: '18px', height: '18px' }} />
                     <span style={{ fontWeight: 600, color: '#374151' }}>Declarar Cónyuge o Pareja en Unión Libre</span>
                   </label>
 
@@ -298,7 +310,7 @@ export default function OnboardingTabs() {
                 <div>
                   <h2 className="section-title">Carga de Documentos</h2>
                   <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '24px' }}>Sube el PDF consolidado con todos los requisitos solicitados en la pestaña de Bienvenida.</p>
-                  
+
                   <div className={`upload-area ${file ? 'has-file' : ''}`} onClick={() => document.getElementById('file-upload')?.click()}>
                     <input type="file" id="file-upload" style={{ display: 'none' }} accept=".pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f && f.type === 'application/pdf') { setFile(f); setError(''); } else { setError('Por favor sube un archivo PDF válido.'); setFile(null); } }} />
                     {file ? (
