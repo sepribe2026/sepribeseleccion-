@@ -132,10 +132,10 @@ export default function CandidatesAdmin() {
         "Número de celular": p.celular || c.telefono || '',
         "Correo electrónico": c.email || '',
         
-        // --- COLUMNAS FINALES DE APELLIDOS ---
-        "En el caso de tener Cónyuge, ingresa el apellido completo: (2 apellidos)": conyuge.tiene ? conyuge.apellidos || '' : '',
-        "En el caso de tener hijos, ingresa el apellido completo: (2 apellidos)": primerHijo.apellidos || '',
-        "En el caso de tener hijos, ingresa el apellido completo: (2 apellidos) ": segundoHijo.apellidos || ''
+        // --- COLUMNAS FINALES DE APELLIDOS (SOLO CABECERAS, SIN DATOS) ---
+        "En el caso de tener Cónyuge, ingresa el apellido completo: (2 apellidos)": '',
+        "En el caso de tener hijos, ingresa el apellido completo: (2 apellidos)": '',
+        "En el caso de tener hijos, ingresa el apellido completo: (2 apellidos) ": ''
       };
     });
 

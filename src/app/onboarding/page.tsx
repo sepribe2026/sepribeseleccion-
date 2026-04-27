@@ -57,6 +57,21 @@ export default function OnboardingTabs() {
     setEstudio(prev => ({ ...prev, [name]: value.toUpperCase() }))
   }
 
+  const checkCedula = async (cedula: string) => {
+    if (!cedula || cedula.length < 10) return
+    const { data } = await supabase
+      .from('onboarding_candidates')
+      .select('cedula')
+      .eq('cedula', cedula)
+      .maybeSingle()
+    
+    if (data) {
+      setError('Registro ya ingresado. Esta cédula ya existe en el sistema.')
+    } else {
+      if (error.includes('Registro ya ingresado')) setError('')
+    }
+  }
+
   const handleSubmit = async () => {
     if (!formData.consentimiento) { setActiveTab(1); setError('Debes aceptar el consentimiento en la pestaña de Bienvenida.'); return }
     if (!file) { setActiveTab(5); setError('Debes subir el archivo PDF consolidado.'); return }
@@ -65,6 +80,20 @@ export default function OnboardingTabs() {
     setError('')
 
     try {
+      // Doble validación antes de guardar
+      const { data: existing } = await supabase
+        .from('onboarding_candidates')
+        .select('cedula')
+        .eq('cedula', formData.cedula)
+        .maybeSingle()
+        
+      if (existing) {
+        setActiveTab(2)
+        setError('Registro ya ingresado. Esta cédula ya existe en el sistema.')
+        setLoading(false)
+        return
+      }
+
       const fileExt = file.name.split('.').pop()
       const fileName = `${formData.cedula}_documentos.${fileExt}`
       const { error: uploadError } = await supabase.storage.from('candidate-documents').upload(fileName, file, { upsert: true })
@@ -219,7 +248,7 @@ export default function OnboardingTabs() {
                   <h2 className="section-title">Información Personal</h2>
                   <div className="grid-3">
                     <div className="form-group"><label className="form-label">Tratamiento *</label><select name="tratamiento" value={formData.tratamiento} onChange={handleChange} className="form-input"><option>Sr.</option><option>Sra.</option><option>Srta.</option></select></div>
-                    <div className="form-group"><label className="form-label">Cédula *</label><input type="text" name="cedula" value={formData.cedula} onChange={handleChange} className="form-input" required maxLength={10} /></div>
+                    <div className="form-group"><label className="form-label">Cédula *</label><input type="text" name="cedula" value={formData.cedula} onChange={handleChange} onBlur={(e) => checkCedula(e.target.value)} className="form-input" required maxLength={10} /></div>
                     <div className="form-group"><label className="form-label">Nacionalidad *</label><select name="nacionalidad" value={formData.nacionalidad} onChange={handleChange} className="form-input"><option>ECUADOR</option><option>COLOMBIA</option><option>VENEZUELA</option><option>OTRA</option></select></div>
                     <div className="form-group" style={{ gridColumn: '1 / -1' }}><label className="form-label">Dos Nombres *</label><input type="text" name="nombres" value={formData.nombres} onChange={handleChange} className="form-input" /></div>
                     <div className="form-group"><label className="form-label">Primer Apellido *</label><input type="text" name="apellido1" value={formData.apellido1} onChange={handleChange} className="form-input" /></div>
