@@ -62,16 +62,10 @@ export default function CandidatesAdmin() {
     if (!window.confirm('¿Estás seguro de que deseas eliminar este registro de candidato? Esto le permitirá ingresar sus datos nuevamente.')) return;
     
     try {
-      // Como Supabase (RLS) bloquea los DELETE públicos por defecto, hacemos un "Soft Delete"
-      // Además, renombramos la cédula para que la validación UNIQUE en la BD permita volver a registrarla.
       const { error } = await supabase
         .from('onboarding_candidates')
-        .update({ 
-          status: 'DELETED',
-          cedula: `${currentCedula}_borrado_${Date.now()}`
-        })
-        .eq('id', id)
-        .eq('status', 'PENDING'); // Solo borra si es PENDING
+        .delete()
+        .eq('id', id);
 
       if (error) throw error;
       

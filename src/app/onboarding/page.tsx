@@ -95,7 +95,7 @@ export default function OnboardingTabs() {
       }
 
       const fileExt = file.name.split('.').pop()
-      const fileName = `${formData.cedula}_documentos.${fileExt}`
+      const fileName = `${formData.cedula}_${Date.now()}_documentos.${fileExt}`
       const { error: uploadError } = await supabase.storage.from('candidate-documents').upload(fileName, file, { upsert: true })
       if (uploadError) throw uploadError
 
