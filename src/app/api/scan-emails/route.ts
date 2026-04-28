@@ -19,9 +19,9 @@ export async function POST(req: NextRequest) {
       secure: true,
       auth: {
         user: 'uneteanuestroequipo@ec.marathon-sports.com',
-        pass: password || 'Toq98022'
+        pass: password || 'Toq91332'
       },
-      logger: false
+      logger: console // Activar logger para ver el error exacto en la terminal
     });
 
     await client.connect();
@@ -32,19 +32,22 @@ export async function POST(req: NextRequest) {
     const resumes = [];
 
     try {
-      // Buscar correos no leídos que tengan archivos adjuntos (esto puede variar según IMAP, buscaremos los últimos 10 para empezar)
-      // client.search() permite buscar por fechas o flags. Buscaremos los últimos 20 correos para la prueba.
-      const messages = await client.search({ all: true }); // Puede traer muchos, mejor limitamos.
+      if (client.mailbox.exists === 0) {
+        return NextResponse.json({ success: true, message: 'La bandeja de entrada está vacía.', data: [] });
+      }
+
+      // Traemos solo los últimos 10 correos usando sequence numbers negativos o simplemente limitamos el iterador
+      // '1:*' trae todos, puede fallar si hay decenas de miles. Usaremos un rango seguro, ej: los últimos 50.
+      const total = client.mailbox.exists;
+      const start = Math.max(1, total - 50); // Últimos 50 mensajes
       
-      // En ImapFlow, para optimizar, es mejor usar un generador con .fetch()
-      // Vamos a traer los últimos 10 mensajes ordenados por más recientes
-      for await (let msg of client.fetch('1:*', { source: true, uid: true })) {
-        if (processedCount >= 10) break; // Límite por petición para no ahogar el servidor
+      for await (let msg of client.fetch(`${start}:*`, { source: true, uid: true })) {
+        if (processedCount >= 10) break; // Procesar máximo 10 en esta prueba
 
         // Revisar si este UID ya está en Supabase
         const { data: existing } = await supabase
           .from('email_resumes')
-          .select('uid')
+          .select('email_uid')
           .eq('email_uid', msg.uid.toString())
           .maybeSingle();
 
@@ -61,12 +64,12 @@ export async function POST(req: NextRequest) {
         );
 
         if (attachments.length > 0) {
-          const file = attachments[0]; // Tomamos la primera hoja de vida
+          const file = attachments[0]; 
           
           // Subir a Supabase Storage
-          const fileName = `resume_${msg.uid}_${file.filename}`;
+          const fileName = `resume_${msg.uid}_${file.filename.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
           const { error: uploadError } = await supabase.storage
-            .from('candidate-documents') // Usamos el bucket existente
+            .from('candidate-documents') 
             .upload(fileName, file.content, { upsert: true, contentType: file.contentType });
 
           if (!uploadError) {
@@ -74,7 +77,6 @@ export async function POST(req: NextRequest) {
               .from('candidate-documents')
               .getPublicUrl(fileName);
 
-            // Guardar en base de datos
             const payload = {
               email_uid: msg.uid.toString(),
               sender_email: parsed.from?.value[0]?.address || 'Desconocido',
@@ -86,14 +88,16 @@ export async function POST(req: NextRequest) {
               classification_status: 'PENDING'
             };
 
-            const { error: dbError } = await supabase
-              .from('email_resumes')
-              .insert([payload]);
+            const { error: dbError } = await supabase.from('email_resumes').insert([payload]);
 
             if (!dbError) {
               resumes.push(payload);
               processedCount++;
+            } else {
+              console.error('Error guardando en Supabase:', dbError);
             }
+          } else {
+            console.error('Error subiendo PDF:', uploadError);
           }
         }
       }
@@ -110,9 +114,20 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('Error IMAP:', error);
+    console.error('Error IMAP detallado:', error);
+    
+    // Detectar bloqueo de Microsoft 365
+    let friendlyError = error.message;
+    if (friendlyError.includes('Command failed') || friendlyError.includes('AUTHENTICATE failed')) {
+      friendlyError = 'Microsoft Office 365 bloqueó la conexión. La cuenta requiere una "Contraseña de Aplicación" (App Password) porque Microsoft ya no permite leer correos usando contraseñas normales por motivos de seguridad.';
+    }
+
     return NextResponse.json(
-      { error: 'Error conectando al correo', details: error.message },
+      { 
+        error: 'Error conectando al correo', 
+        details: friendlyError,
+        serverResponse: error.responseStatus || error.response || ''
+      },
       { status: 500 }
     );
   }

@@ -68,7 +68,7 @@ export default function CandidatesAdmin() {
         alert(data.message)
         fetchResumes()
       } else {
-        alert('Error al escanear: ' + data.details)
+        alert('Error al escanear: ' + data.details + '\nRespuesta del Servidor: ' + (data.serverResponse || 'Revisa la terminal'))
       }
     } catch (err: any) {
       alert('Fallo de red al escanear correos.')
