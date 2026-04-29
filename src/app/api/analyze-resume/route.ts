@@ -72,7 +72,8 @@ export async function POST(req: NextRequest) {
   "skills": "Las 5 habilidades o competencias más relevantes separadas por coma (ej: 'Ventas, Excel, Atención al cliente').",
   "languages": "Idiomas que maneja y nivel si se menciona (ej: 'Español nativo, Inglés básico'). Si no se menciona pon 'Español'.",
   "availability": "Disponibilidad de horario si se menciona (ej: 'Inmediata', 'Tiempo completo', 'Medio tiempo', 'No especificada').",
-  "age": "Edad en años si aparece fecha de nacimiento o edad directamente. Si no pon 'No especificada'."
+  "age": "Edad en años si aparece fecha de nacimiento o edad directamente. Si no pon 'No especificada'.",
+  "phone": "Número de teléfono de contacto del candidato. Busca en la sección de datos personales o contacto. En Ecuador empieza con 09 (ej: '0987654321'). Si no encuentras ninguno pon null."
 }`,
             },
           ],
@@ -102,6 +103,7 @@ export async function POST(req: NextRequest) {
         languages: aiData.languages || 'Español',
         availability: aiData.availability || 'No especificada',
         age: aiData.age || 'No especificada',
+        sender_phone: aiData.phone || null,
         classification_status: 'REVIEWED',
       })
       .eq('id', id);

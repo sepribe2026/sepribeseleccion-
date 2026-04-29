@@ -39,6 +39,15 @@ export default function CandidatesAdmin() {
   const [rankingError, setRankingError] = useState('')
   const [savingPosition, setSavingPosition] = useState(false)
 
+  // === SEGUIMIENTO DE CANDIDATOS ===
+  // Map: resume_id -> { status, interview_date, notes }
+  const [trackingMap, setTrackingMap] = useState<Record<string, any>>({})
+  const [trackingUpdating, setTrackingUpdating] = useState<string | null>(null)
+  // Modal para programar entrevista
+  const [interviewModal, setInterviewModal] = useState<{ id: string; name: string } | null>(null)
+  const [interviewDate, setInterviewDate] = useState('')
+  const [interviewNotes, setInterviewNotes] = useState('')
+
   useEffect(() => {
     setIsMounted(true)
     fetchCandidates()
@@ -86,6 +95,8 @@ export default function CandidatesAdmin() {
       const data = await res.json()
       if (res.ok) {
         setRankingResults(data.rankings)
+        // Cargar tracking guardado para este cargo
+        fetchTracking(rankingCargo)
       } else {
         setRankingError(data.error || 'Error al evaluar candidatos.')
       }
@@ -94,6 +105,30 @@ export default function CandidatesAdmin() {
     } finally {
       setRankingLoading(false)
     }
+  }
+
+  const fetchTracking = async (cargo: string) => {
+    const res = await fetch(`/api/candidate-tracking?cargo=${encodeURIComponent(cargo)}`)
+    const data = await res.json()
+    if (data.data) {
+      const map: Record<string, any> = {}
+      data.data.forEach((t: any) => { map[t.resume_id] = t })
+      setTrackingMap(map)
+    }
+  }
+
+  const updateTracking = async (resume_id: string, status: string, interview_date?: string, notes?: string) => {
+    setTrackingUpdating(resume_id)
+    const res = await fetch('/api/candidate-tracking', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resume_id, cargo: rankingCargo, status, interview_date, notes })
+    })
+    const data = await res.json()
+    if (data.success) {
+      setTrackingMap(prev => ({ ...prev, [resume_id]: data.data }))
+    }
+    setTrackingUpdating(null)
   }
 
   const fetchCandidates = async () => {
@@ -387,7 +422,63 @@ export default function CandidatesAdmin() {
         .rank-row:hover { background: #fafafa; }
         .rank-number { width: 48px; text-align: center; font-size: 13px; font-weight: 700; color: #6b7280; }
         .justification-text { font-size: 12px; color: #6b7280; font-style: italic; margin-top: 4px; line-height: 1.4; }
+
+        /* === TRACKING / PIPELINE STYLES === */
+        .pipeline-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 9999px; white-space: nowrap; }
+        .pipeline-pendiente { background: #f3f4f6; color: #6b7280; }
+        .pipeline-mensaje { background: #dbeafe; color: #1d4ed8; }
+        .pipeline-entrevista { background: #fef3c7; color: #92400e; }
+        .pipeline-onboarding { background: #dcfce7; color: #166534; }
+        .track-btn { font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 6px; border: 1px solid; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; transition: opacity 0.15s; background: white; }
+        .track-btn:hover { opacity: 0.8; }
+        .track-btn:disabled { opacity: 0.4; cursor: wait; }
+        .track-btn-wa { color: #16a34a; border-color: #86efac; }
+        .track-btn-entrevista { color: #d97706; border-color: #fde68a; }
+        .track-btn-onboarding { color: #7c3aed; border-color: #c4b5fd; }
+        .interview-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 60; }
+        .interview-content { background: white; padding: 28px; border-radius: 12px; width: 420px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
+        .wa-link { color: #16a34a; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; }
+        .wa-link:hover { opacity: 0.8; }
       `}</style>
+
+      {/* MODAL: Programar Entrevista */}
+      {interviewModal && (
+        <div className="interview-modal">
+          <div className="interview-content">
+            <h3 style={{ margin: '0 0 6px', fontSize: '17px', fontWeight: 700 }}>📅 Programar Entrevista</h3>
+            <p style={{ margin: '0 0 18px', fontSize: '13px', color: '#6b7280' }}>Candidato: <strong>{interviewModal.name}</strong></p>
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', marginBottom: '6px' }}>Fecha de entrevista *</label>
+            <input
+              type="date"
+              value={interviewDate}
+              onChange={e => setInterviewDate(e.target.value)}
+              style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: '8px', padding: '9px 12px', fontSize: '14px', marginBottom: '14px', boxSizing: 'border-box' }}
+            />
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', marginBottom: '6px' }}>Notas (opcional)</label>
+            <textarea
+              value={interviewNotes}
+              onChange={e => setInterviewNotes(e.target.value)}
+              placeholder="Hora, lugar, modalidad..."
+              style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: '8px', padding: '9px 12px', fontSize: '13px', resize: 'vertical', minHeight: '80px', marginBottom: '20px', boxSizing: 'border-box', fontFamily: 'inherit' }}
+            />
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setInterviewModal(null)} style={{ padding: '9px 18px', border: '1px solid #d1d5db', background: 'white', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}>Cancelar</button>
+              <button
+                disabled={!interviewDate}
+                onClick={async () => {
+                  await updateTracking(interviewModal.id, 'ENTREVISTA_PROGRAMADA', interviewDate, interviewNotes)
+                  setInterviewModal(null)
+                  setInterviewDate('')
+                  setInterviewNotes('')
+                }}
+                style={{ padding: '9px 18px', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 700, fontSize: '13px', opacity: interviewDate ? 1 : 0.4 }}
+              >
+                ✅ Confirmar Fecha
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showSettings && (
         <div className="settings-modal">
@@ -593,6 +684,7 @@ export default function CandidatesAdmin() {
                     <tr>
                       <th>Perfil IA</th>
                       <th>Archivo CV</th>
+                      <th>Teléfono</th>
                       <th>Fecha</th>
                       <th>Estado</th>
                     </tr>
@@ -648,6 +740,21 @@ export default function CandidatesAdmin() {
                             </div>
                           )}
                         </td>
+                        <td style={{ fontSize: '13px', color: '#374151', whiteSpace: 'nowrap' }}>
+                          {r.sender_phone
+                            ? <a
+                                href={`https://wa.me/${r.sender_phone.replace(/\D/g, '').replace(/^0/, '593')}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                title="Enviar mensaje por WhatsApp"
+                                style={{ color: '#16a34a', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 600 }}
+                              >
+                                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/whatsapp.svg" alt="WhatsApp" style={{ width: '14px', height: '14px', filter: 'invert(34%) sepia(89%) saturate(500%) hue-rotate(90deg)' }} />
+                                {r.sender_phone}
+                              </a>
+                            : <span style={{ color: '#9ca3af', fontSize: '12px' }}>No registrado</span>
+                          }
+                        </td>
                         <td style={{ fontSize: '13px', color: '#4b5563' }}>{new Date(r.received_date).toLocaleDateString()}</td>
                         <td>
                           <span className={`status-badge ${r.classification_status === 'REVIEWED' ? 'status-synced' : 'status-pending'}`}>
@@ -658,7 +765,7 @@ export default function CandidatesAdmin() {
                     ))}
                     {resumes.length === 0 && (
                       <tr>
-                        <td colSpan={4} style={{ textAlign: 'center', color: '#6b7280', padding: '40px' }}>
+                        <td colSpan={5} style={{ textAlign: 'center', color: '#6b7280', padding: '40px' }}>
                           Aún no se han escaneado correos. Haz clic en "Buscar Nuevos Correos".
                         </td>
                       </tr>
@@ -770,8 +877,10 @@ export default function CandidatesAdmin() {
                           <th style={{ width: '48px', textAlign: 'center' }}>#</th>
                           <th>Candidato</th>
                           <th>Ciudad</th>
-                          <th>Perfil detectado</th>
-                          <th>Puntaje IA</th>
+                          <th>Perfil</th>
+                          <th>Puntaje</th>
+                          <th>Teléfono</th>
+                          <th>Estado / Seguimiento</th>
                           <th>CV</th>
                         </tr>
                       </thead>
@@ -780,6 +889,12 @@ export default function CandidatesAdmin() {
                           const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}`
                           const scoreColor = r.score >= 75 ? '#16a34a' : r.score >= 50 ? '#d97706' : '#dc2626'
                           const barColor = r.score >= 75 ? '#22c55e' : r.score >= 50 ? '#f59e0b' : '#ef4444'
+                          const tracking = trackingMap[r.id]
+                          const tStatus = tracking?.status || 'PENDIENTE'
+                          const isUpdating = trackingUpdating === r.id
+                          const waHref = r.sender_phone
+                            ? `https://wa.me/${r.sender_phone.replace(/\D/g, '').replace(/^0/, '593')}`
+                            : null
                           return (
                             <tr key={r.id} className="rank-row">
                               <td className="rank-number">
@@ -792,6 +907,12 @@ export default function CandidatesAdmin() {
                                     <p className="user-name" style={{ marginBottom: '2px' }}>{r.sender_name || 'Sin nombre'}</p>
                                     <p className="user-email">{r.sender_email}</p>
                                     <p className="justification-text">{r.justification}</p>
+                                    {tStatus === 'ENTREVISTA_PROGRAMADA' && tracking?.interview_date && (
+                                      <p style={{ fontSize: '11px', color: '#d97706', fontWeight: 600, margin: '4px 0 0' }}>
+                                        📅 Entrevista: {new Date(tracking.interview_date + 'T12:00:00').toLocaleDateString()}
+                                        {tracking.notes && <span style={{ color: '#6b7280', fontWeight: 400 }}> · {tracking.notes}</span>}
+                                      </p>
+                                    )}
                                   </div>
                                 </div>
                               </td>
@@ -808,6 +929,70 @@ export default function CandidatesAdmin() {
                                     <div className="score-bar-fill" style={{ width: `${r.score}%`, background: barColor }} />
                                   </div>
                                   <span style={{ fontWeight: '700', fontSize: '14px', color: scoreColor }}>{r.score}</span>
+                                </div>
+                              </td>
+                              <td style={{ whiteSpace: 'nowrap' }}>
+                                {waHref
+                                  ? <a href={waHref} target="_blank" rel="noreferrer" className="wa-link">
+                                      <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/whatsapp.svg" alt="WA" style={{ width: '13px', height: '13px', filter: 'invert(34%) sepia(89%) saturate(500%) hue-rotate(90deg)' }} />
+                                      {r.sender_phone}
+                                    </a>
+                                  : <span style={{ color: '#9ca3af', fontSize: '11px' }}>Sin teléfono</span>
+                                }
+                              </td>
+                              <td style={{ minWidth: '200px' }}>
+                                {/* Badge de estado actual */}
+                                <div style={{ marginBottom: '8px' }}>
+                                  <span className={`pipeline-badge pipeline-${tStatus.toLowerCase().replace('_', '-')}`}>
+                                    {tStatus === 'PENDIENTE' && '⏳ Pendiente'}
+                                    {tStatus === 'MENSAJE_ENVIADO' && '💬 Mensaje enviado'}
+                                    {tStatus === 'ENTREVISTA_PROGRAMADA' && '📅 Entrevista programada'}
+                                    {tStatus === 'ONBOARDING' && '✅ Onboarding'}
+                                  </span>
+                                </div>
+                                {/* Botones de acción según estado */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  {tStatus === 'PENDIENTE' && waHref && (
+                                    <a
+                                      href={waHref}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      onClick={() => updateTracking(r.id, 'MENSAJE_ENVIADO')}
+                                      className="track-btn track-btn-wa"
+                                      style={{ textDecoration: 'none' }}
+                                    >
+                                      <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/whatsapp.svg" alt="WA" style={{ width: '11px', height: '11px', filter: 'invert(34%) sepia(89%) saturate(500%) hue-rotate(90deg)' }} />
+                                      Enviar mensaje WA
+                                    </a>
+                                  )}
+                                  {(tStatus === 'PENDIENTE' || tStatus === 'MENSAJE_ENVIADO') && (
+                                    <button
+                                      className="track-btn track-btn-entrevista"
+                                      disabled={isUpdating}
+                                      onClick={() => { setInterviewModal({ id: r.id, name: r.sender_name || r.sender_email }); setInterviewDate(''); setInterviewNotes('') }}
+                                    >
+                                      📅 Programar entrevista
+                                    </button>
+                                  )}
+                                  {tStatus === 'ENTREVISTA_PROGRAMADA' && (
+                                    <button
+                                      className="track-btn track-btn-onboarding"
+                                      disabled={isUpdating}
+                                      onClick={() => updateTracking(r.id, 'ONBOARDING')}
+                                    >
+                                      ✅ Pasar a Onboarding
+                                    </button>
+                                  )}
+                                  {tStatus !== 'PENDIENTE' && (
+                                    <button
+                                      className="track-btn"
+                                      style={{ color: '#9ca3af', borderColor: '#e5e7eb', fontSize: '10px' }}
+                                      disabled={isUpdating}
+                                      onClick={() => updateTracking(r.id, 'PENDIENTE', undefined, undefined)}
+                                    >
+                                      ↺ Reiniciar
+                                    </button>
+                                  )}
                                 </div>
                               </td>
                               <td>
