@@ -15,7 +15,7 @@ export default function CandidatesAdmin() {
   const [errorMsg, setErrorMsg] = useState('')
 
   // Selección de Pestañas
-  const [activeTab, setActiveTab] = useState<'onboarding' | 'seleccion' | 'ranking'>('onboarding')
+  const [activeTab, setActiveTab] = useState<'onboarding' | 'seleccion' | 'ranking' | 'pipeline'>('seleccion')
   
   // Datos para Selección
   const [resumes, setResumes] = useState<any[]>([])
@@ -40,20 +40,88 @@ export default function CandidatesAdmin() {
   const [savingPosition, setSavingPosition] = useState(false)
 
   // === SEGUIMIENTO DE CANDIDATOS ===
-  // Map: resume_id -> { status, interview_date, notes }
   const [trackingMap, setTrackingMap] = useState<Record<string, any>>({})
   const [trackingUpdating, setTrackingUpdating] = useState<string | null>(null)
-  // Modal para programar entrevista
-  const [interviewModal, setInterviewModal] = useState<{ id: string; name: string } | null>(null)
+  const [interviewModal, setInterviewModal] = useState<{ id: string; name: string; resumeId: string; cargo: string } | null>(null)
   const [interviewDate, setInterviewDate] = useState('')
   const [interviewNotes, setInterviewNotes] = useState('')
+
+  // === PIPELINE GLOBAL ===
+  const [pipelineData, setPipelineData] = useState<any[]>([])
+  const [pipelineLoading, setPipelineLoading] = useState(false)
+  const [pipelineFilter, setPipelineFilter] = useState('ALL')
+  const [pipelineCargoFilter, setPipelineCargoFilter] = useState('')
+  const [pipelineUpdating, setPipelineUpdating] = useState<string | null>(null)
 
   useEffect(() => {
     setIsMounted(true)
     fetchCandidates()
     fetchResumes()
     fetchJobPositions()
+    fetchPipeline()
   }, [])
+
+  const fetchPipeline = async () => {
+    setPipelineLoading(true)
+    const res = await fetch('/api/candidate-tracking')
+    const data = await res.json()
+    if (data.data) setPipelineData(data.data)
+    setPipelineLoading(false)
+  }
+
+  const updatePipelineStatus = async (trackingId: string, resumeId: string, cargo: string, status: string, interview_date?: string, notes?: string) => {
+    setPipelineUpdating(trackingId)
+    const res = await fetch('/api/candidate-tracking', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resume_id: resumeId, cargo, status, interview_date, notes })
+    })
+    const result = await res.json()
+    if (result.success) {
+      setPipelineData(prev => prev.map(p => p.id === trackingId ? { ...p, status, interview_date: interview_date || p.interview_date, notes: notes || p.notes } : p))
+      
+      // Si el estado es APROBADO, enviar el mail automáticamente
+      if (status === 'ENTREVISTA_APROBADA') {
+        handleSendApprovalEmail(resumeId)
+      }
+    }
+    setPipelineUpdating(null)
+  }
+
+  const handleSendApprovalEmail = async (resumeId: string) => {
+    // Buscar el candidato en las fuentes de datos disponibles
+    let candidate = resumes.find(r => r.id === resumeId);
+    if (!candidate) {
+      candidate = rankingResults.find(r => r.id === resumeId);
+    }
+    if (!candidate) {
+      const pipeEntry = pipelineData.find(p => p.resume_id === resumeId);
+      candidate = pipeEntry?.candidate;
+    }
+
+    if (!candidate || !candidate.sender_email) {
+      console.warn("No se encontró el email del candidato para enviar el correo de aprobación.");
+      return;
+    }
+
+    console.log(`Enviando email de bienvenida a: ${candidate.sender_email}`);
+    try {
+      const res = await fetch('/api/send-approval-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          candidateName: candidate.sender_name || candidate.name,
+          candidateEmail: candidate.sender_email
+        })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        console.error("Error al enviar el mail:", data.error);
+      }
+    } catch (error) {
+      console.error("Error de red al enviar el mail:", error);
+    }
+  }
 
   const fetchJobPositions = async () => {
     const { data } = await supabase.from('job_positions').select('*').order('created_at', { ascending: false })
@@ -127,6 +195,11 @@ export default function CandidatesAdmin() {
     const data = await res.json()
     if (data.success) {
       setTrackingMap(prev => ({ ...prev, [resume_id]: data.data }))
+      
+      // Si el estado es APROBADO, enviar el mail automáticamente
+      if (status === 'ENTREVISTA_APROBADA') {
+        handleSendApprovalEmail(resume_id)
+      }
     }
     setTrackingUpdating(null)
   }
@@ -472,7 +545,12 @@ export default function CandidatesAdmin() {
               <button
                 disabled={!interviewDate}
                 onClick={async () => {
-                  await updateTracking(interviewModal.id, 'ENTREVISTA_PROGRAMADA', interviewDate, interviewNotes)
+                  // Si viene del pipeline (tiene resumeId diferente de id), usa updatePipelineStatus
+                  if (interviewModal.resumeId && interviewModal.resumeId !== interviewModal.id) {
+                    await updatePipelineStatus(interviewModal.id, interviewModal.resumeId, interviewModal.cargo, 'ENTREVISTA_PROGRAMADA', interviewDate, interviewNotes)
+                  } else {
+                    await updateTracking(interviewModal.id, 'ENTREVISTA_PROGRAMADA', interviewDate, interviewNotes)
+                  }
                   setInterviewModal(null)
                   setInterviewDate('')
                   setInterviewNotes('')
@@ -543,24 +621,34 @@ export default function CandidatesAdmin() {
         )}
 
         <div className="tabs-nav">
-          <button 
-            className={`tab-btn ${activeTab === 'onboarding' ? 'active' : ''}`}
-            onClick={() => setActiveTab('onboarding')}
-          >
-            Formularios de Ingreso (Onboarding)
+          {/* 1. Bandeja de Hojas de Vida */}
+          <button className={`tab-btn ${activeTab === 'seleccion' ? 'active' : ''}`} onClick={() => setActiveTab('seleccion')}>
+            📥 Bandeja de Hojas de Vida
           </button>
-          <button 
-            className={`tab-btn ${activeTab === 'seleccion' ? 'active' : ''}`}
-            onClick={() => setActiveTab('seleccion')}
-          >
-            Bandeja de Hojas de Vida (Selección)
-          </button>
-          <button 
+          {/* 2. Selección por Cargo IA */}
+          <button
             className={`tab-btn ${activeTab === 'ranking' ? 'active' : ''}`}
             onClick={() => setActiveTab('ranking')}
             style={{ color: activeTab === 'ranking' ? '#7c3aed' : undefined, borderBottomColor: activeTab === 'ranking' ? '#7c3aed' : undefined }}
           >
             🏆 Selección por Cargo (IA)
+          </button>
+          {/* 3. Resumen de Candidatos (pipeline) */}
+          <button
+            className={`tab-btn ${activeTab === 'pipeline' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('pipeline'); fetchPipeline() }}
+            style={{ color: activeTab === 'pipeline' ? '#059669' : undefined, borderBottomColor: activeTab === 'pipeline' ? '#059669' : undefined }}
+          >
+            📋 Resumen de Candidatos
+            {pipelineData.length > 0 && (
+              <span style={{ marginLeft: '6px', background: '#059669', color: 'white', fontSize: '10px', fontWeight: 700, borderRadius: '9999px', padding: '1px 6px' }}>
+                {pipelineData.length}
+              </span>
+            )}
+          </button>
+          {/* 4. Formularios de Ingreso */}
+          <button className={`tab-btn ${activeTab === 'onboarding' ? 'active' : ''}`} onClick={() => setActiveTab('onboarding')}>
+            📝 Formularios de Ingreso (Onboarding)
           </button>
         </div>
 
@@ -983,7 +1071,7 @@ export default function CandidatesAdmin() {
                                     <button
                                       className="track-btn track-btn-entrevista"
                                       disabled={isUpdating}
-                                      onClick={() => { setInterviewModal({ id: r.id, name: r.sender_name || r.sender_email }); setInterviewDate(''); setInterviewNotes('') }}
+                                      onClick={() => { setInterviewModal({ id: r.id, name: r.sender_name || r.sender_email, resumeId: r.id, cargo: rankingCargo }); setInterviewDate(''); setInterviewNotes('') }}
                                     >
                                       📅 Programar entrevista
                                     </button>
@@ -1060,6 +1148,192 @@ export default function CandidatesAdmin() {
             </div>
           </div>
         )}
+
+        {/* ==================== PIPELINE GLOBAL ==================== */}
+        {activeTab === 'pipeline' && (() => {
+          const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+            MENSAJE_ENVIADO:        { label: '💬 Mensaje enviado',        color: '#1d4ed8', bg: '#dbeafe' },
+            ENTREVISTA_PROGRAMADA:  { label: '📅 Entrevista programada',  color: '#92400e', bg: '#fef3c7' },
+            ENTREVISTA_CONFIRMADA:  { label: '✅ Entrevista confirmada',  color: '#0369a1', bg: '#e0f2fe' },
+            ENTREVISTA_APROBADA:    { label: '🌟 Aprobado',              color: '#166534', bg: '#dcfce7' },
+            ENTREVISTA_RECHAZADA:   { label: '❌ No aprobado',             color: '#991b1b', bg: '#fee2e2' },
+            ONBOARDING:             { label: '🚀 Onboarding',             color: '#5b21b6', bg: '#ede9fe' },
+          }
+          const allStatuses = Object.keys(STATUS_CONFIG)
+          const filtered = pipelineData
+            .filter(p => pipelineFilter === 'ALL' || p.status === pipelineFilter)
+            .filter(p => pipelineCargoFilter === '' || (p.cargo || '').toLowerCase().includes(pipelineCargoFilter.toLowerCase()))
+          const countByStatus = (s: string) => pipelineData.filter(p => p.status === s).length
+
+          return (
+            <>
+              {/* Contadores resumen */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px' }}>
+                {allStatuses.map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setPipelineFilter(pipelineFilter === s ? 'ALL' : s)}
+                    style={{
+                      border: `2px solid ${pipelineFilter === s ? STATUS_CONFIG[s].color : '#e5e7eb'}`,
+                      background: pipelineFilter === s ? STATUS_CONFIG[s].bg : 'white',
+                      color: pipelineFilter === s ? STATUS_CONFIG[s].color : '#6b7280',
+                      borderRadius: '9999px', padding: '5px 14px', fontSize: '12px', fontWeight: 700,
+                      cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '6px'
+                    }}
+                  >
+                    {STATUS_CONFIG[s].label}
+                    <span style={{ background: STATUS_CONFIG[s].color, color: 'white', borderRadius: '9999px', padding: '0 6px', fontSize: '11px' }}>
+                      {countByStatus(s)}
+                    </span>
+                  </button>
+                ))}
+                {pipelineFilter !== 'ALL' && (
+                  <button onClick={() => setPipelineFilter('ALL')} style={{ border: '1px solid #d1d5db', background: 'white', color: '#6b7280', borderRadius: '9999px', padding: '5px 12px', fontSize: '12px', cursor: 'pointer' }}>
+                    × Limpiar filtro
+                  </button>
+                )}
+              </div>
+
+              {/* Filtro de cargo */}
+              <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input
+                  type="text"
+                  placeholder="Filtrar por cargo (ej. Cajero)..."
+                  value={pipelineCargoFilter}
+                  onChange={e => setPipelineCargoFilter(e.target.value)}
+                  style={{ border: '1px solid #d1d5db', borderRadius: '8px', padding: '8px 12px', fontSize: '13px', width: '280px' }}
+                />
+                <button
+                  onClick={fetchPipeline}
+                  style={{ background: '#059669', color: 'white', border: 'none', borderRadius: '8px', padding: '8px 14px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <RefreshCw size={14} /> Actualizar
+                </button>
+                <span style={{ color: '#6b7280', fontSize: '13px' }}>{filtered.length} candidato{filtered.length !== 1 ? 's' : ''}</span>
+              </div>
+
+              {pipelineLoading ? (
+                <p style={{ textAlign: 'center', color: '#6b7280', padding: '40px' }}>Cargando pipeline...</p>
+              ) : filtered.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px', background: 'white', borderRadius: '12px', border: '1px dashed #d1d5db' }}>
+                  <p style={{ color: '#9ca3af', fontSize: '15px', margin: 0 }}>No hay candidatos en el pipeline todavía.</p>
+                  <p style={{ color: '#9ca3af', fontSize: '13px', margin: '8px 0 0' }}>Cuando envíes un mensaje a un candidato desde la pestaña Selección por Cargo, aparecerá aquí.</p>
+                </div>
+              ) : (
+                <div className="table-container">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Candidato</th>
+                        <th>Cargo evaluado</th>
+                        <th>Teléfono</th>
+                        <th>Estado</th>
+                        <th>Entrevista</th>
+                        <th>Acciones</th>
+                        <th>CV</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filtered.map((p: any) => {
+                        const c = p.candidate
+                        const cfg = STATUS_CONFIG[p.status] || { label: p.status, color: '#6b7280', bg: '#f3f4f6' }
+                        const isUpd = pipelineUpdating === p.id
+                        const waHref = c?.sender_phone
+                          ? `https://wa.me/${c.sender_phone.replace(/\D/g, '').replace(/^0/, '593')}?text=${encodeURIComponent('Estimado candidato, hemos recibido su CV, ¿podemos agendar una reunión para la entrevista?')}`
+                          : null
+                        return (
+                          <tr key={p.id} className="rank-row">
+                            <td>
+                              <div className="user-cell">
+                                <div className="user-avatar" style={{ background: '#f0fdf4', color: '#16a34a', flexShrink: 0 }}><User size={16}/></div>
+                                <div>
+                                  <p className="user-name" style={{ margin: '0 0 2px' }}>{c?.sender_name || 'Sin nombre'}</p>
+                                  <p className="user-email" style={{ margin: 0 }}>{c?.sender_email}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              <span style={{ fontSize: '12px', fontWeight: 600, color: '#374151' }}>{p.cargo}</span>
+                              {c?.position && <span className="ai-tag" style={{ display: 'block', marginTop: '4px' }}><Briefcase size={10}/> {c.position}</span>}
+                            </td>
+                            <td style={{ whiteSpace: 'nowrap' }}>
+                              {waHref
+                                ? <a href={waHref} target="_blank" rel="noreferrer" className="wa-link">
+                                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/whatsapp.svg" alt="WA" style={{ width: '12px', height: '12px', filter: 'invert(34%) sepia(89%) saturate(500%) hue-rotate(90deg)' }} />
+                                    {c.sender_phone}
+                                  </a>
+                                : <span style={{ color: '#9ca3af', fontSize: '11px' }}>Sin teléfono</span>
+                              }
+                            </td>
+                            <td>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '9999px', background: cfg.bg, color: cfg.color, whiteSpace: 'nowrap' }}>
+                                {cfg.label}
+                              </span>
+                            </td>
+                            <td style={{ fontSize: '12px', color: '#4b5563' }}>
+                              {p.interview_date
+                                ? <><strong>📅</strong> {new Date(p.interview_date + 'T12:00:00').toLocaleDateString()}{p.notes && <><br/><span style={{ color: '#9ca3af' }}>{p.notes}</span></>}</>
+                                : <span style={{ color: '#9ca3af' }}>—</span>
+                              }
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                {p.status === 'MENSAJE_ENVIADO' && (
+                                  <button className="track-btn track-btn-entrevista" disabled={isUpd}
+                                    onClick={() => setInterviewModal({ id: p.id, name: c?.sender_name || c?.sender_email, resumeId: p.resume_id, cargo: p.cargo })}>
+                                    📅 Programar entrevista
+                                  </button>
+                                )}
+                                {p.status === 'ENTREVISTA_PROGRAMADA' && (
+                                  <button className="track-btn track-btn-confirmar" disabled={isUpd}
+                                    onClick={() => updatePipelineStatus(p.id, p.resume_id, p.cargo, 'ENTREVISTA_CONFIRMADA')}>
+                                    ✅ Confirmó asistencia
+                                  </button>
+                                )}
+                                {p.status === 'ENTREVISTA_CONFIRMADA' && (
+                                  <>
+                                    <button className="track-btn track-btn-aprobar" disabled={isUpd}
+                                      onClick={() => updatePipelineStatus(p.id, p.resume_id, p.cargo, 'ENTREVISTA_APROBADA')}>
+                                      🌟 Aprobó
+                                    </button>
+                                    <button className="track-btn track-btn-rechazar" disabled={isUpd}
+                                      onClick={() => updatePipelineStatus(p.id, p.resume_id, p.cargo, 'ENTREVISTA_RECHAZADA')}>
+                                      ❌ No aprobó
+                                    </button>
+                                  </>
+                                )}
+                                {p.status === 'ENTREVISTA_APROBADA' && (
+                                  <button className="track-btn track-btn-onboarding" disabled={isUpd}
+                                    onClick={() => updatePipelineStatus(p.id, p.resume_id, p.cargo, 'ONBOARDING')}>
+                                    🚀 Pasar a Onboarding
+                                  </button>
+                                )}
+                                {p.status !== 'MENSAJE_ENVIADO' && (
+                                  <button className="track-btn" disabled={isUpd}
+                                    style={{ color: '#9ca3af', borderColor: '#e5e7eb', fontSize: '10px' }}
+                                    onClick={() => updatePipelineStatus(p.id, p.resume_id, p.cargo, 'MENSAJE_ENVIADO')}>
+                                    ↺ Retroceder
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                            <td>
+                              {c?.pdf_url
+                                ? <a href={c.pdf_url} target="_blank" rel="noreferrer" className="pdf-link"><FileText size={14}/> CV</a>
+                                : <span style={{ color: '#9ca3af', fontSize: '11px' }}>—</span>
+                              }
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )
+        })()}
+
       </div>
     </>
   )
