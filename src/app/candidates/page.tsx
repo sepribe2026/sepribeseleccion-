@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { CheckCircle2, FileText, User, Download, FileSpreadsheet, Trash2, Mail, RefreshCw, Brain, Settings, Search, MapPin, Briefcase, Trophy, Star, Save, ChevronDown } from 'lucide-react'
+import { CheckCircle2, FileText, User, Download, FileSpreadsheet, Trash2, Mail, RefreshCw, Brain, Settings, Search, MapPin, Briefcase, Trophy, Star, Save, ChevronDown, X } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
 export default function CandidatesAdmin() {
@@ -38,6 +38,7 @@ export default function CandidatesAdmin() {
   const [rankingLoading, setRankingLoading] = useState(false)
   const [rankingError, setRankingError] = useState('')
   const [savingPosition, setSavingPosition] = useState(false)
+  const [showJobMaintenance, setShowJobMaintenance] = useState(false)
 
   // === SEGUIMIENTO DE CANDIDATOS ===
   const [trackingMap, setTrackingMap] = useState<Record<string, any>>({})
@@ -518,7 +519,61 @@ export default function CandidatesAdmin() {
         .interview-content { background: white; padding: 28px; border-radius: 12px; width: 420px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
         .wa-link { color: #16a34a; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; }
         .wa-link:hover { opacity: 0.8; }
+        .job-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 60; }
+        .job-content { background: white; padding: 32px; border-radius: 16px; width: 500px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
       `}</style>
+
+      {/* MODAL: Mantenimiento de Cargos */}
+      {showJobMaintenance && (
+        <div className="job-modal">
+          <div className="job-content">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ margin: 0, fontSize: '19px', fontWeight: 800, color: '#111827' }}>⚙️ Mantenimiento de Cargos</h3>
+              <button onClick={() => setShowJobMaintenance(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af' }}><X size={20}/></button>
+            </div>
+
+            <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '12px', marginBottom: '20px', border: '1px solid #f3f4f6' }}>
+              <p style={{ margin: '0 0 12px', fontSize: '13px', fontWeight: 700, color: '#4b5563' }}>Configurar Cargo Fijo</p>
+              
+              <div style={{ marginBottom: '14px' }}>
+                <label className="ranking-label">Nombre del cargo *</label>
+                <input className="ranking-input" type="text" placeholder="Ej: Cajero, Vendedor..." value={rankingCargo} onChange={e => setRankingCargo(e.target.value)} />
+              </div>
+
+              <div style={{ marginBottom: '14px' }}>
+                <label className="ranking-label">Ciudad objetivo</label>
+                <input className="ranking-input" type="text" placeholder="Ej: Quito, Guayaquil..." value={rankingCiudad} onChange={e => setRankingCiudad(e.target.value)} />
+              </div>
+
+              <div style={{ marginBottom: '0' }}>
+                <label className="ranking-label">Funciones y requisitos del cargo *</label>
+                <textarea
+                  className="ranking-textarea"
+                  style={{ minHeight: '180px' }}
+                  placeholder="Describe las funciones principales y requisitos..."
+                  value={rankingFunciones}
+                  onChange={e => setRankingFunciones(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowJobMaintenance(false)} style={{ padding: '10px 20px', border: '1px solid #d1d5db', background: 'white', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 600 }}>Cerrar</button>
+              <button
+                className="ranking-btn-secondary"
+                style={{ padding: '10px 20px', width: 'auto', background: '#7c3aed', color: 'white', borderColor: '#7c3aed' }}
+                onClick={async () => {
+                  await handleSavePosition()
+                  setShowJobMaintenance(false)
+                }}
+                disabled={savingPosition || !rankingCargo || !rankingFunciones}
+              >
+                <Save size={16} /> {savingPosition ? 'Guardando...' : 'Guardar Cargo'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL: Programar Entrevista */}
       {interviewModal && (
@@ -881,58 +936,40 @@ export default function CandidatesAdmin() {
 
             {/* ---- PANEL IZQUIERDO: FORMULARIO ---- */}
             <div className="ranking-form-card">
-              <p className="ranking-form-title"><Trophy size={18} color="#7c3aed" /> Definir Cargo Vacante</p>
-
-              {jobPositions.length > 0 && (
-                <div style={{ marginBottom: '16px' }}>
-                  <label className="ranking-label">Cargar cargo guardado</label>
-                  <select
-                    className="ranking-select"
-                    defaultValue=""
-                    onChange={e => {
-                      const pos = jobPositions.find((p: any) => p.id === e.target.value)
-                      if (pos) handleLoadPosition(pos)
-                    }}
-                  >
-                    <option value="">-- Selecciona un cargo --</option>
-                    {jobPositions.map((p: any) => (
-                      <option key={p.id} value={p.id}>{p.cargo} {p.ciudad ? `· ${p.ciudad}` : ''}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div style={{ marginBottom: '14px' }}>
-                <label className="ranking-label">Nombre del cargo *</label>
-                <input id="ranking-cargo" className="ranking-input" type="text" placeholder="Ej: Cajero, Vendedor, Bodeguero..." value={rankingCargo} onChange={e => setRankingCargo(e.target.value)} />
-              </div>
-
-              <div style={{ marginBottom: '14px' }}>
-                <label className="ranking-label">Ciudad objetivo</label>
-                <input id="ranking-ciudad" className="ranking-input" type="text" placeholder="Ej: Quito, Guayaquil..." value={rankingCiudad} onChange={e => setRankingCiudad(e.target.value)} />
-              </div>
+              <p className="ranking-form-title"><Trophy size={18} color="#7c3aed" /> Evaluación por Cargo</p>
 
               <div style={{ marginBottom: '20px' }}>
-                <label className="ranking-label">Funciones y requisitos del cargo *</label>
-                <textarea
-                  id="ranking-funciones"
-                  className="ranking-textarea"
-                  placeholder="Describe las funciones principales, requisitos de experiencia, nivel educativo mínimo, habilidades clave..."
-                  value={rankingFunciones}
-                  onChange={e => setRankingFunciones(e.target.value)}
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
-                <button
-                  id="btn-save-position"
-                  className="ranking-btn-secondary"
-                  onClick={handleSavePosition}
-                  disabled={savingPosition || !rankingCargo || !rankingFunciones}
+                <label className="ranking-label">Seleccionar cargo configurado</label>
+                <select
+                  className="ranking-select"
+                  value={jobPositions.find(p => p.cargo === rankingCargo)?.id || ''}
+                  onChange={e => {
+                    const pos = jobPositions.find((p: any) => p.id === e.target.value)
+                    if (pos) handleLoadPosition(pos)
+                  }}
+                  style={{ marginBottom: '10px', fontWeight: 600, border: '2px solid #ddd' }}
                 >
-                  <Save size={14} /> {savingPosition ? 'Guardando...' : 'Guardar'}
+                  <option value="">-- Selecciona un cargo --</option>
+                  {jobPositions.map((p: any) => (
+                    <option key={p.id} value={p.id}>{p.cargo} {p.ciudad ? `· ${p.ciudad}` : ''}</option>
+                  ))}
+                </select>
+                
+                <button
+                  onClick={() => setShowJobMaintenance(true)}
+                  style={{ width: '100%', padding: '8px', background: '#f3f4f6', border: '1px dashed #d1d5db', borderRadius: '8px', color: '#4b5563', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  <Settings size={14} /> Mantenimiento de Cargos
                 </button>
               </div>
+
+              {rankingCargo && (
+                <div style={{ background: '#f5f3ff', border: '1px solid #ddd6fe', padding: '12px', borderRadius: '8px', marginBottom: '20px' }}>
+                  <p style={{ margin: '0 0 4px', fontSize: '11px', fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase' }}>Perfil Activo</p>
+                  <p style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#1f2937' }}>{rankingCargo}</p>
+                  {rankingCiudad && <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#6b7280' }}>📍 {rankingCiudad}</p>}
+                </div>
+              )}
 
               <button
                 id="btn-rank-candidates"
