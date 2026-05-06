@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Se requiere el email del candidato.' }, { status: 400 });
     }
 
-    const smtpHost = process.env.SMTP_HOST || 'smtp.office365.com';
+    const smtpHost = process.env.SMTP_HOST || 'smtp-mail.outlook.com';
     const smtpPort = parseInt(process.env.SMTP_PORT || '587');
     const smtpUser = process.env.SMTP_USER || 'uneteanuestroequipo@ec.marathon-sports.com';
     const smtpPass = process.env.SMTP_PASS || '';
