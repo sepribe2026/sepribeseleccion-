@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { CheckCircle2, FileText, User, Download, FileSpreadsheet, Trash2, Mail, RefreshCw, Brain, Settings, Search, MapPin, Briefcase, Trophy, Star, Save, ChevronDown, X } from 'lucide-react'
+import { CheckCircle2, FileText, User, Download, FileSpreadsheet, Trash2, Mail, RefreshCw, Brain, Settings, MapPin, Briefcase, Trophy, Save, X, UploadCloud, Clock } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
 export default function CandidatesAdmin() {
@@ -15,14 +15,17 @@ export default function CandidatesAdmin() {
   const [errorMsg, setErrorMsg] = useState('')
 
   // Selección de Pestañas
-  const [activeTab, setActiveTab] = useState<'onboarding' | 'seleccion' | 'ranking' | 'pipeline'>('seleccion')
+  const [activeTab, setActiveTab] = useState<'onboarding' | 'seleccion' | 'ranking' | 'pipeline' | 'estadisticas'>('seleccion')
+  const [showCalendarModal, setShowCalendarModal] = useState(false)
+  const [viewingOnboarding, setViewingOnboarding] = useState<any | null>(null)
+  const [rejectionModal, setRejectionModal] = useState<{ id: string; email: string; name: string } | null>(null)
+  const [rejectionObs, setRejectionObs] = useState('')
   
   // Datos para Selección
   const [resumes, setResumes] = useState<any[]>([])
   const [loadingResumes, setLoadingResumes] = useState(false)
   const [scanning, setScanning] = useState(false)
   const [analyzingId, setAnalyzingId] = useState<string | null>(null)
-  const [openAiKey, setOpenAiKey] = useState('')
   const [showSettings, setShowSettings] = useState(false)
 
   // Filtros de Búsqueda
@@ -39,13 +42,15 @@ export default function CandidatesAdmin() {
   const [rankingError, setRankingError] = useState('')
   const [savingPosition, setSavingPosition] = useState(false)
   const [showJobMaintenance, setShowJobMaintenance] = useState(false)
+  const [editingPositionId, setEditingPositionId] = useState<string | null>(null)
 
   // === SEGUIMIENTO DE CANDIDATOS ===
   const [trackingMap, setTrackingMap] = useState<Record<string, any>>({})
   const [trackingUpdating, setTrackingUpdating] = useState<string | null>(null)
   const [interviewModal, setInterviewModal] = useState<{ id: string; name: string; resumeId: string; cargo: string } | null>(null)
   const [interviewDate, setInterviewDate] = useState('')
-  const [interviewNotes, setInterviewNotes] = useState('')
+  const [interviewTime, setInterviewTime] = useState('09:00')
+  const [interviewNotes, setInterviewNotes] = useState('Cita en las Av Galo Plaza Lasso 13205 de los Ceresos.')
 
   // === PIPELINE GLOBAL ===
   const [pipelineData, setPipelineData] = useState<any[]>([])
@@ -54,8 +59,17 @@ export default function CandidatesAdmin() {
   const [pipelineCargoFilter, setPipelineCargoFilter] = useState('')
   const [pipelineUpdating, setPipelineUpdating] = useState<string | null>(null)
 
+  // === BANDEJA FILTERS ===
+  const [inboxSearch, setInboxSearch] = useState('')
+  const [inboxCargo, setInboxCargo] = useState('')
+  const [inboxCity, setInboxCity] = useState('')
+  const [inboxExp, setInboxExp] = useState('')
+  const [openAiKey, setOpenAiKey] = useState('')
+
   useEffect(() => {
     setIsMounted(true)
+    const savedKey = localStorage.getItem('openai_api_key')
+    if (savedKey) setOpenAiKey(savedKey)
     fetchCandidates()
     fetchResumes()
     fetchJobPositions()
@@ -81,7 +95,6 @@ export default function CandidatesAdmin() {
     if (result.success) {
       setPipelineData(prev => prev.map(p => p.id === trackingId ? { ...p, status, interview_date: interview_date || p.interview_date, notes: notes || p.notes } : p))
       
-      // Si el estado es APROBADO, enviar el mail automáticamente
       if (status === 'ENTREVISTA_APROBADA') {
         handleSendApprovalEmail(resumeId)
       }
@@ -90,7 +103,6 @@ export default function CandidatesAdmin() {
   }
 
   const handleSendApprovalEmail = async (resumeId: string) => {
-    // Buscar el candidato en las fuentes de datos disponibles
     let candidate = resumes.find(r => r.id === resumeId);
     if (!candidate) {
       candidate = rankingResults.find(r => r.id === resumeId);
@@ -100,14 +112,39 @@ export default function CandidatesAdmin() {
       candidate = pipeEntry?.candidate;
     }
 
-    if (!candidate || !candidate.sender_email) {
-      console.warn("No se encontró el email del candidato para enviar el correo de aprobación.");
-      return;
-    }
+    if (!candidate || !candidate.sender_email) return;
 
-    console.log(`Enviando email de bienvenida a: ${candidate.sender_email}`);
     try {
-      const res = await fetch('/api/send-approval-email', {
+      // 1. Registrar PRIMERO en la tabla de onboarding (aseguramos que pueda entrar)
+      const names = (candidate.sender_name || candidate.name || '').split(' ');
+      const candidatePayload = {
+        email: candidate.sender_email,
+        nombres: names[0] || '',
+        apellidos: names.slice(1).join(' ') || '',
+        telefono: candidate.sender_phone || '',
+        cedula: `PENDIENTE-${candidate.sender_email}`, // Usamos un placeholder único para evitar el error de duplicados
+        cargo: candidate.position || (pipelineData.find(p => p.resume_id === resumeId)?.cargo) || '',
+        status: 'PENDING'
+      };
+
+      // Buscamos si ya existe
+      const { data: existing } = await supabase.from('onboarding_candidates').select('id').eq('email', candidate.sender_email).single();
+
+      let onboardErr;
+      if (existing) {
+        const { error } = await supabase.from('onboarding_candidates').update(candidatePayload).eq('id', existing.id);
+        onboardErr = error;
+      } else {
+        const { error } = await supabase.from('onboarding_candidates').insert(candidatePayload);
+        onboardErr = error;
+      }
+
+      if (onboardErr) throw new Error("Error al registrar en Onboarding: " + onboardErr.message);
+      
+      fetchCandidates(); // Refrescar pestaña onboarding
+
+      // 2. Intentar enviar correo de aprobación
+      const mailRes = await fetch('/api/send-approval-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -115,12 +152,17 @@ export default function CandidatesAdmin() {
           candidateEmail: candidate.sender_email
         })
       });
-      const data = await res.json();
-      if (!data.success) {
-        console.error("Error al enviar el mail:", data.error);
+
+      const mailData = await mailRes.json();
+      if (!mailRes.ok) {
+        alert("⚠️ El candidato fue registrado en Onboarding, pero el correo no pudo enviarse: " + (mailData.error || "Error de servidor SMTP"));
+      } else {
+        alert("✅ Proceso completado: Candidato registrado y correo enviado con éxito.");
       }
-    } catch (error) {
-      console.error("Error de red al enviar el mail:", error);
+
+    } catch (error: any) {
+      console.error("Error en proceso de aprobación:", error);
+      alert("❌ Error crítico: " + error.message);
     }
   }
 
@@ -132,12 +174,31 @@ export default function CandidatesAdmin() {
   const handleSavePosition = async () => {
     if (!rankingCargo || !rankingFunciones) return
     setSavingPosition(true)
-    await supabase.from('job_positions').insert({ cargo: rankingCargo, ciudad: rankingCiudad, funciones: rankingFunciones })
+    const payload = { cargo: rankingCargo, ciudad: rankingCiudad, funciones: rankingFunciones }
+    if (editingPositionId) {
+      await supabase.from('job_positions').update(payload).eq('id', editingPositionId)
+    } else {
+      await supabase.from('job_positions').insert(payload)
+    }
     await fetchJobPositions()
     setSavingPosition(false)
   }
 
+  const handleDeletePosition = async () => {
+    if (!editingPositionId) return
+    if (!window.confirm('¿Eliminar perfil de cargo?')) return
+    setSavingPosition(true)
+    await supabase.from('job_positions').delete().eq('id', editingPositionId)
+    setEditingPositionId(null)
+    setRankingCargo('')
+    setRankingFunciones('')
+    await fetchJobPositions()
+    setShowJobMaintenance(false)
+    setSavingPosition(false)
+  }
+
   const handleLoadPosition = (pos: any) => {
+    setEditingPositionId(pos.id)
     setRankingCargo(pos.cargo)
     setRankingCiudad(pos.ciudad || '')
     setRankingFunciones(pos.funciones)
@@ -145,10 +206,11 @@ export default function CandidatesAdmin() {
 
   const handleRankCandidates = async () => {
     if (!rankingCargo || !rankingFunciones) {
-      setRankingError('Debes ingresar el cargo y sus funciones.')
+      alert('Completa el cargo y las funciones.')
       return
     }
     if (!openAiKey) {
+      alert('Falta la API Key de OpenAI.')
       setShowSettings(true)
       return
     }
@@ -163,14 +225,15 @@ export default function CandidatesAdmin() {
       })
       const data = await res.json()
       if (res.ok) {
-        setRankingResults(data.rankings)
-        // Cargar tracking guardado para este cargo
+        setRankingResults(data.data || [])
         fetchTracking(rankingCargo)
       } else {
-        setRankingError(data.error || 'Error al evaluar candidatos.')
+        setRankingError(data.error || 'Error al evaluar.')
+        alert('Error en Ranking: ' + (data.error || 'Desconocido'))
       }
     } catch (e: any) {
-      setRankingError('Error de red: ' + e.message)
+      setRankingError('Error: ' + e.message)
+      alert('Error de conexión en Ranking: ' + e.message)
     } finally {
       setRankingLoading(false)
     }
@@ -196,62 +259,50 @@ export default function CandidatesAdmin() {
     const data = await res.json()
     if (data.success) {
       setTrackingMap(prev => ({ ...prev, [resume_id]: data.data }))
-      
-      // Si el estado es APROBADO, enviar el mail automáticamente
-      if (status === 'ENTREVISTA_APROBADA') {
-        handleSendApprovalEmail(resume_id)
-      }
+      if (status === 'ENTREVISTA_APROBADA') handleSendApprovalEmail(resume_id)
     }
     setTrackingUpdating(null)
   }
 
   const fetchCandidates = async () => {
     setLoading(true)
-    setErrorMsg('')
-    const { data, error } = await supabase
-      .from('onboarding_candidates')
-      .select('*')
-      .neq('status', 'DELETED')
-      .order('created_at', { ascending: false })
-    
-    if (error) {
-      console.error('Supabase Error:', error)
-      setErrorMsg(error.message)
-    } else if (data) {
-      setCandidates(data)
-    }
+    const { data } = await supabase.from('onboarding_candidates').select('*').neq('status', 'DELETED').order('created_at', { ascending: false })
+    if (data) setCandidates(data)
     setLoading(false)
   }
 
   const fetchResumes = async () => {
     setLoadingResumes(true)
-    const { data, error } = await supabase
-      .from('email_resumes')
-      .select('*')
-      .order('received_date', { ascending: false })
-    
-    if (!error && data) {
-      setResumes(data)
-    }
+    const { data } = await supabase.from('email_resumes').select('*').order('received_date', { ascending: false })
+    if (data) setResumes(data)
     setLoadingResumes(false)
+  }
+
+  const handleSendContactEmail = async (email: string, name: string, cargo: string, interviewDate?: string, notes?: string) => {
+    const isInterview = !!interviewDate;
+    const confirmMsg = isInterview 
+      ? `¿Enviar citación de entrevista a ${email} para el ${interviewDate}?`
+      : `¿Enviar correo de contacto inicial a ${email}?`;
+      
+    if (!confirm(confirmMsg)) return;
+    
+    try {
+      const res = await fetch('/api/send-contact-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name, cargo, interviewDate, notes })
+      });
+      if (res.ok) alert('Correo enviado con éxito.');
+      else alert('Error al enviar correo.');
+    } catch (e) { alert('Error de conexión.'); }
   }
 
   const handleScanEmails = async () => {
     setScanning(true)
     try {
-      const res = await fetch('/api/scan-emails', { method: 'POST', body: JSON.stringify({}) })
-      const data = await res.json()
-      if (res.ok) {
-        alert(data.message)
-        fetchResumes()
-      } else {
-        alert('Error al escanear: ' + data.details + '\nRespuesta del Servidor: ' + (data.serverResponse || 'Revisa la terminal'))
-      }
-    } catch (err: any) {
-      alert('Fallo de red al escanear correos.')
-    } finally {
-      setScanning(false)
-    }
+      const res = await fetch('/api/scan-emails', { method: 'POST' })
+      if (res.ok) fetchResumes()
+    } finally { setScanning(false) }
   }
 
   const handleAnalyzeResume = async (id: string) => {
@@ -260,7 +311,6 @@ export default function CandidatesAdmin() {
       setShowSettings(true)
       return
     }
-
     setAnalyzingId(id)
     try {
       const res = await fetch('/api/analyze-resume', { 
@@ -269,144 +319,81 @@ export default function CandidatesAdmin() {
         body: JSON.stringify({ id, apiKey: openAiKey }) 
       })
       const data = await res.json()
-      
       if (res.ok) {
-        fetchResumes() // Recargar datos
+        fetchResumes()
       } else {
-        alert('Error de IA: ' + data.error + '\nDetalles: ' + (data.details || ''))
+        alert('Error de IA: ' + (data.error || 'Fallo desconocido'))
       }
-    } catch (err) {
-      alert('Error de conexión con la IA.')
+    } catch (err: any) {
+      alert('Error de conexión con la IA: ' + err.message)
     } finally {
       setAnalyzingId(null)
     }
   }
 
   const handleSyncToOracle = async (id: string) => {
-    try {
-      const response = await fetch('/api/oracle-sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id })
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        alert('Sincronizado exitosamente:\n- Datos guardados en Oracle\n- PDF descargado al servidor local\n- ' + result.message);
-        fetchCandidates();
-      } else {
-        alert('Error al sincronizar: ' + (result.error || result.details));
-      }
-    } catch (err: any) {
-      alert('Error de conexión con el servidor: ' + err.message);
-    }
+    if (!confirm('¿Deseas sincronizar este candidato con Oracle? Asegúrate de haber revisado sus documentos.')) return;
+    await fetch('/api/oracle-sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+    fetchCandidates();
   }
 
-  const handleDelete = async (id: string, currentCedula: string) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar este registro de candidato? Esto le permitirá ingresar sus datos nuevamente.')) return;
-    
+  const handleRejectOnboarding = async () => {
+    if (!rejectionModal || !rejectionObs) return;
     try {
-      const { error } = await supabase
-        .from('onboarding_candidates')
-        .delete()
-        .eq('id', id);
+      const res = await fetch('/api/send-rejection-onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: rejectionModal.email, 
+          name: rejectionModal.name, 
+          observation: rejectionObs 
+        })
+      });
+      if (res.ok) {
+        // Obtenemos los datos actuales para no sobrescribir datos personales si los hay
+        const { data: current } = await supabase.from('onboarding_candidates').select('datos_personales').eq('id', rejectionModal.id).single();
+        
+        const { error: updateErr } = await supabase.from('onboarding_candidates').update({ 
+          status: 'PENDING', 
+          // observaciones: rejectionObs, // Comentado hasta que se corra el SQL
+          cedula: `PENDIENTE-${rejectionModal.email}`,
+          datos_personales: { ...(current?.datos_personales || {}), observation_fallback: rejectionObs }, // Guardamos aquí temporalmente
+          datos_bancarios: null,
+          cargas_familiares: null,
+          estudios: null,
+          documentos: null
+        }).eq('id', rejectionModal.id);
+        
+        if (updateErr) {
+          alert('Error al resetear datos en la base: ' + updateErr.message);
+          return;
+        }
 
-      if (error) throw error;
-      
-      alert('Candidato eliminado exitosamente.');
-      fetchCandidates();
-    } catch (err: any) {
-      alert('Error al eliminar: ' + err.message);
-    }
+        alert('✅ Correo enviado y expediente reseteado con éxito.');
+        setRejectionModal(null);
+        setRejectionObs('');
+        setViewingOnboarding(null); // Clear viewing state
+        fetchCandidates(); // Refresh list
+      } else {
+        const errData = await res.json();
+        alert('Error al enviar el correo: ' + (errData.error || 'Fallo desconocido'));
+      }
+    } catch (e) { alert('Error de conexión.'); }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('¿Eliminar?')) return;
+    await supabase.from('onboarding_candidates').delete().eq('id', id);
+    fetchCandidates();
   }
 
   const exportToExcel = () => {
-    const pendingCandidates = candidates.filter(c => c.status === 'PENDING');
-    if (pendingCandidates.length === 0) {
-      alert('No hay candidatos pendientes para exportar.');
-      return;
-    }
-
-    // Aplanar los datos para el Excel
-    const flatData = pendingCandidates.map(c => {
-      const p = c.datos_personales || {};
-      const b = c.datos_bancarios || {};
-      const fam = c.cargas_familiares || {};
-      const conyuge = fam.conyuge || {};
-      const hijos = fam.hijos || [];
-      const estudio = (c.estudios && c.estudios.length > 0) ? c.estudios[0] : {};
-
-      // Si el candidato es antiguo y no tiene apellido1 y apellido2 separado, intentamos separar el campo apellidos.
-      let ap1 = p.apellido1 || '';
-      let ap2 = p.apellido2 || '';
-      if (!ap1 && !ap2 && c.apellidos) {
-        const parts = c.apellidos.split(' ');
-        ap1 = parts[0] || '';
-        ap2 = parts.length > 1 ? parts.slice(1).join(' ') : '';
-      }
-
-      // El Excel muestra columnas para hasta DOS hijos
-      const primerHijo = hijos.length > 0 ? hijos[0] : {};
-      const segundoHijo = hijos.length > 1 ? hijos[1] : {};
-
-      return {
-        "Timestamp": new Date(c.created_at).toLocaleString(),
-        "¿Autoriza el tratamiento de sus datos personales para el proceso de selección y": "Acepto",
-        "Tratamiento": p.tratamiento || '',
-        "Ingresa tus dos Nombres:": c.nombres || '',
-        "Ingresa tu Primer Apellido:": ap1,
-        "Ingresa tu Segundo Apellido:": ap2,
-        "Ciudad de Nacimiento": p.ciudad_nacimiento || '',
-        "Fecha de Nacimiento": p.fecha_nacimiento || '',
-        "Estado Civil": p.estado_civil || '',
-        "Nacionalidad": p.nacionalidad || '',
-        "Número de cédula": c.cedula || '',
-        "Número de Cta Banco Produbanco": b.numero_cuenta || '',
-        "Tipo de Cta": b.tipo_cuenta || '',
-        "Ciudad en la que resides": p.ciudad_residencia || '',
-        "Dirección domiciliaria: Detallar Calle principal, numeración y calle transversal": p.direccion || '',
-        "N° de teléfono convencional": p.telefono_fijo || 'S/n',
-        "En el caso de contar Con cargas Familiares escoge las opciones": hijos.length.toString(),
-        "En el caso de tener Cónyuge, ingresa el nombre completo: (2 nombres)": conyuge.tiene ? `${conyuge.nombres || ''} ${conyuge.apellidos || ''}`.trim() : '',
-        "Fecha de nacimiento del Cónyuge:": conyuge.fecha_nacimiento || '',
-        "Nacionalidad del Cónyuge": conyuge.nacionalidad || '',
-        "Ciudad de Nacimiento Cónyuge": conyuge.ciudad_nacimiento || '',
-        "Número Cédula Cónyuge": conyuge.cedula || '',
-        
-        // --- HIJO 1 ---
-        "En el caso de tener Hijos, ingrese el nombre completo: (2 nombres)": primerHijo.nombres ? `${primerHijo.nombres} ${primerHijo.apellidos}`.trim() : '',
-        "Fecha de nacimiento del Hijo:": primerHijo.fecha_nacimiento || '',
-        "Nacionalidad del hijo:": primerHijo.nacionalidad || '',
-        "Ciudad de Nacimiento del Hijo": primerHijo.ciudad_nacimiento || '',
-        "Número Cédula Hijo": primerHijo.cedula || '',
-
-        // --- HIJO 2 (Columnas duplicadas) ---
-        "En el caso de tener Hijos, ingrese el nombre completo: (2 nombres) ": segundoHijo.nombres ? `${segundoHijo.nombres} ${segundoHijo.apellidos}`.trim() : '',
-        "Fecha de nacimiento del Hijo: ": segundoHijo.fecha_nacimiento || '',
-        "Nacionalidad del hijo: ": segundoHijo.nacionalidad || '',
-        "Ciudad de Nacimiento del Hijo ": segundoHijo.ciudad_nacimiento || '',
-        "Número Cédula Hijo ": segundoHijo.cedula || '',
-
-        "Estudios:": estudio.nivel || '',
-        "Título Obtenido:": estudio.titulo || '',
-        "Nombre de Institución Educativa / Universidad :": estudio.institucion || '',
-        "Fecha de inicio de estudios:": estudio.fecha_inicio || '',
-        "Fecha de fin de estudios:": estudio.fecha_fin || '',
-        "Número de celular": p.celular || c.telefono || '',
-        "Correo electrónico": c.email || '',
-        
-        // --- COLUMNAS FINALES DE APELLIDOS (SOLO CABECERAS, SIN DATOS) ---
-        "En el caso de tener Cónyuge, ingresa el apellido completo: (2 apellidos)": '',
-        "En el caso de tener hijos, ingresa el apellido completo: (2 apellidos)": '',
-        "En el caso de tener hijos, ingresa el apellido completo: (2 apellidos) ": ''
-      };
-    });
-
-    const worksheet = XLSX.utils.json_to_sheet(flatData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Candidatos Pendientes");
-    XLSX.writeFile(workbook, "Candidatos_Pendientes_Onboarding.xlsx");
+    const pending = candidates.filter(c => c.status === 'PENDING');
+    const flat = pending.map(c => ({ "Nombre": c.nombres, "Apellido": c.apellidos, "Email": c.email, "Cédula": c.cedula, "Teléfono": c.telefono }));
+    const ws = XLSX.utils.json_to_sheet(flat);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Pendientes");
+    XLSX.writeFile(wb, "Onboarding.xlsx");
   }
 
   if (!isMounted) return null;
@@ -414,225 +401,168 @@ export default function CandidatesAdmin() {
   return (
     <>
       <style>{`
-        .admin-container { padding: 32px; background-color: #f9fafb; min-height: 100vh; font-family: system-ui, sans-serif; color: #111827; }
+        .admin-container { padding: 32px; background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); min-height: 100vh; font-family: 'Inter', system-ui, sans-serif; color: #0f172a; }
         .admin-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; flex-wrap: wrap; gap: 20px; }
-        .admin-title { font-size: 24px; font-weight: bold; margin: 0 0 4px; }
-        .admin-subtitle { color: #6b7280; font-size: 14px; margin: 0; }
-        
-        .qr-card { background: white; padding: 16px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; display: flex; align-items: center; gap: 24px; }
-        .qr-input-group { display: flex; flex-direction: column; }
-        .qr-label { font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; margin-bottom: 6px; }
-        .qr-input { border: 1px solid #d1d5db; border-radius: 4px; padding: 6px 10px; font-size: 14px; width: 280px; }
-        .qr-input:focus { outline: none; border-color: #3b82f6; }
-        .qr-image-container { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-        .qr-img { width: 64px; height: 64px; border: 1px solid #e5e7eb; border-radius: 4px; }
-        .qr-download { font-size: 11px; color: #2563eb; font-weight: bold; text-decoration: none; display: flex; align-items: center; gap: 4px; }
-        .qr-download:hover { text-decoration: underline; }
-
-        .tabs-nav { display: flex; border-bottom: 1px solid #e5e7eb; margin-bottom: 24px; }
-        .tab-btn { padding: 12px 24px; background: none; border: none; font-size: 14px; font-weight: 600; color: #6b7280; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; }
-        .tab-btn:hover { color: #111827; }
-        .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
-
-        .table-container { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; overflow: hidden; }
+        .admin-title { font-size: 28px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.02em; background: linear-gradient(90deg, #0f172a, #334155); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .admin-subtitle { color: #64748b; font-size: 15px; font-weight: 500; margin: 0; }
+        .qr-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid rgba(226, 232, 240, 0.8); display: flex; align-items: center; gap: 24px; }
+        .qr-input { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; font-size: 14px; width: 280px; transition: all 0.2s; }
+        .qr-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); outline: none; }
+        .tabs-nav { display: flex; border-bottom: 1px solid #e2e8f0; margin-bottom: 28px; gap: 8px; }
+        .tab-btn { padding: 12px 20px; background: none; border: none; font-size: 14px; font-weight: 700; color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 8px 8px 0 0; }
+        .tab-btn:hover { color: #0f172a; background: rgba(241, 245, 249, 0.8); }
+        .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; background: rgba(37, 99, 235, 0.05); }
+        .table-container { background: white; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; overflow: hidden; }
         table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { background-color: #f3f4f6; color: #4b5563; font-size: 12px; font-weight: 600; text-transform: uppercase; padding: 12px 24px; border-bottom: 1px solid #e5e7eb; }
-        td { padding: 16px 24px; border-bottom: 1px solid #e5e7eb; vertical-align: middle; }
-        tr:last-child td { border-bottom: none; }
-        
+        th { background-color: #f8fafc; color: #475569; font-size: 12px; font-weight: 700; text-transform: uppercase; padding: 16px 24px; border-bottom: 1px solid #e2e8f0; letter-spacing: 0.05em; }
+        td { padding: 18px 24px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
         .user-cell { display: flex; align-items: center; gap: 16px; }
-        .user-avatar { width: 40px; height: 40px; background-color: #dbeafe; color: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .user-name { font-size: 14px; font-weight: 600; color: #111827; margin: 0 0 2px; }
-        .user-email { font-size: 13px; color: #6b7280; margin: 0; }
-        
-        .status-badge { display: inline-flex; padding: 2px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
-        .status-synced { background-color: #dcfce7; color: #166534; }
-        .status-pending { background-color: #fef3c7; color: #92400e; }
-        
-        .action-btn { background: none; border: none; color: #4f46e5; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: flex-end; gap: 6px; cursor: pointer; width: 100%; text-align: right; }
-        .action-btn:hover { color: #312e81; }
-        
-        .action-btn-danger { background: none; border: none; color: #ef4444; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: flex-end; gap: 6px; cursor: pointer; width: 100%; text-align: right; }
-        .action-btn-danger:hover { color: #b91c1c; }
-        
-        .ai-btn { background: #8b5cf6; color: white; border: none; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: 0.2s; }
-        .ai-btn:hover { background: #7c3aed; }
-        .ai-btn:disabled { background: #c4b5fd; cursor: wait; }
-
-        .ai-summary-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; font-size: 13px; color: #475569; margin-top: 8px; font-style: italic; }
-        .ai-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 4px; margin-right: 8px; margin-bottom: 4px; }
-        .ai-tag.city { background: #fce7f3; color: #be185d; }
-
-        .filter-bar { display: flex; gap: 16px; margin-bottom: 16px; background: white; padding: 16px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; align-items: center; }
-        .filter-input { flex: 1; display: flex; align-items: center; gap: 8px; border: 1px solid #d1d5db; padding: 8px 12px; border-radius: 6px; }
-        .filter-input input { border: none; outline: none; width: 100%; font-size: 14px; }
-
-        .settings-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 50; }
-        .settings-content { background: white; padding: 24px; border-radius: 8px; width: 400px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
-
-        .pdf-link { color: #2563eb; font-size: 14px; display: flex; align-items: center; gap: 6px; text-decoration: none; }
-        .pdf-link:hover { color: #1d4ed8; text-decoration: underline; }
-
-        /* === RANKING STYLES === */
-        .ranking-layout { display: grid; grid-template-columns: 340px 1fr; gap: 24px; align-items: flex-start; }
-        @media (max-width: 900px) { .ranking-layout { grid-template-columns: 1fr; } }
-        .ranking-form-card { background: white; border-radius: 12px; border: 1px solid #e5e7eb; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); position: sticky; top: 24px; }
-        .ranking-form-title { font-size: 15px; font-weight: 700; color: #111827; margin: 0 0 18px; display: flex; align-items: center; gap: 8px; }
-        .ranking-label { display: block; font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-        .ranking-input { width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 9px 12px; font-size: 14px; box-sizing: border-box; transition: border-color 0.2s; }
-        .ranking-input:focus { outline: none; border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139,92,246,0.1); }
-        .ranking-textarea { width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 9px 12px; font-size: 13px; resize: vertical; min-height: 140px; box-sizing: border-box; line-height: 1.5; transition: border-color 0.2s; font-family: inherit; }
-        .ranking-textarea:focus { outline: none; border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139,92,246,0.1); }
-        .ranking-btn-primary { width: 100%; background: linear-gradient(135deg,#7c3aed,#4f46e5); color: white; border: none; padding: 11px 16px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
-        .ranking-btn-primary:hover { opacity: 0.9; }
-        .ranking-btn-primary:disabled { opacity: 0.55; cursor: wait; }
-        .ranking-btn-secondary { flex: 1; background: white; color: #374151; border: 1px solid #d1d5db; padding: 9px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.2s; }
-        .ranking-btn-secondary:hover { background: #f9fafb; }
-        .ranking-select { width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 9px 12px; font-size: 13px; background: white; cursor: pointer; }
-        .score-bar-wrap { background: #f3f4f6; border-radius: 9999px; height: 8px; width: 120px; overflow: hidden; display: inline-block; vertical-align: middle; }
-        .score-bar-fill { height: 8px; border-radius: 9999px; transition: width 0.6s ease; }
-        .medal-badge { font-size: 22px; line-height: 1; }
-        .rank-row { border-bottom: 1px solid #f3f4f6; }
-        .rank-row:hover { background: #fafafa; }
-        .rank-number { width: 48px; text-align: center; font-size: 13px; font-weight: 700; color: #6b7280; }
-        .justification-text { font-size: 12px; color: #6b7280; font-style: italic; margin-top: 4px; line-height: 1.4; }
-
-        /* === TRACKING / PIPELINE STYLES === */
-        .pipeline-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 9999px; white-space: nowrap; }
-        .pipeline-pendiente { background: #f3f4f6; color: #6b7280; }
-        .pipeline-mensaje { background: #dbeafe; color: #1d4ed8; }
-        .pipeline-entrevista { background: #fef3c7; color: #92400e; }
-        .pipeline-confirmada { background: #e0f2fe; color: #0369a1; }
-        .pipeline-aprobada { background: #dcfce7; color: #166534; }
-        .pipeline-rechazada { background: #fee2e2; color: #991b1b; }
-        .pipeline-onboarding { background: #ede9fe; color: #5b21b6; }
-        .track-btn { font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 6px; border: 1px solid; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; transition: opacity 0.15s; background: white; }
-        .track-btn:hover { opacity: 0.8; }
-        .track-btn:disabled { opacity: 0.4; cursor: wait; }
-        .track-btn-wa { color: #16a34a; border-color: #86efac; }
-        .track-btn-entrevista { color: #d97706; border-color: #fde68a; }
-        .track-btn-confirmar { color: #0369a1; border-color: #bae6fd; }
-        .track-btn-aprobar { color: #166534; border-color: #86efac; }
-        .track-btn-rechazar { color: #991b1b; border-color: #fca5a5; }
-        .track-btn-onboarding { color: #5b21b6; border-color: #c4b5fd; }
-        .interview-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 60; }
-        .interview-content { background: white; padding: 28px; border-radius: 12px; width: 420px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
-        .wa-link { color: #16a34a; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; }
-        .wa-link:hover { opacity: 0.8; }
-        .job-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 60; }
-        .job-content { background: white; padding: 32px; border-radius: 16px; width: 500px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        .user-avatar { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .track-btn { 
+          display: inline-flex; 
+          align-items: center; 
+          gap: 6px; 
+          padding: 8px 14px; 
+          background: white; 
+          border: 1px solid #e2e8f0; 
+          border-radius: 8px; 
+          font-size: 13px; 
+          font-weight: 600; 
+          color: #475569; 
+          cursor: pointer; 
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+          box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .track-btn:hover { 
+          background: #f8fafc; 
+          border-color: #cbd5e1; 
+          transform: translateY(-1px);
+          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        .track-btn:active { transform: translateY(0); }
+        .track-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+        .pipeline-badge { 
+          padding: 6px 12px; 
+          border-radius: 20px; 
+          font-size: 11px; 
+          font-weight: 700; 
+          text-transform: uppercase; 
+          letter-spacing: 0.05em; 
+        }
+        .user-name { font-size: 15px; font-weight: 700; color: #1e293b; margin: 0 0 2px; }
+        .user-email { font-size: 13px; color: #64748b; margin: 0; }
+        .status-badge { display: inline-flex; padding: 4px 12px; border-radius: 9999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
+        .status-synced { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        .status-pending { background-color: #fff7ed; color: #9a3412; border: 1px solid #ffedd5; }
+        .action-btn { background: none; border: none; color: #4f46e5; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
+        .action-btn:hover { color: #3730a3; transform: translateX(2px); }
+        .ai-btn { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border: none; font-size: 12px; font-weight: 700; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.2); transition: all 0.2s; }
+        .ai-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(139, 92, 246, 0.3); }
+        .ai-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 6px; border: 1px solid #e2e8f0; }
+        .filter-bar { display: flex; gap: 16px; margin-bottom: 24px; background: white; padding: 12px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .filter-input { flex: 1; display: flex; align-items: center; gap: 10px; border: 1px solid #f1f5f9; background: #f8fafc; padding: 10px 14px; border-radius: 10px; transition: all 0.2s; }
+        .filter-input:focus-within { background: white; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.05); }
+        .filter-input input { border: none; outline: none; width: 100%; font-size: 14px; background: transparent; font-weight: 500; }
+        .ranking-layout { display: grid; grid-template-columns: 360px 1fr; gap: 32px; align-items: flex-start; }
+        .ranking-form-card { background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 28px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.05); position: sticky; top: 32px; }
+        .ranking-label { display: block; font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+        .ranking-input, .ranking-select { width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; padding: 11px 14px; font-size: 14px; margin-bottom: 16px; background: #f8fafc; transition: all 0.2s; }
+        .ranking-textarea { width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; padding: 11px 14px; font-size: 14px; min-height: 160px; margin-bottom: 16px; background: #f8fafc; line-height: 1.6; }
+        .ranking-btn-primary { width: 100%; background: linear-gradient(135deg, #7c3aed, #4f46e5); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.3); transition: all 0.2s; }
+        .ranking-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(124, 58, 237, 0.4); }
+        .score-bar-wrap { background: #f1f5f9; border-radius: 9999px; height: 10px; width: 140px; overflow: hidden; display: inline-block; vertical-align: middle; border: 1px solid #e2e8f0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        .score-bar-fill { height: 100%; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 9999px; }
+        .medal-badge { font-size: 26px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); display: inline-block; }
+        .rank-number { width: 50px; text-align: center; font-size: 15px; font-weight: 800; color: #94a3b8; }
+        .rank-row { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .rank-row:hover { background: #f8fafc; transform: scale(1.005); box-shadow: inset 4px 0 0 #7c3aed, 0 10px 15px -3px rgba(0,0,0,0.05); }
+        .ai-btn-accept { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; font-size: 13px; font-weight: 800; padding: 10px 20px; border-radius: 10px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+        .ai-btn-accept:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 10px 15px rgba(16, 185, 129, 0.3); }
+        .pipeline-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; padding: 5px 14px; border-radius: 9999px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); }
+        .wa-link { color: #15803d; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; background: #f0fdf4; padding: 4px 10px; border-radius: 6px; border: 1px solid #bbf7d0; transition: all 0.2s; }
+        .wa-link:hover { background: #dcfce7; transform: translateY(-1px); }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-top: 20px; }
+        .calendar-day { background: white; border-radius: 12px; border: 1px solid #e2e8f0; min-height: 150px; padding: 12px; transition: all 0.2s; }
+        .calendar-day:hover { border-color: #3b82f6; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+        .calendar-day.today { background: #f0f9ff; border-color: #3b82f6; border-width: 2px; }
+        .calendar-date { font-size: 13px; font-weight: 800; color: #64748b; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .event-card { background: #eff6ff; border-left: 3px solid #3b82f6; padding: 6px 10px; border-radius: 4px; margin-bottom: 6px; font-size: 11px; }
+        .event-time { font-weight: 800; color: #1e40af; margin-right: 4px; }
+        .event-title { font-weight: 600; color: #1e3a8a; }
       `}</style>
 
-      {/* MODAL: Mantenimiento de Cargos */}
+      {/* MODALES */}
       {showJobMaintenance && (
-        <div className="job-modal">
-          <div className="job-content">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ margin: 0, fontSize: '19px', fontWeight: 800, color: '#111827' }}>⚙️ Mantenimiento de Cargos</h3>
-              <button onClick={() => setShowJobMaintenance(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af' }}><X size={20}/></button>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: 'white', padding: '32px', borderRadius: '16px', width: '500px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+              <h3 style={{ margin: 0 }}>{editingPositionId ? '✏️ Editar Cargo' : '➕ Crear Cargo'}</h3>
+              <button onClick={() => setShowJobMaintenance(false)} style={{ background: 'none', border: 'none' }}><X /></button>
             </div>
-
-            <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '12px', marginBottom: '20px', border: '1px solid #f3f4f6' }}>
-              <p style={{ margin: '0 0 12px', fontSize: '13px', fontWeight: 700, color: '#4b5563' }}>Configurar Cargo Fijo</p>
-              
-              <div style={{ marginBottom: '14px' }}>
-                <label className="ranking-label">Nombre del cargo *</label>
-                <input className="ranking-input" type="text" placeholder="Ej: Cajero, Vendedor..." value={rankingCargo} onChange={e => setRankingCargo(e.target.value)} />
-              </div>
-
-              <div style={{ marginBottom: '14px' }}>
-                <label className="ranking-label">Ciudad objetivo</label>
-                <input className="ranking-input" type="text" placeholder="Ej: Quito, Guayaquil..." value={rankingCiudad} onChange={e => setRankingCiudad(e.target.value)} />
-              </div>
-
-              <div style={{ marginBottom: '0' }}>
-                <label className="ranking-label">Funciones y requisitos del cargo *</label>
-                <textarea
-                  className="ranking-textarea"
-                  style={{ minHeight: '180px' }}
-                  placeholder="Describe las funciones principales y requisitos..."
-                  value={rankingFunciones}
-                  onChange={e => setRankingFunciones(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button onClick={() => setShowJobMaintenance(false)} style={{ padding: '10px 20px', border: '1px solid #d1d5db', background: 'white', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 600 }}>Cerrar</button>
-              <button
-                className="ranking-btn-secondary"
-                style={{ padding: '10px 20px', width: 'auto', background: '#7c3aed', color: 'white', borderColor: '#7c3aed' }}
-                onClick={async () => {
-                  await handleSavePosition()
-                  setShowJobMaintenance(false)
-                }}
-                disabled={savingPosition || !rankingCargo || !rankingFunciones}
-              >
-                <Save size={16} /> {savingPosition ? 'Guardando...' : 'Guardar Cargo'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: Programar Entrevista */}
-      {interviewModal && (
-        <div className="interview-modal">
-          <div className="interview-content">
-            <h3 style={{ margin: '0 0 6px', fontSize: '17px', fontWeight: 700 }}>📅 Programar Entrevista</h3>
-            <p style={{ margin: '0 0 18px', fontSize: '13px', color: '#6b7280' }}>Candidato: <strong>{interviewModal.name}</strong></p>
-            <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', marginBottom: '6px' }}>Fecha de entrevista *</label>
-            <input
-              type="date"
-              value={interviewDate}
-              onChange={e => setInterviewDate(e.target.value)}
-              style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: '8px', padding: '9px 12px', fontSize: '14px', marginBottom: '14px', boxSizing: 'border-box' }}
-            />
-            <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', marginBottom: '6px' }}>Notas (opcional)</label>
-            <textarea
-              value={interviewNotes}
-              onChange={e => setInterviewNotes(e.target.value)}
-              placeholder="Hora, lugar, modalidad..."
-              style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: '8px', padding: '9px 12px', fontSize: '13px', resize: 'vertical', minHeight: '80px', marginBottom: '20px', boxSizing: 'border-box', fontFamily: 'inherit' }}
-            />
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button onClick={() => setInterviewModal(null)} style={{ padding: '9px 18px', border: '1px solid #d1d5db', background: 'white', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}>Cancelar</button>
-              <button
-                disabled={!interviewDate}
-                onClick={async () => {
-                  // Si viene del pipeline (tiene resumeId diferente de id), usa updatePipelineStatus
-                  if (interviewModal.resumeId && interviewModal.resumeId !== interviewModal.id) {
-                    await updatePipelineStatus(interviewModal.id, interviewModal.resumeId, interviewModal.cargo, 'ENTREVISTA_PROGRAMADA', interviewDate, interviewNotes)
-                  } else {
-                    await updateTracking(interviewModal.id, 'ENTREVISTA_PROGRAMADA', interviewDate, interviewNotes)
-                  }
-                  setInterviewModal(null)
-                  setInterviewDate('')
-                  setInterviewNotes('')
-                }}
-                style={{ padding: '9px 18px', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 700, fontSize: '13px', opacity: interviewDate ? 1 : 0.4 }}
-              >
-                ✅ Confirmar Fecha
-              </button>
+            {editingPositionId && (
+              <button onClick={() => { setEditingPositionId(null); setRankingCargo(''); setRankingFunciones(''); }} style={{ marginBottom: '16px', fontSize: '12px', color: '#2563eb', border: 'none', background: 'none' }}>+ Crear nuevo</button>
+            )}
+            <label className="ranking-label">Cargo</label>
+            <input className="ranking-input" value={rankingCargo} onChange={e => setRankingCargo(e.target.value)} />
+            <label className="ranking-label">Funciones</label>
+            <textarea className="ranking-textarea" style={{ minHeight: '180px' }} value={rankingFunciones} onChange={e => setRankingFunciones(e.target.value)} />
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="ranking-btn-primary" onClick={() => { handleSavePosition(); setShowJobMaintenance(false); }}>Guardar</button>
+              {editingPositionId && <button onClick={handleDeletePosition} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '10px', borderRadius: '8px' }}><Trash2 size={16}/></button>}
             </div>
           </div>
         </div>
       )}
 
       {showSettings && (
-        <div className="settings-modal">
-          <div className="settings-content">
-            <h3 style={{ margin: '0 0 16px', fontSize: '18px' }}>Configuración de IA (Claude)</h3>
-            <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '16px' }}>Ingresa tu API Key de Anthropic Claude para habilitar el motor de lectura inteligente de Hojas de Vida.</p>
-            <input 
-              type="password" 
-              placeholder="sk-ant-..." 
-              value={openAiKey}
-              onChange={e => setOpenAiKey(e.target.value)}
-              style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px', marginBottom: '16px' }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-              <button onClick={() => setShowSettings(false)} style={{ padding: '8px 16px', border: '1px solid #d1d5db', background: 'white', borderRadius: '4px', cursor: 'pointer' }}>Cerrar</button>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: 'white', padding: '24px', borderRadius: '12px', width: '400px' }}>
+            <h3 style={{ marginBottom: '16px' }}>Configuración IA (OpenAI)</h3>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>OpenAI API Key</label>
+              <input 
+                className="ranking-input" 
+                type="password" 
+                placeholder="sk-..."
+                value={openAiKey} 
+                onChange={e => {
+                  setOpenAiKey(e.target.value)
+                  localStorage.setItem('openai_api_key', e.target.value)
+                }} 
+              />
+            </div>
+            <button className="ranking-btn-primary" onClick={() => setShowSettings(false)}>Guardar y Cerrar</button>
+          </div>
+        </div>
+      )}
+
+      {interviewModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: 'white', padding: '28px', borderRadius: '12px', width: '420px' }}>
+            <h3 style={{ margin: '0 0 16px' }}>📅 Programar Entrevista</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+              <div>
+                <label className="ranking-label">Fecha</label>
+                <input type="date" className="ranking-input" value={interviewDate} onChange={e => setInterviewDate(e.target.value)} />
+              </div>
+              <div>
+                <label className="ranking-label">Hora</label>
+                <input type="time" className="ranking-input" value={interviewTime} onChange={e => setInterviewTime(e.target.value)} />
+              </div>
+            </div>
+            <label className="ranking-label">Lugar / Notas</label>
+            <textarea className="ranking-textarea" placeholder="Notas..." value={interviewNotes} onChange={e => setInterviewNotes(e.target.value)} />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button onClick={() => setInterviewModal(null)} className="track-btn">Cancelar</button>
+              <button className="ranking-btn-primary" style={{ width: 'auto' }} onClick={async () => {
+                const fullDateTime = `${interviewDate} ${interviewTime}`;
+                if (interviewModal.resumeId && interviewModal.resumeId !== interviewModal.id) {
+                  await updatePipelineStatus(interviewModal.id, interviewModal.resumeId, interviewModal.cargo, 'ENTREVISTA_PROGRAMADA', fullDateTime, interviewNotes)
+                } else {
+                  await updateTracking(interviewModal.id, 'ENTREVISTA_PROGRAMADA', fullDateTime, interviewNotes)
+                }
+                setInterviewModal(null)
+              }}>Confirmar</button>
             </div>
           </div>
         </div>
@@ -643,734 +573,741 @@ export default function CandidatesAdmin() {
           <div>
             <h1 className="admin-title">Candidatos Registrados</h1>
             <p className="admin-subtitle">Portal de Onboarding - Zero Paper</p>
-            <button onClick={exportToExcel} style={{ marginTop: '16px', backgroundColor: '#10b981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <FileSpreadsheet size={16} /> Exportar Pendientes (Excel)
-            </button>
+            <button onClick={exportToExcel} style={{ marginTop: '16px', background: '#10b981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}><FileSpreadsheet size={16} /> Exportar Excel</button>
           </div>
-
           <div className="qr-card">
-            <div className="qr-input-group">
-              <label className="qr-label">Enlace para Candidatos</label>
-              <input 
-                type="text" 
-                value={portalUrl} 
-                onChange={e => setPortalUrl(e.target.value)} 
-                className="qr-input"
-              />
+            <div>
+              <label className="ranking-label">Link Candidatos</label>
+              <input type="text" value={portalUrl} onChange={e => setPortalUrl(e.target.value)} className="qr-input" />
             </div>
-            <div className="qr-image-container">
-              <img src={qrCodeUrl} alt="QR Code" className="qr-img" />
-              <a href={qrCodeUrl} download="QR_Onboarding.png" target="_blank" rel="noreferrer" className="qr-download">
-                <Download size={12} /> Descargar QR
-              </a>
-            </div>
+            <img src={qrCodeUrl} alt="QR" style={{ width: '64px', height: '64px' }} />
           </div>
         </div>
 
-        {errorMsg && (
-          <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '16px', borderRadius: '8px', marginBottom: '24px' }}>
-            <h3 style={{ fontWeight: 'bold', margin: '0 0 8px' }}>Error al conectar con Supabase:</h3>
-            <p style={{ margin: 0 }}>{errorMsg}</p>
-            <p style={{ fontSize: '13px', marginTop: '8px' }}>Verifica si corriste el script <code>setup_onboarding.sql</code> en el dashboard de Supabase y si las políticas de lectura (RLS) permiten acceso público.</p>
+        <div className="tabs-nav">
+          <button className={`tab-btn ${activeTab === 'seleccion' ? 'active' : ''}`} onClick={() => setActiveTab('seleccion')}>Inbox</button>
+          <button className={`tab-btn ${activeTab === 'ranking' ? 'active' : ''}`} onClick={() => setActiveTab('ranking')}>🏆 Ranking IA</button>
+          <button className={`tab-btn ${activeTab === 'pipeline' ? 'active' : ''}`} onClick={() => { setActiveTab('pipeline'); fetchPipeline() }}>📑 Resumen</button>
+          <button className={`tab-btn ${activeTab === 'onboarding' ? 'active' : ''}`} onClick={() => setActiveTab('onboarding')}>🚀 Onboarding</button>
+          <button className={`tab-btn ${activeTab === 'estadisticas' ? 'active' : ''}`} onClick={() => setActiveTab('estadisticas')}>📈 Estadísticas</button>
+        </div>
+
+        {/* --- BANDEJA --- */}
+        {activeTab === 'seleccion' && (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginBottom: '16px' }}>
+              <button onClick={() => setShowSettings(true)} style={{ background: 'white', border: '1px solid #ddd', padding: '8px', borderRadius: '6px' }}><Settings size={16}/></button>
+              <button onClick={handleScanEmails} disabled={scanning} className="ai-btn" style={{ background: '#3b82f6' }}><RefreshCw size={16} className={scanning ? "animate-spin" : ""}/> {scanning ? 'Escaneando...' : 'Buscar Nuevos Correos'}</button>
+            </div>
+            <div style={{ 
+              display: 'flex', 
+              gap: '12px', 
+              marginBottom: '20px', 
+              background: 'white', 
+              padding: '16px', 
+              borderRadius: '12px', 
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+              flexWrap: 'wrap',
+              alignItems: 'center'
+            }}>
+              <div style={{ flex: 1, minWidth: '200px' }}>
+                <label className="form-label">Buscar por nombre</label>
+                <div className="filter-input" style={{ background: '#f8fafc', marginTop: '4px' }}>
+                  <User size={18} color="#6b7280" />
+                  <input 
+                    type="text" 
+                    placeholder="Ej: Daniel Molina..." 
+                    value={inboxSearch}
+                    onChange={(e) => setInboxSearch(e.target.value)}
+                    style={{ background: 'transparent' }}
+                  />
+                </div>
+              </div>
+              <div style={{ width: '180px' }}>
+                <label className="form-label">Cargo</label>
+                <div className="filter-input" style={{ background: '#f8fafc', marginTop: '4px' }}>
+                  <Briefcase size={18} color="#6b7280" />
+                  <input 
+                    type="text" 
+                    placeholder="Ej: Cajero..." 
+                    value={inboxCargo}
+                    onChange={(e) => setInboxCargo(e.target.value)}
+                    style={{ background: 'transparent' }}
+                  />
+                </div>
+              </div>
+              <div style={{ width: '150px' }}>
+                <label className="form-label">Ciudad</label>
+                <div className="filter-input" style={{ background: '#f8fafc', marginTop: '4px' }}>
+                  <MapPin size={18} color="#6b7280" />
+                  <input 
+                    type="text" 
+                    placeholder="Ej: Quito..." 
+                    value={inboxCity}
+                    onChange={(e) => setInboxCity(e.target.value)}
+                    style={{ background: 'transparent' }}
+                  />
+                </div>
+              </div>
+              <div style={{ width: '100px' }}>
+                <label className="form-label">Min. Años</label>
+                <div className="filter-input" style={{ background: '#f8fafc', marginTop: '4px' }}>
+                  <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: 'bold' }}>+</span>
+                  <input 
+                    type="number" 
+                    placeholder="Exp" 
+                    value={inboxExp}
+                    onChange={(e) => setInboxExp(e.target.value)}
+                    style={{ background: 'transparent' }}
+                  />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
+                <button 
+                  className="track-btn" 
+                  onClick={() => { setInboxSearch(''); setInboxCargo(''); setInboxCity(''); setInboxExp(''); }}
+                >
+                  Limpiar
+                </button>
+                <button 
+                  className="track-btn" 
+                  style={{ background: '#f8fafc', color: '#2563eb', borderColor: '#dbeafe' }}
+                  onClick={() => fetchResumes()}
+                  disabled={loadingResumes}
+                >
+                  {loadingResumes ? 'Cargando...' : 'Actualizar'}
+                </button>
+              </div>
+            </div>
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr><th>Perfil IA</th><th>Archivo CV</th><th>Fecha</th><th>Estado</th></tr>
+                </thead>
+                <tbody>
+                  {resumes
+                    .filter(r => {
+                      const matchesSearch = !inboxSearch || (r.sender_name || '').toLowerCase().includes(inboxSearch.toLowerCase());
+                      const matchesCargo = !inboxCargo || (r.position || '').toLowerCase().includes(inboxCargo.toLowerCase());
+                      const matchesCity = !inboxCity || (r.city || '').toLowerCase().includes(inboxCity.toLowerCase());
+                      const matchesExp = !inboxExp || (parseInt(r.experience_years || '0') >= parseInt(inboxExp));
+                      return matchesSearch && matchesCargo && matchesCity && matchesExp;
+                    })
+                    .map(r => (
+                    <tr key={r.id}>
+                      <td>
+                        <div className="user-cell" style={{ alignItems: 'flex-start' }}>
+                          <div className="user-avatar" style={{ 
+                            background: r.email_uid?.startsWith('WEB') ? '#eff6ff' : (r.classification_status === 'REVIEWED' ? '#f0fdf4' : '#f3e8ff'), 
+                            color: r.email_uid?.startsWith('WEB') ? '#3b82f6' : (r.classification_status === 'REVIEWED' ? '#16a34a' : '#9333ea') 
+                          }}>
+                            {r.email_uid?.startsWith('WEB') ? <UploadCloud size={20} /> : (r.classification_status === 'REVIEWED' ? <Brain size={20} /> : <Mail size={20} />)}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <p className="user-name" style={{ margin: 0 }}>{r.sender_name || 'Sin Nombre'}</p>
+                              <span style={{ 
+                                fontSize: '10px', 
+                                padding: '2px 6px', 
+                                borderRadius: '4px', 
+                                background: r.email_uid?.startsWith('WEB') ? '#dbeafe' : '#f1f5f9',
+                                color: r.email_uid?.startsWith('WEB') ? '#1e40af' : '#475569',
+                                fontWeight: 'bold'
+                              }}>
+                                {r.email_uid?.startsWith('WEB') ? 'WEB' : 'EMAIL'}
+                              </span>
+                            </div>
+                            <p style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>{r.sender_email}</p>
+                            
+                            {/* Mostramos los datos si está REVISADO o si ya tiene cargo extraído */}
+                            {(r.classification_status === 'REVIEWED' || r.position) ? (
+                              <div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                                  {r.city && <span className="ai-tag"><MapPin size={12} /> {r.city}</span>}
+                                  {r.position && <span className="ai-tag"><Briefcase size={12} /> {r.position}</span>}
+                                  {r.experience_years && <span className="ai-tag" style={{ background: '#fef9c3', color: '#854d0e' }}>⏱ {r.experience_years} años</span>}
+                                  {r.skills && r.skills.split(',').map((s: string, i: number) => i < 3 && <span key={i} className="ai-tag" style={{ background: '#f0fdf4', color: '#166534' }}>{s.trim()}</span>)}
+                                </div>
+                                {r.ai_summary && (
+                                  <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '6px', fontSize: '12px', fontStyle: 'italic', color: '#475569', borderLeft: '3px solid #cbd5e1' }}>
+                                    "{r.ai_summary}"
+                                  </div>
+                                )}
+                                {/* Botón de IA extra por si quieren profundizar aunque ya tengan datos básicos */}
+                                {r.classification_status !== 'REVIEWED' && (
+                                  <button className="ai-btn" style={{ marginTop: '8px', background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }} onClick={() => handleAnalyzeResume(r.id)} disabled={analyzingId === r.id}>
+                                    {analyzingId === r.id ? 'Analizando...' : 'Profundizar con IA'}
+                                  </button>
+                                )}
+                              </div>
+                            ) : <button className="ai-btn" onClick={() => handleAnalyzeResume(r.id)} disabled={analyzingId === r.id}>{analyzingId === r.id ? 'Analizando...' : 'Analizar con IA'}</button>}
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        {r.pdf_url && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <a href={r.pdf_url} target="_blank" className="pdf-link" style={{ fontWeight: 600 }}>
+                              <FileText size={16} /> Ver CV
+                            </a>
+                            <span style={{ fontSize: '10px', color: '#64748b', wordBreak: 'break-all', maxWidth: '150px' }}>
+                              {r.file_name}
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                      <td style={{ fontSize: '13px' }}>{r.received_date ? new Date(r.received_date).toLocaleDateString() : '—'}</td>
+                      <td>
+                        <span className={`status-badge ${r.classification_status === 'REVIEWED' ? 'status-synced' : 'status-pending'}`}>
+                          {r.classification_status === 'REVIEWED' ? 'REVISADO' : 'PENDIENTE'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {/* --- RANKING IA --- */}
+        {activeTab === 'ranking' && (
+          <div className="ranking-layout">
+            <div className="ranking-form-card">
+              <p style={{ fontWeight: 700, margin: '0 0 16px' }}><Trophy size={18} color="#7c3aed" /> Evaluación por Cargo</p>
+              <label className="ranking-label">Seleccionar Cargo</label>
+              <select className="ranking-select" value={editingPositionId || ''} onChange={e => {
+                const p = jobPositions.find(pos => pos.id === e.target.value);
+                if (p) handleLoadPosition(p);
+                else { setEditingPositionId(null); setRankingCargo(''); setRankingFunciones(''); }
+              }}>
+                <option value="">Seleccionar...</option>
+                {jobPositions.map(p => <option key={p.id} value={p.id}>{p.cargo} {p.ciudad ? `· ${p.ciudad}` : ''}</option>)}
+              </select>
+              <button onClick={() => setShowJobMaintenance(true)} style={{ width: '100%', padding: '8px', background: '#f3f4f6', border: 'none', borderRadius: '8px', marginBottom: '12px' }}>⚙️ Ajustar Perfil</button>
+              <button className="ranking-btn-primary" onClick={handleRankCandidates} disabled={rankingLoading}><Brain size={16} /> {rankingLoading ? 'Evaluando...' : 'Evaluar con IA'}</button>
+            </div>
+            <div>
+              {rankingResults && rankingResults.length > 0 && (
+                <div className="table-container">
+                  <table>
+                    <thead>
+                      <tr><th>#</th><th>Candidato</th><th>Ciudad</th><th>Puntaje</th><th>CV</th><th style={{ textAlign: 'right' }}>Acción</th></tr>
+                    </thead>
+                    <tbody>
+                      {rankingResults.map((r, idx) => {
+                        const status = trackingMap[r.id]?.status || 'PENDIENTE';
+                        const isUpd = trackingUpdating === r.id;
+                        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : null;
+                        const scoreColor = r.score >= 85 ? 'linear-gradient(90deg, #10b981, #22c55e)' : r.score >= 60 ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' : 'linear-gradient(90deg, #ef4444, #f87171)';
+                        
+                        return (
+                          <tr key={`${r.id}-${idx}`} className="rank-row">
+                            <td className="rank-number">
+                              {medal ? <span className="medal-badge">{medal}</span> : idx + 1}
+                            </td>
+                            <td>
+                              <div className="user-cell" style={{ alignItems: 'flex-start' }}>
+                                <div className="user-avatar" style={{ background: '#f3e8ff', color: '#9333ea', width: '36px', height: '36px' }}><User size={18}/></div>
+                                <div>
+                                  <p style={{ fontWeight: 700, margin: '0 0 2px', fontSize: '15px', color: '#1e293b' }}>{r.name || r.sender_name || 'Sin Nombre'}</p>
+                                  <p className="justification-text" style={{ fontSize: '12px', lineHeight: '1.4', color: '#64748b' }}>{r.justification}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
+                              <MapPin size={12} style={{ marginRight: '4px' }} /> {r.city}
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div className="score-bar-wrap">
+                                  <div className="score-bar-fill" style={{ width: `${r.score}%`, background: scoreColor }} />
+                                </div>
+                                <span style={{ fontWeight: 800, fontSize: '15px', color: '#1e293b' }}>{r.score}</span>
+                              </div>
+                            </td>
+                            <td>{r.pdf_url && <a href={r.pdf_url} target="_blank" className="pdf-link" style={{ fontWeight: 600 }}><FileText size={16}/> CV</a>}</td>
+                            <td style={{ textAlign: 'right' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
+                                {status === 'PENDIENTE' ? (
+                                  <button className="ai-btn-accept" onClick={() => updateTracking(r.id, 'MENSAJE_ENVIADO')} disabled={isUpd}>
+                                    {isUpd ? '...' : 'Aceptar Candidato'}
+                                  </button>
+                                ) : (
+                                  <>
+                                    <span className="pipeline-badge" style={{ background: '#dcfce7', color: '#166534', border: '1px solid #bbf7d0', marginBottom: '4px' }}>
+                                      ✅ SELECCIONADO
+                                    </span>
+                                    
+                                    {/* Panel de Seguimiento Completo */}
+                                    {r.sender_phone && status === 'MENSAJE_ENVIADO' && (
+                                      <a 
+                                        href={`https://wa.me/${r.sender_phone.replace(/\D/g, '').replace(/^0/, '593')}?text=${encodeURIComponent('Estimado candidato, hemos recibido su CV para el cargo de ' + rankingCargo + ', ¿podemos agendar una reunión para la entrevista?')}`} 
+                                        target="_blank" 
+                                        className="wa-link"
+                                      >
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" style={{ width: '14px' }} /> Reenviar WA
+                                      </a>
+                                    )}
+                                    
+                                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                      {status === 'MENSAJE_ENVIADO' && (
+                                        <button className="track-btn" onClick={() => setInterviewModal({ id: r.id, name: r.sender_name, resumeId: r.id, cargo: rankingCargo })}>📅 Citar</button>
+                                      )}
+                                      <button className="track-btn" style={{ color: '#94a3b8' }} onClick={() => updateTracking(r.id, 'PENDIENTE')}>↺ Reiniciar</button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        <div className="tabs-nav">
-          {/* 1. Bandeja de Hojas de Vida */}
-          <button className={`tab-btn ${activeTab === 'seleccion' ? 'active' : ''}`} onClick={() => setActiveTab('seleccion')}>
-            📥 Bandeja de Hojas de Vida
-          </button>
-          {/* 2. Selección por Cargo IA */}
-          <button
-            className={`tab-btn ${activeTab === 'ranking' ? 'active' : ''}`}
-            onClick={() => setActiveTab('ranking')}
-            style={{ color: activeTab === 'ranking' ? '#7c3aed' : undefined, borderBottomColor: activeTab === 'ranking' ? '#7c3aed' : undefined }}
-          >
-            🏆 Selección por Cargo (IA)
-          </button>
-          {/* 3. Resumen de Candidatos (pipeline) */}
-          <button
-            className={`tab-btn ${activeTab === 'pipeline' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('pipeline'); fetchPipeline() }}
-            style={{ color: activeTab === 'pipeline' ? '#059669' : undefined, borderBottomColor: activeTab === 'pipeline' ? '#059669' : undefined }}
-          >
-            📋 Resumen de Candidatos
-            {pipelineData.length > 0 && (
-              <span style={{ marginLeft: '6px', background: '#059669', color: 'white', fontSize: '10px', fontWeight: 700, borderRadius: '9999px', padding: '1px 6px' }}>
-                {pipelineData.length}
-              </span>
-            )}
-          </button>
-          {/* 4. Formularios de Ingreso */}
-          <button className={`tab-btn ${activeTab === 'onboarding' ? 'active' : ''}`} onClick={() => setActiveTab('onboarding')}>
-            📝 Formularios de Ingreso (Onboarding)
-          </button>
-        </div>
+        {/* --- ESTADÍSTICAS --- */}
+        {activeTab === 'estadisticas' && (
+          <div style={{ padding: '20px' }}>
+            <h2 style={{ marginBottom: '24px', fontSize: '24px', fontWeight: 800, color: '#002f6c' }}>Panel de Estadísticas</h2>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+              
+              {/* SECCIÓN PIPELINE */}
+              <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ marginTop: 0, borderBottom: '2px solid #f1f5f9', paddingBottom: '12px', color: '#1e293b' }}>Resumen / Pipeline</h3>
+                <div style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#64748b' }}>📅 Entrevistas Agendadas</span>
+                    <strong style={{ fontSize: '18px', color: '#2563eb' }}>{pipelineData.filter(p => p.status === 'ENTREVISTA_PROGRAMADA').length}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#64748b' }}>✅ Entrevistas Aprobadas</span>
+                    <strong style={{ fontSize: '18px', color: '#10b981' }}>{pipelineData.filter(p => p.status === 'ENTREVISTA_APROBADA').length}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#64748b' }}>❌ Entrevistas Rechazadas</span>
+                    <strong style={{ fontSize: '18px', color: '#ef4444' }}>{pipelineData.filter(p => p.status === 'ENTREVISTA_RECHAZADA').length}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#64748b' }}>✉️ Contactados (Mail/WA)</span>
+                    <strong style={{ fontSize: '18px', color: '#8b5cf6' }}>{pipelineData.filter(p => p.status !== 'PENDIENTE').length}</strong>
+                  </div>
+                </div>
+              </div>
 
+              {/* SECCIÓN ONBOARDING */}
+              <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ marginTop: 0, borderBottom: '2px solid #f1f5f9', paddingBottom: '12px', color: '#1e293b' }}>Proceso Onboarding</h3>
+                <div style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#64748b' }}>📝 Onboarding Completados</span>
+                    <strong style={{ fontSize: '18px', color: '#7c3aed' }}>{candidates.filter(c => c.status === 'LLENADO').length}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#64748b' }}>⚠️ Rechazados / En Revisión</span>
+                    <strong style={{ fontSize: '18px', color: '#f59e0b' }}>{candidates.filter(c => c.observaciones || (c.datos_personales && c.datos_personales.observation_fallback)).length}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#64748b' }}>🏦 Data de Nómina (Simulada)</span>
+                    <strong style={{ fontSize: '18px', color: '#06b6d4' }}>0</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#64748b' }}>🚀 Sincronizados Oracle</span>
+                    <strong style={{ fontSize: '18px', color: '#002f6c' }}>{candidates.filter(c => c.status === 'SYNCED').length}</strong>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <div style={{ marginTop: '32px', background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px dashed #cbd5e1' }}>
+              <h4 style={{ margin: '0 0 8px', color: '#475569' }}>Total Candidatos en el Sistema</h4>
+              <p style={{ margin: 0, fontSize: '32px', fontWeight: 900, color: '#0f172a' }}>{resumes.length + candidates.length}</p>
+            </div>
+          </div>
+        )}
+
+        {/* --- PIPELINE / RESUMEN --- */}
+        {activeTab === 'pipeline' && (
+          <div style={{ display: 'grid', gap: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="filter-bar" style={{ margin: 0, flex: 1 }}>
+                <div className="filter-input">
+                  <Briefcase size={18} color="#94a3b8" />
+                  <input placeholder="Filtrar por cargo..." value={pipelineCargoFilter} onChange={e => setPipelineCargoFilter(e.target.value)} />
+                </div>
+                <select 
+                  value={pipelineFilter} 
+                  onChange={e => setPipelineFilter(e.target.value)}
+                  style={{ border: 'none', background: 'none', fontWeight: 700, color: '#475569', cursor: 'pointer', outline: 'none' }}
+                >
+                  <option value="ALL">Todos los estados</option>
+                  <option value="PENDIENTE">⏳ Pendientes</option>
+                  <option value="MENSAJE_ENVIADO">📨 Mensaje Enviado</option>
+                  <option value="ENTREVISTA_PROGRAMADA">📅 Citados</option>
+                  <option value="ENTREVISTA_APROBADA">✅ Aprobados</option>
+                  <option value="RECHAZADO">❌ Rechazados</option>
+                </select>
+              </div>
+              <button 
+                onClick={() => setShowCalendarModal(true)} 
+                className="ranking-btn-primary" 
+                style={{ width: 'auto', padding: '10px 20px', marginLeft: '20px' }}
+              >
+                📅 Ver Mi Agenda
+              </button>
+            </div>
+
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Candidato</th>
+                    <th>Cargo</th>
+                    <th>Teléfono / WhatsApp</th>
+                    <th>Estado</th>
+                    <th>Entrevista</th>
+                    <th style={{ textAlign: 'right' }}>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pipelineData.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+                        No hay candidatos en el resumen actualmente.
+                      </td>
+                    </tr>
+                  ) : (
+                    pipelineData
+                      .filter(p => pipelineFilter === 'ALL' || p.status === pipelineFilter)
+                      .filter(p => !pipelineCargoFilter || p.cargo.toLowerCase().includes(pipelineCargoFilter.toLowerCase()))
+                      .map(p => (
+                      <tr key={p.id}>
+                        <td>
+                          <p style={{ fontWeight: 700, margin: 0, color: '#1e293b' }}>{p.candidate?.sender_name || 'Candidato'}</p>
+                          <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>{p.candidate?.sender_email || '—'}</p>
+                        </td>
+                        <td style={{ fontWeight: 600, color: '#475569' }}>{p.cargo}</td>
+                        <td>
+                          {p.candidate?.sender_phone ? (
+                            <a 
+                              href={p.status === 'PENDIENTE' ? '#' : `https://wa.me/${p.candidate.sender_phone.replace(/\D/g, '').replace(/^0/, '593')}?text=${encodeURIComponent(
+                                p.status === 'ENTREVISTA_PROGRAMADA' 
+                                ? `Estimad@ candidat@, nos complace informarte que has pasado la primera etapa de nuestro proceso de selección para Superdeporte S.A. Para la siguiente fase, deberás asistir a una entrevista presencial y/o virtual.\n\nTe enviamos los detalles para que puedas asistir:\n📅Fecha: ${p.interview_date ? new Date(p.interview_date.split(' ')[0] + 'T12:00:00').toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long' }) : '—'}\n⏰Hora: ${p.interview_date?.split(' ')[1] || '09:00'}\n📍Lugar: Av Galo Plaza Lasso 13205 de los Ceresos.`
+                                : `Hola ${p.candidate.sender_name || 'Candidato'}, te saludamos de RRHH de Superdeporte S.A. Estamos revisando tu perfil para el cargo de ${p.cargo} y nos gustaría agendar una entrevista.`
+                              )}`} 
+                              onClick={(e) => p.status === 'PENDIENTE' && e.preventDefault()}
+                              target={p.status === 'PENDIENTE' ? undefined : "_blank"} 
+                              className="wa-link"
+                              style={{ 
+                                opacity: p.status === 'PENDIENTE' ? 0.5 : 1, 
+                                cursor: p.status === 'PENDIENTE' ? 'not-allowed' : 'pointer',
+                                filter: p.status === 'PENDIENTE' ? 'grayscale(1)' : 'none'
+                              }}
+                            >
+                              <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" style={{ width: '16px' }} /> {p.candidate.sender_phone}
+                            </a>
+                          ) : (
+                            <button 
+                              disabled={p.status === 'PENDIENTE'}
+                              onClick={() => handleSendContactEmail(p.candidate?.sender_email, p.candidate?.sender_name, p.cargo, p.interview_date, p.notes)}
+                              className="track-btn"
+                              style={{ 
+                                fontSize: '11px', 
+                                padding: '4px 8px', 
+                                color: p.status === 'PENDIENTE' ? '#94a3b8' : '#2563eb', 
+                                borderColor: p.status === 'PENDIENTE' ? '#e2e8f0' : '#dbeafe',
+                                cursor: p.status === 'PENDIENTE' ? 'not-allowed' : 'pointer'
+                              }}
+                            >
+                              <Mail size={12} /> {p.status === 'ENTREVISTA_PROGRAMADA' ? 'Enviar Citación' : 'Enviar Email'}
+                            </button>
+                          )}
+                        </td>
+                        <td>
+                          <span className="pipeline-badge" style={{ background: '#dbeafe', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
+                            {p.status || 'PENDIENTE'}
+                          </span>
+                        </td>
+                        <td style={{ fontSize: '13px', fontWeight: 500, color: '#475569' }}>
+                          {p.interview_date ? <span>📅 {new Date(p.interview_date.split(' ')[0] + 'T12:00:00').toLocaleDateString()}</span> : '—'}
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                            {/* Botón Citar (si ya fue aceptado o mensaje enviado) */}
+                            {(p.status === 'PENDIENTE' || p.status === 'MENSAJE_ENVIADO') && (
+                              <button className="track-btn" onClick={() => setInterviewModal({ id: p.id, name: p.candidate?.sender_name, resumeId: p.resume_id, cargo: p.cargo })}>
+                                📅 Citar
+                              </button>
+                            )}
+  
+                            {/* Botón Aprobar / Rechazar (si ya tiene entrevista) */}
+                            {p.status === 'ENTREVISTA_PROGRAMADA' && (
+                              <div style={{ display: 'flex', gap: '4px' }}>
+                                <button className="track-btn" style={{ color: '#10b981', borderColor: '#bbf7d0' }} onClick={() => updatePipelineStatus(p.id, p.resume_id, p.cargo, 'ENTREVISTA_APROBADA')}>
+                                  🌟 Aprobar
+                                </button>
+                                <button className="track-btn" style={{ color: '#ef4444', borderColor: '#fecaca' }} onClick={() => updatePipelineStatus(p.id, p.resume_id, p.cargo, 'RECHAZADO')}>
+                                  ❌ Rechazar
+                                </button>
+                              </div>
+                            )}
+  
+                            {/* Estados Finales */}
+                            {p.status === 'ENTREVISTA_APROBADA' && (
+                              <span className="pipeline-badge" style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0' }}>✅ APROBADO</span>
+                            )}
+                            {p.status === 'RECHAZADO' && (
+                              <span className="pipeline-badge" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>❌ RECHAZADO</span>
+                            )}
+  
+                            {/* Botón Reiniciar siempre disponible */}
+                            <button 
+                              className="track-btn" 
+                              style={{ color: '#94a3b8', padding: '6px' }} 
+                              onClick={() => updatePipelineStatus(p.id, p.resume_id, p.cargo, 'PENDIENTE')}
+                              title="Reiniciar a Pendiente"
+                            >
+                              ↺
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {showCalendarModal && (
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+            <div style={{ background: '#f8fafc', padding: '32px', borderRadius: '24px', width: '90%', maxWidth: '1200px', maxHeight: '90vh', overflow: 'auto', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 800 }}>Mi Agenda de Entrevistas</h2>
+                  <p style={{ margin: '4px 0 0', color: '#64748b' }}>Planifica tus actividades de selección</p>
+                </div>
+                <button onClick={() => setShowCalendarModal(false)} className="track-btn" style={{ padding: '10px' }}><X /></button>
+              </div>
+              
+              <div className="calendar-grid">
+                {(() => {
+                  const today = new Date();
+                  const dayOfWeek = today.getDay(); // 0 (Dom) a 6 (Sab)
+                  const startOfWeek = new Date(today);
+                  startOfWeek.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)); // Empezar en Lunes
+
+                  const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+                  
+                  return days.map((dayName, index) => {
+                    const currentDate = new Date(startOfWeek);
+                    currentDate.setDate(startOfWeek.getDate() + index);
+                    const dateStr = currentDate.toISOString().split('T')[0];
+                    const isToday = today.toISOString().split('T')[0] === dateStr;
+                    
+                    const dayEvents = pipelineData.filter(p => p.status === 'ENTREVISTA_PROGRAMADA' && p.interview_date && p.interview_date.startsWith(dateStr));
+                    
+                    return (
+                      <div key={dayName} className={`calendar-day ${isToday ? 'today' : ''}`} style={{ minHeight: '200px' }}>
+                        <div className="calendar-date">
+                          <span>{dayName}</span>
+                          <span style={{ background: isToday ? '#2563eb' : 'transparent', color: isToday ? 'white' : 'inherit', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}>
+                            {currentDate.getDate()}
+                          </span>
+                        </div>
+                        <div style={{ overflowY: 'auto' }}>
+                          {dayEvents.length === 0 ? (
+                            <div style={{ textAlign: 'center', marginTop: '40px', opacity: 0.3 }}>
+                              <div style={{ fontSize: '20px', marginBottom: '8px' }}>🕒</div>
+                              <p style={{ fontSize: '10px' }}>Libre</p>
+                            </div>
+                          ) : (
+                            dayEvents.map(ev => (
+                              <div key={ev.id} className="event-card" style={{ cursor: 'pointer' }}>
+                                <div className="event-time">{ev.interview_date?.split(' ')[1] || '09:00'}</div>
+                                <div className="event-title">{ev.candidate?.sender_name || 'Candidato'}</div>
+                                <div style={{ fontSize: '9px', color: '#64748b', marginTop: '2px' }}>{ev.cargo}</div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- ONBOARDING --- */}
         {activeTab === 'onboarding' && (
-          <>
-            {loading ? (
-              <p style={{ color: '#6b7280', textAlign: 'center', padding: '40px' }}>Cargando candidatos...</p>
-            ) : (
           <div className="table-container">
             <table>
               <thead>
-                <tr>
-                  <th>Candidato</th>
-                  <th>Cédula</th>
-                  <th>Cargas Familiares</th>
-                  <th>Documentos</th>
-                  <th>Estado Oracle</th>
-                  <th style={{ textAlign: 'right' }}>Acciones</th>
-                </tr>
+                <tr><th>Candidato</th><th>Cargo</th><th>Cédula</th><th>Estado Onboarding</th><th>Acciones</th></tr>
               </thead>
               <tbody>
-                {candidates.map((c) => (
+                {candidates.map(c => (
                   <tr key={c.id}>
                     <td>
                       <div className="user-cell">
                         <div className="user-avatar"><User size={20} /></div>
                         <div>
                           <p className="user-name">{c.nombres} {c.apellidos}</p>
-                          <p className="user-email">{c.email} • {c.telefono}</p>
+                          <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>{c.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td style={{ fontSize: '14px', color: '#4b5563' }}>{c.cedula}</td>
-                    <td style={{ fontSize: '14px', color: '#4b5563' }}>
-                      {c.cargas_familiares?.conyuge ? '1 Cónyuge, ' : ''}
-                      {c.cargas_familiares?.hijos?.length || 0} Hijos
-                    </td>
+                    <td style={{ color: '#475569', fontWeight: 600 }}>{c.cargo}</td>
+                    <td>{c.cedula?.startsWith('PENDIENTE') ? <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Por completar</span> : <strong>{c.cedula}</strong>}</td>
                     <td>
-                      {c.documento_pdf_url && (
-                        <a href={c.documento_pdf_url} target="_blank" rel="noreferrer" className="pdf-link">
-                          <FileText size={16} /> Ver PDF
-                        </a>
-                      )}
+                      <span className="pipeline-badge" style={{ 
+                         background: c.status === 'SYNCED' ? '#f0fdf4' : c.status === 'LLENADO' ? '#f5f3ff' : '#eff6ff', 
+                         color: c.status === 'SYNCED' ? '#166534' : c.status === 'LLENADO' ? '#5b21b6' : '#1e40af',
+                         border: '1px solid currentColor',
+                         opacity: 0.8
+                       }}>
+                         {c.status === 'LLENADO' ? '📝 LLENADO' : c.status === 'SYNCED' ? '✅ SINCRONIZADO' : '⏳ PENDIENTE'}
+                       </span>
+                       {c.observaciones && <p style={{ fontSize: '10px', color: '#ef4444', margin: '4px 0 0' }}>⚠️ {c.observaciones}</p>}
                     </td>
-                    <td>
-                      <span className={`status-badge ${c.status === 'SYNCED' ? 'status-synced' : 'status-pending'}`}>
-                        {c.status}
-                      </span>
-                    </td>
-                    <td style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'flex-end', justifyContent: 'center', height: '100%' }}>
-                      {c.status === 'PENDING' && (
-                        <>
-                          <button onClick={() => handleSyncToOracle(c.id)} className="action-btn">
-                            <CheckCircle2 size={16} /> Aprobar y Enviar a Oracle
-                          </button>
-                          <button onClick={() => handleDelete(c.id, c.cedula)} className="action-btn-danger">
-                            <Trash2 size={16} /> Eliminar
-                          </button>
-                        </>
-                      )}
+                    <td style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                        {c.status === 'LLENADO' && (
+                          <>
+                            <button onClick={() => setViewingOnboarding(c)} className="track-btn" style={{ color: '#3b82f6', borderColor: '#dbeafe' }}>👁️ Ver Expediente</button>
+                            <button onClick={() => alert('Ventana de Nómina próximamente...')} className="track-btn" style={{ color: '#8b5cf6', borderColor: '#ddd6fe' }}>🏦 Nómina</button>
+                            <button onClick={() => setRejectionModal({ id: c.id, email: c.email, name: `${c.nombres} ${c.apellidos}` })} className="track-btn" style={{ color: '#ef4444', borderColor: '#fecaca' }}>❌ Rechazar</button>
+                            <button onClick={() => handleSyncToOracle(c.id)} className="track-btn" style={{ color: '#002f6c', borderColor: '#002f6c' }}>🚀 Sincronizar</button>
+                          </>
+                        )}
+                        {c.status === 'SYNCED' && <span style={{ color: '#10b981', fontSize: '12px', fontWeight: 'bold' }}>Sincronizado</span>}
+                        {c.status === 'PENDING' && <span style={{ color: '#94a3b8', fontSize: '12px' }}>Esperando llenado</span>}
+                        <button onClick={() => handleDelete(c.id)} className="track-btn" style={{ color: '#64748b', padding: '6px' }} title="Eliminar registro"><Trash2 size={14} /></button>
+                      </div>
                     </td>
                   </tr>
                 ))}
-                {candidates.length === 0 && (
-                  <tr>
-                    <td colSpan={6} style={{ textAlign: 'center', color: '#6b7280', padding: '40px' }}>
-                      No hay candidatos registrados aún.
-                    </td>
-                  </tr>
-                )}
               </tbody>
             </table>
           </div>
-            )}
-          </>
         )}
 
-        {activeTab === 'seleccion' && (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <p style={{ color: '#6b7280', fontSize: '14px', margin: 0 }}>Hojas de vida extraídas desde el correo de Selección.</p>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button 
-                  onClick={() => setShowSettings(true)} 
-                  style={{ backgroundColor: 'white', color: '#4b5563', border: '1px solid #d1d5db', padding: '8px', borderRadius: '6px', cursor: 'pointer' }}
-                >
-                  <Settings size={16} />
-                </button>
-                <button 
-                  onClick={handleScanEmails} 
-                  disabled={scanning}
-                  style={{ backgroundColor: '#3b82f6', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', fontSize: '13px', cursor: scanning ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px', opacity: scanning ? 0.7 : 1 }}
-                >
-                  <RefreshCw size={16} className={scanning ? "animate-spin" : ""} /> 
-                  {scanning ? 'Escaneando Correo...' : 'Buscar Nuevos Correos'}
-                </button>
+        {/* MODAL VER EXPEDIENTE */}
+        {viewingOnboarding && (
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+            <div style={{ background: 'white', padding: '32px', borderRadius: '16px', width: '90%', maxWidth: '900px', maxHeight: '90vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
+                <h2 style={{ margin: 0 }}>Expediente de {viewingOnboarding.nombres} {viewingOnboarding.apellidos}</h2>
+                <button onClick={() => setViewingOnboarding(null)} className="track-btn"><X /></button>
               </div>
-            </div>
 
-            <div className="filter-bar">
-              <div className="filter-input">
-                <Briefcase size={18} color="#6b7280" />
-                <input 
-                  type="text" 
-                  placeholder="Filtrar por cargo (ej. Vendedor, Gerente)..." 
-                  value={filterPosition} 
-                  onChange={e => setFilterPosition(e.target.value)} 
-                />
-              </div>
-              <div className="filter-input">
-                <MapPin size={18} color="#6b7280" />
-                <input 
-                  type="text" 
-                  placeholder="Filtrar por ciudad (ej. Quito)..." 
-                  value={filterCity} 
-                  onChange={e => setFilterCity(e.target.value)} 
-                />
-              </div>
-            </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                <div>
+                  <h3 style={{ fontSize: '16px', color: '#002f6c', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>Datos Personales</h3>
+                  <div style={{ fontSize: '13px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '12px' }}>
+                    <p><strong>Cédula:</strong> {viewingOnboarding.cedula}</p>
+                    <p><strong>Email:</strong> {viewingOnboarding.email}</p>
+                    <p><strong>Nacionalidad:</strong> {viewingOnboarding.datos_personales?.nacionalidad}</p>
+                    <p><strong>Estado Civil:</strong> {viewingOnboarding.datos_personales?.estado_civil}</p>
+                    <p><strong>Ciudad Nac.:</strong> {viewingOnboarding.datos_personales?.ciudad_nacimiento}</p>
+                    <p><strong>Fecha Nac.:</strong> {viewingOnboarding.datos_personales?.fecha_nacimiento}</p>
+                    <p><strong>Ciudad Res.:</strong> {viewingOnboarding.datos_personales?.ciudad_residencia}</p>
+                    <p><strong>Teléfono:</strong> {viewingOnboarding.telefono}</p>
+                    <p style={{ gridColumn: '1 / -1' }}><strong>Dirección:</strong> {viewingOnboarding.datos_personales?.direccion}</p>
+                  </div>
 
-            {loadingResumes ? (
-              <p style={{ color: '#6b7280', textAlign: 'center', padding: '40px' }}>Cargando hojas de vida...</p>
-            ) : (
-              <div className="table-container">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Perfil IA</th>
-                      <th>Archivo CV</th>
-                      <th>Teléfono</th>
-                      <th>Fecha</th>
-                      <th>Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {resumes
-                      .filter(r => filterPosition ? (r.position || '').toLowerCase().includes(filterPosition.toLowerCase()) : true)
-                      .filter(r => filterCity ? (r.city || '').toLowerCase().includes(filterCity.toLowerCase()) : true)
-                      .sort((a, b) => {
-                        if (a.id === analyzingId) return -1
-                        if (b.id === analyzingId) return 1
-                        return 0
-                      })
-                      .map((r) => (
-                      <tr key={r.id}>
-                        <td style={{ width: '50%' }}>
-                          <div className="user-cell" style={{ alignItems: 'flex-start' }}>
-                            <div className="user-avatar" style={{ backgroundColor: r.classification_status === 'REVIEWED' ? '#f0fdf4' : '#f3e8ff', color: r.classification_status === 'REVIEWED' ? '#16a34a' : '#9333ea' }}>
-                              {r.classification_status === 'REVIEWED' ? <Brain size={20} /> : <Mail size={20} />}
-                            </div>
-                            <div style={{ flex: 1 }}>
-                              <p className="user-name">{r.sender_name || 'Sin Nombre'} <span style={{ color: '#9ca3af', fontWeight: 'normal', fontSize: '12px' }}>({r.sender_email})</span></p>
-                              <p className="user-email" style={{ marginBottom: '8px' }}>Asunto: {r.subject}</p>
-                              
-                              {r.classification_status === 'REVIEWED' ? (
-                                <div>
-                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
-                                    <span className="ai-tag city"><MapPin size={12} /> {r.city}</span>
-                                    <span className="ai-tag"><Briefcase size={12} /> {r.position}</span>
-                                    {r.experience_years && <span className="ai-tag" style={{ background: '#fef9c3', color: '#854d0e' }}>⏱ {r.experience_years}</span>}
-                                    {r.education_level && <span className="ai-tag" style={{ background: '#f0fdf4', color: '#166534' }}>🎓 {r.education_level}</span>}
-                                    {r.age && r.age !== 'No especificada' && <span className="ai-tag" style={{ background: '#ede9fe', color: '#6d28d9' }}>👤 {r.age}</span>}
-                                    {r.availability && <span className="ai-tag" style={{ background: '#fff7ed', color: '#c2410c' }}>📅 {r.availability}</span>}
-                                  </div>
-                                  {r.skills && <p style={{ fontSize: '12px', color: '#4b5563', margin: '4px 0' }}>🛠 <strong>Skills:</strong> {r.skills}</p>}
-                                  {r.languages && <p style={{ fontSize: '12px', color: '#4b5563', margin: '4px 0' }}>🌐 <strong>Idiomas:</strong> {r.languages}</p>}
-                                  <div className="ai-summary-box">"{r.ai_summary}"</div>
-                                </div>
-                              ) : (
-                                <button 
-                                  className="ai-btn" 
-                                  onClick={() => handleAnalyzeResume(r.id)}
-                                  disabled={analyzingId === r.id}
-                                >
-                                  <Brain size={14} /> {analyzingId === r.id ? 'Analizando (IA)...' : 'Analizar con IA'}
-                                </button>
-                              )}
-                            </div>
+                  <h3 style={{ fontSize: '16px', color: '#002f6c', borderBottom: '1px solid #eee', paddingBottom: '8px', marginTop: '24px' }}>Datos Bancarios</h3>
+                  <div style={{ fontSize: '13px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '12px' }}>
+                    <p><strong>Banco:</strong> {viewingOnboarding.datos_bancarios?.banco}</p>
+                    <p><strong>Tipo Cuenta:</strong> {viewingOnboarding.datos_bancarios?.tipo_cuenta}</p>
+                    <p style={{ gridColumn: '1 / -1' }}><strong>Número:</strong> {viewingOnboarding.datos_bancarios?.numero_cuenta}</p>
+                  </div>
+
+                  <h3 style={{ fontSize: '16px', color: '#002f6c', borderBottom: '1px solid #eee', paddingBottom: '8px', marginTop: '24px' }}>Cargas Familiares</h3>
+                  <div style={{ fontSize: '13px', display: 'grid', gap: '8px', marginTop: '12px' }}>
+                    {viewingOnboarding.cargas_familiares?.conyuge ? (
+                      <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '6px' }}>
+                        <p style={{ fontWeight: 700, margin: '0 0 4px', color: '#475569' }}>Cónyuge / Pareja</p>
+                        <p style={{ margin: 0 }}>{viewingOnboarding.cargas_familiares.conyuge.nombres} {viewingOnboarding.cargas_familiares.conyuge.apellidos}</p>
+                        <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#64748b' }}>Cédula: {viewingOnboarding.cargas_familiares.conyuge.cedula} | Nac: {viewingOnboarding.cargas_familiares.conyuge.fecha_nacimiento}</p>
+                      </div>
+                    ) : <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>Sin cónyuge declarado</p>}
+                    
+                    {viewingOnboarding.cargas_familiares?.hijos?.length > 0 ? (
+                      <div style={{ marginTop: '8px' }}>
+                        <p style={{ fontWeight: 700, margin: '0 0 6px', color: '#475569' }}>Hijos ({viewingOnboarding.cargas_familiares.hijos.length})</p>
+                        {viewingOnboarding.cargas_familiares.hijos.map((h: any, idx: number) => (
+                          <div key={idx} style={{ padding: '6px 0', borderBottom: '1px solid #f1f5f9' }}>
+                            <p style={{ margin: 0 }}>• {h.nombres} {h.apellidos}</p>
+                            <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>Cédula: {h.cedula} | Nac: {h.fecha_nacimiento}</p>
                           </div>
-                        </td>
-                        <td>
-                          {r.pdf_url && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                              <a href={r.pdf_url} target="_blank" rel="noreferrer" className="pdf-link">
-                                <FileText size={16} /> Ver CV
-                              </a>
-                              <span style={{ fontSize: '11px', color: '#9ca3af' }}>{r.file_name}</span>
-                            </div>
-                          )}
-                        </td>
-                        <td style={{ fontSize: '13px', color: '#374151', whiteSpace: 'nowrap' }}>
-                          {r.sender_phone
-                            ? <a
-                                href={`https://wa.me/${r.sender_phone.replace(/\D/g, '').replace(/^0/, '593')}?text=${encodeURIComponent('Estimado candidato, hemos recibido su CV, ¿podemos agendar una reunión para la entrevista?')}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                title="Enviar mensaje por WhatsApp"
-                                style={{ color: '#16a34a', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 600 }}
-                              >
-                                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/whatsapp.svg" alt="WhatsApp" style={{ width: '14px', height: '14px', filter: 'invert(34%) sepia(89%) saturate(500%) hue-rotate(90deg)' }} />
-                                {r.sender_phone}
-                              </a>
-                            : <span style={{ color: '#9ca3af', fontSize: '12px' }}>No registrado</span>
-                          }
-                        </td>
-                        <td style={{ fontSize: '13px', color: '#4b5563' }}>{new Date(r.received_date).toLocaleDateString()}</td>
-                        <td>
-                          <span className={`status-badge ${r.classification_status === 'REVIEWED' ? 'status-synced' : 'status-pending'}`}>
-                            {r.classification_status === 'REVIEWED' ? 'REVISADO' : 'PENDIENTE'}
-                          </span>
-                        </td>
-                      </tr>
+                        ))}
+                      </div>
+                    ) : <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>Sin hijos declarados</p>}
+                  </div>
+
+                  <h3 style={{ fontSize: '16px', color: '#002f6c', borderBottom: '1px solid #eee', paddingBottom: '8px', marginTop: '24px' }}>Estudios Académicos</h3>
+                  <div style={{ fontSize: '13px', display: 'grid', gap: '12px', marginTop: '12px' }}>
+                    {viewingOnboarding.estudios?.map((e: any, idx: number) => (
+                      <div key={idx} style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px' }}>
+                        <p style={{ fontWeight: 800, margin: '0 0 4px', color: '#1e293b' }}>{e.nivel}</p>
+                        <p style={{ fontWeight: 600, margin: 0 }}>{e.titulo}</p>
+                        <p style={{ margin: '2px 0', color: '#475569' }}>{e.institucion}</p>
+                        <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>{e.fecha_inicio} - {e.fecha_fin || 'Presente'}</p>
+                      </div>
                     ))}
-                    {resumes.length === 0 && (
-                      <tr>
-                        <td colSpan={5} style={{ textAlign: 'center', color: '#6b7280', padding: '40px' }}>
-                          Aún no se han escaneado correos. Haz clic en "Buscar Nuevos Correos".
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </>
-        )}
+                  </div>
+                </div>
 
-        {activeTab === 'ranking' && (
-          <div className="ranking-layout">
-
-            {/* ---- PANEL IZQUIERDO: FORMULARIO ---- */}
-            <div className="ranking-form-card">
-              <p className="ranking-form-title"><Trophy size={18} color="#7c3aed" /> Evaluación por Cargo</p>
-
-              <div style={{ marginBottom: '20px' }}>
-                <label className="ranking-label">Seleccionar cargo configurado</label>
-                <select
-                  className="ranking-select"
-                  value={jobPositions.find(p => p.cargo === rankingCargo)?.id || ''}
-                  onChange={e => {
-                    const pos = jobPositions.find((p: any) => p.id === e.target.value)
-                    if (pos) handleLoadPosition(pos)
-                  }}
-                  style={{ marginBottom: '10px', fontWeight: 600, border: '2px solid #ddd' }}
-                >
-                  <option value="">-- Selecciona un cargo --</option>
-                  {jobPositions.map((p: any) => (
-                    <option key={p.id} value={p.id}>{p.cargo} {p.ciudad ? `· ${p.ciudad}` : ''}</option>
-                  ))}
-                </select>
-                
-                <button
-                  onClick={() => setShowJobMaintenance(true)}
-                  style={{ width: '100%', padding: '8px', background: '#f3f4f6', border: '1px dashed #d1d5db', borderRadius: '8px', color: '#4b5563', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                >
-                  <Settings size={14} /> Mantenimiento de Cargos
-                </button>
+                <div>
+                  <h3 style={{ fontSize: '16px', color: '#002f6c', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>Documentos Adjuntos</h3>
+                  <div style={{ display: 'grid', gap: '8px', marginTop: '12px' }}>
+                    {viewingOnboarding.documentos && Object.entries(viewingOnboarding.documentos).map(([name, url]: [string, any]) => (
+                      <a key={name} href={url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: '#f8fafc', borderRadius: '6px', fontSize: '12px', color: '#3b82f6', textDecoration: 'none', border: '1px solid #e2e8f0' }}>
+                        <FileText size={14} /> {name}
+                      </a>
+                    ))}
+                  </div>
+                </div>
               </div>
 
-              {rankingCargo && (
-                <div style={{ background: '#f5f3ff', border: '1px solid #ddd6fe', padding: '12px', borderRadius: '8px', marginBottom: '20px' }}>
-                  <p style={{ margin: '0 0 4px', fontSize: '11px', fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase' }}>Perfil Activo</p>
-                  <p style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#1f2937' }}>{rankingCargo}</p>
-                  {rankingCiudad && <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#6b7280' }}>📍 {rankingCiudad}</p>}
-                </div>
-              )}
-
-              <button
-                id="btn-rank-candidates"
-                className="ranking-btn-primary"
-                onClick={handleRankCandidates}
-                disabled={rankingLoading}
-              >
-                <Brain size={16} />
-                {rankingLoading ? 'Evaluando candidatos...' : 'Evaluar con IA'}
-              </button>
-
-              {rankingError && (
-                <div style={{ marginTop: '14px', background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '12px', borderRadius: '8px', fontSize: '13px' }}>
-                  {rankingError}
-                </div>
-              )}
-
-              {rankingLoading && (
-                <div style={{ marginTop: '16px', textAlign: 'center', color: '#7c3aed', fontSize: '13px' }}>
-                  <RefreshCw size={16} style={{ display: 'inline', animation: 'spin 1s linear infinite', marginRight: '6px' }} />
-                  La IA está analizando todos los perfiles...
-                </div>
-              )}
-            </div>
-
-            {/* ---- PANEL DERECHO: RESULTADOS ---- */}
-            <div>
-              {rankingResults.length > 0 ? (
-                <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <div>
-                      <h2 style={{ margin: '0 0 4px', fontSize: '18px', fontWeight: '700' }}>Ranking de Candidatos</h2>
-                      <p style={{ margin: 0, color: '#6b7280', fontSize: '13px' }}>Cargo: <strong>{rankingCargo}</strong>{rankingCiudad ? ` · ${rankingCiudad}` : ''} · {rankingResults.length} candidatos evaluados</p>
-                    </div>
-                  </div>
-
-                  <div className="table-container">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th style={{ width: '48px', textAlign: 'center' }}>#</th>
-                          <th>Candidato</th>
-                          <th>Ciudad</th>
-                          <th>Perfil</th>
-                          <th>Puntaje</th>
-                          <th>Teléfono</th>
-                          <th>Estado / Seguimiento</th>
-                          <th>CV</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rankingResults.map((r, idx) => {
-                          const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}`
-                          const scoreColor = r.score >= 75 ? '#16a34a' : r.score >= 50 ? '#d97706' : '#dc2626'
-                          const barColor = r.score >= 75 ? '#22c55e' : r.score >= 50 ? '#f59e0b' : '#ef4444'
-                          const tracking = trackingMap[r.id]
-                          const tStatus = tracking?.status || 'PENDIENTE'
-                          const isUpdating = trackingUpdating === r.id
-                          const waHref = r.sender_phone
-                            ? `https://wa.me/${r.sender_phone.replace(/\D/g, '').replace(/^0/, '593')}?text=${encodeURIComponent('Estimado candidato, hemos recibido su CV, ¿podemos agendar una reunión para la entrevista?')}`
-                            : null
-                          return (
-                            <tr key={r.id} className="rank-row">
-                              <td className="rank-number">
-                                {idx < 3 ? <span className="medal-badge">{medal}</span> : <span>{medal}</span>}
-                              </td>
-                              <td>
-                                <div className="user-cell" style={{ alignItems: 'flex-start' }}>
-                                  <div className="user-avatar" style={{ background: '#f3e8ff', color: '#9333ea', flexShrink: 0 }}><User size={18}/></div>
-                                  <div>
-                                    <p className="user-name" style={{ marginBottom: '2px' }}>{r.sender_name || 'Sin nombre'}</p>
-                                    <p className="user-email">{r.sender_email}</p>
-                                    <p className="justification-text">{r.justification}</p>
-                                    {(tStatus === 'ENTREVISTA_PROGRAMADA' || tStatus === 'ENTREVISTA_CONFIRMADA' || tStatus === 'ENTREVISTA_APROBADA') && tracking?.interview_date && (
-                                      <p style={{ fontSize: '11px', color: '#d97706', fontWeight: 600, margin: '4px 0 0' }}>
-                                        📅 Entrevista: {new Date(tracking.interview_date + 'T12:00:00').toLocaleDateString()}
-                                        {tracking.notes && <span style={{ color: '#6b7280', fontWeight: 400 }}> · {tracking.notes}</span>}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              </td>
-                              <td style={{ fontSize: '13px', color: '#4b5563', whiteSpace: 'nowrap' }}>
-                                <MapPin size={12} style={{ marginRight: '4px', verticalAlign: 'middle' }} />{r.city || '—'}
-                              </td>
-                              <td>
-                                {r.position && <span className="ai-tag"><Briefcase size={11}/> {r.position}</span>}
-                                {r.experience_years && <span className="ai-tag" style={{ background: '#fef9c3', color: '#854d0e' }}>⏱ {r.experience_years}</span>}
-                              </td>
-                              <td style={{ whiteSpace: 'nowrap' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                  <div className="score-bar-wrap">
-                                    <div className="score-bar-fill" style={{ width: `${r.score}%`, background: barColor }} />
-                                  </div>
-                                  <span style={{ fontWeight: '700', fontSize: '14px', color: scoreColor }}>{r.score}</span>
-                                </div>
-                              </td>
-                              <td style={{ whiteSpace: 'nowrap' }}>
-                                {waHref
-                                  ? <a href={waHref} target="_blank" rel="noreferrer" className="wa-link">
-                                      <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/whatsapp.svg" alt="WA" style={{ width: '13px', height: '13px', filter: 'invert(34%) sepia(89%) saturate(500%) hue-rotate(90deg)' }} />
-                                      {r.sender_phone}
-                                    </a>
-                                  : <span style={{ color: '#9ca3af', fontSize: '11px' }}>Sin teléfono</span>
-                                }
-                              </td>
-                              <td style={{ minWidth: '200px' }}>
-                                {/* Badge de estado actual */}
-                                <div style={{ marginBottom: '8px' }}>
-                                  <span className={`pipeline-badge pipeline-${tStatus.toLowerCase().replace('_', '-')}`}>
-                                    {tStatus === 'PENDIENTE' && '⏳ Pendiente'}
-                                    {tStatus === 'MENSAJE_ENVIADO' && '💬 Mensaje enviado'}
-                                    {tStatus === 'ENTREVISTA_PROGRAMADA' && '📅 Entrevista programada'}
-                                    {tStatus === 'ENTREVISTA_CONFIRMADA' && '✅ Entrevista confirmada'}
-                                    {tStatus === 'ENTREVISTA_APROBADA' && '🌟 Entrevista aprobada'}
-                                    {tStatus === 'ENTREVISTA_RECHAZADA' && '❌ No aprobado'}
-                                    {tStatus === 'ONBOARDING' && '🚀 Onboarding'}
-                                  </span>
-                                </div>
-                                {/* Botones de acción según estado */}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                  {tStatus === 'PENDIENTE' && waHref && (
-                                    <a
-                                      href={waHref}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      onClick={() => updateTracking(r.id, 'MENSAJE_ENVIADO')}
-                                      className="track-btn track-btn-wa"
-                                      style={{ textDecoration: 'none' }}
-                                    >
-                                      <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/whatsapp.svg" alt="WA" style={{ width: '11px', height: '11px', filter: 'invert(34%) sepia(89%) saturate(500%) hue-rotate(90deg)' }} />
-                                      Enviar mensaje WA
-                                    </a>
-                                  )}
-                                  {(tStatus === 'PENDIENTE' || tStatus === 'MENSAJE_ENVIADO') && (
-                                    <button
-                                      className="track-btn track-btn-entrevista"
-                                      disabled={isUpdating}
-                                      onClick={() => { setInterviewModal({ id: r.id, name: r.sender_name || r.sender_email, resumeId: r.id, cargo: rankingCargo }); setInterviewDate(''); setInterviewNotes('') }}
-                                    >
-                                      📅 Programar entrevista
-                                    </button>
-                                  )}
-                                  {tStatus === 'ENTREVISTA_PROGRAMADA' && (
-                                    <button
-                                      className="track-btn track-btn-confirmar"
-                                      disabled={isUpdating}
-                                      onClick={() => updateTracking(r.id, 'ENTREVISTA_CONFIRMADA')}
-                                    >
-                                      ✅ Candidato confirmó asistencia
-                                    </button>
-                                  )}
-                                  {tStatus === 'ENTREVISTA_CONFIRMADA' && (
-                                    <>
-                                      <button
-                                        className="track-btn track-btn-aprobar"
-                                        disabled={isUpdating}
-                                        onClick={() => updateTracking(r.id, 'ENTREVISTA_APROBADA')}
-                                      >
-                                        🌟 Aprobó la entrevista
-                                      </button>
-                                      <button
-                                        className="track-btn track-btn-rechazar"
-                                        disabled={isUpdating}
-                                        onClick={() => updateTracking(r.id, 'ENTREVISTA_RECHAZADA')}
-                                      >
-                                        ❌ No aprobó la entrevista
-                                      </button>
-                                    </>
-                                  )}
-                                  {tStatus === 'ENTREVISTA_APROBADA' && (
-                                    <button
-                                      className="track-btn track-btn-onboarding"
-                                      disabled={isUpdating}
-                                      onClick={() => updateTracking(r.id, 'ONBOARDING')}
-                                    >
-                                      🚀 Pasar a Onboarding
-                                    </button>
-                                  )}
-                                  {tStatus !== 'PENDIENTE' && (
-                                    <button
-                                      className="track-btn"
-                                      style={{ color: '#9ca3af', borderColor: '#e5e7eb', fontSize: '10px' }}
-                                      disabled={isUpdating}
-                                      onClick={() => updateTracking(r.id, 'PENDIENTE', undefined, undefined)}
-                                    >
-                                      ↺ Reiniciar
-                                    </button>
-                                  )}
-                                </div>
-                              </td>
-                              <td>
-                                {r.pdf_url ? (
-                                  <a href={r.pdf_url} target="_blank" rel="noreferrer" className="pdf-link"><FileText size={15}/> Ver CV</a>
-                                ) : <span style={{ color: '#9ca3af', fontSize: '12px' }}>Sin CV</span>}
-                              </td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </>
-              ) : (
-                !rankingLoading && (
-                  <div style={{ textAlign: 'center', padding: '80px 40px', background: 'white', borderRadius: '12px', border: '1px dashed #d1d5db' }}>
-                    <Trophy size={48} color="#d1d5db" style={{ marginBottom: '16px' }} />
-                    <h3 style={{ color: '#9ca3af', margin: '0 0 8px', fontSize: '16px' }}>Sin resultados aún</h3>
-                    <p style={{ color: '#9ca3af', fontSize: '14px', margin: 0 }}>Completa el formulario y haz clic en <strong>"Evaluar con IA"</strong> para ver el ranking de candidatos.</p>
-                  </div>
-                )
-              )}
+              <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                <button onClick={() => { setRejectionModal({ id: viewingOnboarding.id, email: viewingOnboarding.email, name: `${viewingOnboarding.nombres} ${viewingOnboarding.apellidos}` }); setViewingOnboarding(null); }} className="track-btn" style={{ color: '#ef4444', borderColor: '#fecaca' }}>Rechazar con Observación</button>
+                <button onClick={() => handleSyncToOracle(viewingOnboarding.id)} className="track-btn" style={{ background: '#002f6c', color: 'white', border: 'none' }}>Aprobar y Sincronizar</button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* ==================== PIPELINE GLOBAL ==================== */}
-        {activeTab === 'pipeline' && (() => {
-          const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-            MENSAJE_ENVIADO:        { label: '💬 Mensaje enviado',        color: '#1d4ed8', bg: '#dbeafe' },
-            ENTREVISTA_PROGRAMADA:  { label: '📅 Entrevista programada',  color: '#92400e', bg: '#fef3c7' },
-            ENTREVISTA_CONFIRMADA:  { label: '✅ Entrevista confirmada',  color: '#0369a1', bg: '#e0f2fe' },
-            ENTREVISTA_APROBADA:    { label: '🌟 Aprobado',              color: '#166534', bg: '#dcfce7' },
-            ENTREVISTA_RECHAZADA:   { label: '❌ No aprobado',             color: '#991b1b', bg: '#fee2e2' },
-            ONBOARDING:             { label: '🚀 Onboarding',             color: '#5b21b6', bg: '#ede9fe' },
-          }
-          const allStatuses = Object.keys(STATUS_CONFIG)
-          const filtered = pipelineData
-            .filter(p => pipelineFilter === 'ALL' || p.status === pipelineFilter)
-            .filter(p => pipelineCargoFilter === '' || (p.cargo || '').toLowerCase().includes(pipelineCargoFilter.toLowerCase()))
-          const countByStatus = (s: string) => pipelineData.filter(p => p.status === s).length
-
-          return (
-            <>
-              {/* Contadores resumen */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px' }}>
-                {allStatuses.map(s => (
-                  <button
-                    key={s}
-                    onClick={() => setPipelineFilter(pipelineFilter === s ? 'ALL' : s)}
-                    style={{
-                      border: `2px solid ${pipelineFilter === s ? STATUS_CONFIG[s].color : '#e5e7eb'}`,
-                      background: pipelineFilter === s ? STATUS_CONFIG[s].bg : 'white',
-                      color: pipelineFilter === s ? STATUS_CONFIG[s].color : '#6b7280',
-                      borderRadius: '9999px', padding: '5px 14px', fontSize: '12px', fontWeight: 700,
-                      cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '6px'
-                    }}
-                  >
-                    {STATUS_CONFIG[s].label}
-                    <span style={{ background: STATUS_CONFIG[s].color, color: 'white', borderRadius: '9999px', padding: '0 6px', fontSize: '11px' }}>
-                      {countByStatus(s)}
-                    </span>
-                  </button>
-                ))}
-                {pipelineFilter !== 'ALL' && (
-                  <button onClick={() => setPipelineFilter('ALL')} style={{ border: '1px solid #d1d5db', background: 'white', color: '#6b7280', borderRadius: '9999px', padding: '5px 12px', fontSize: '12px', cursor: 'pointer' }}>
-                    × Limpiar filtro
-                  </button>
-                )}
+        {/* MODAL RECHAZO */}
+        {rejectionModal && (
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
+            <div style={{ background: 'white', padding: '32px', borderRadius: '16px', width: '400px' }}>
+              <h3 style={{ margin: '0 0 16px' }}>Rechazar Expediente</h3>
+              <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '16px' }}>Indica el motivo del rechazo para {rejectionModal.name}. Se enviará un correo solicitando corregir la información.</p>
+              <textarea 
+                value={rejectionObs} 
+                onChange={e => setRejectionObs(e.target.value)}
+                placeholder="Ej: La cédula está borrosa, faltan los antecedentes penales..."
+                style={{ width: '100%', height: '100px', padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px', marginBottom: '20px', resize: 'none' }}
+              />
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button onClick={() => setRejectionModal(null)} className="track-btn">Cancelar</button>
+                <button onClick={handleRejectOnboarding} className="track-btn" style={{ background: '#ef4444', color: 'white', border: 'none' }}>Enviar Observación</button>
               </div>
-
-              {/* Filtro de cargo */}
-              <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <input
-                  type="text"
-                  placeholder="Filtrar por cargo (ej. Cajero)..."
-                  value={pipelineCargoFilter}
-                  onChange={e => setPipelineCargoFilter(e.target.value)}
-                  style={{ border: '1px solid #d1d5db', borderRadius: '8px', padding: '8px 12px', fontSize: '13px', width: '280px' }}
-                />
-                <button
-                  onClick={fetchPipeline}
-                  style={{ background: '#059669', color: 'white', border: 'none', borderRadius: '8px', padding: '8px 14px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-                >
-                  <RefreshCw size={14} /> Actualizar
-                </button>
-                <span style={{ color: '#6b7280', fontSize: '13px' }}>{filtered.length} candidato{filtered.length !== 1 ? 's' : ''}</span>
-              </div>
-
-              {pipelineLoading ? (
-                <p style={{ textAlign: 'center', color: '#6b7280', padding: '40px' }}>Cargando pipeline...</p>
-              ) : filtered.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px', background: 'white', borderRadius: '12px', border: '1px dashed #d1d5db' }}>
-                  <p style={{ color: '#9ca3af', fontSize: '15px', margin: 0 }}>No hay candidatos en el pipeline todavía.</p>
-                  <p style={{ color: '#9ca3af', fontSize: '13px', margin: '8px 0 0' }}>Cuando envíes un mensaje a un candidato desde la pestaña Selección por Cargo, aparecerá aquí.</p>
-                </div>
-              ) : (
-                <div className="table-container">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Candidato</th>
-                        <th>Cargo evaluado</th>
-                        <th>Teléfono</th>
-                        <th>Estado</th>
-                        <th>Entrevista</th>
-                        <th>Acciones</th>
-                        <th>CV</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filtered.map((p: any) => {
-                        const c = p.candidate
-                        const cfg = STATUS_CONFIG[p.status] || { label: p.status, color: '#6b7280', bg: '#f3f4f6' }
-                        const isUpd = pipelineUpdating === p.id
-                        const waHref = c?.sender_phone
-                          ? `https://wa.me/${c.sender_phone.replace(/\D/g, '').replace(/^0/, '593')}?text=${encodeURIComponent('Estimado candidato, hemos recibido su CV, ¿podemos agendar una reunión para la entrevista?')}`
-                          : null
-                        return (
-                          <tr key={p.id} className="rank-row">
-                            <td>
-                              <div className="user-cell">
-                                <div className="user-avatar" style={{ background: '#f0fdf4', color: '#16a34a', flexShrink: 0 }}><User size={16}/></div>
-                                <div>
-                                  <p className="user-name" style={{ margin: '0 0 2px' }}>{c?.sender_name || 'Sin nombre'}</p>
-                                  <p className="user-email" style={{ margin: 0 }}>{c?.sender_email}</p>
-                                </div>
-                              </div>
-                            </td>
-                            <td>
-                              <span style={{ fontSize: '12px', fontWeight: 600, color: '#374151' }}>{p.cargo}</span>
-                              {c?.position && <span className="ai-tag" style={{ display: 'block', marginTop: '4px' }}><Briefcase size={10}/> {c.position}</span>}
-                            </td>
-                            <td style={{ whiteSpace: 'nowrap' }}>
-                              {waHref
-                                ? <a href={waHref} target="_blank" rel="noreferrer" className="wa-link">
-                                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/whatsapp.svg" alt="WA" style={{ width: '12px', height: '12px', filter: 'invert(34%) sepia(89%) saturate(500%) hue-rotate(90deg)' }} />
-                                    {c.sender_phone}
-                                  </a>
-                                : <span style={{ color: '#9ca3af', fontSize: '11px' }}>Sin teléfono</span>
-                              }
-                            </td>
-                            <td>
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '9999px', background: cfg.bg, color: cfg.color, whiteSpace: 'nowrap' }}>
-                                {cfg.label}
-                              </span>
-                            </td>
-                            <td style={{ fontSize: '12px', color: '#4b5563' }}>
-                              {p.interview_date
-                                ? <><strong>📅</strong> {new Date(p.interview_date + 'T12:00:00').toLocaleDateString()}{p.notes && <><br/><span style={{ color: '#9ca3af' }}>{p.notes}</span></>}</>
-                                : <span style={{ color: '#9ca3af' }}>—</span>
-                              }
-                            </td>
-                            <td>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                {p.status === 'MENSAJE_ENVIADO' && (
-                                  <button className="track-btn track-btn-entrevista" disabled={isUpd}
-                                    onClick={() => setInterviewModal({ id: p.id, name: c?.sender_name || c?.sender_email, resumeId: p.resume_id, cargo: p.cargo })}>
-                                    📅 Programar entrevista
-                                  </button>
-                                )}
-                                {p.status === 'ENTREVISTA_PROGRAMADA' && (
-                                  <button className="track-btn track-btn-confirmar" disabled={isUpd}
-                                    onClick={() => updatePipelineStatus(p.id, p.resume_id, p.cargo, 'ENTREVISTA_CONFIRMADA')}>
-                                    ✅ Confirmó asistencia
-                                  </button>
-                                )}
-                                {p.status === 'ENTREVISTA_CONFIRMADA' && (
-                                  <>
-                                    <button className="track-btn track-btn-aprobar" disabled={isUpd}
-                                      onClick={() => updatePipelineStatus(p.id, p.resume_id, p.cargo, 'ENTREVISTA_APROBADA')}>
-                                      🌟 Aprobó
-                                    </button>
-                                    <button className="track-btn track-btn-rechazar" disabled={isUpd}
-                                      onClick={() => updatePipelineStatus(p.id, p.resume_id, p.cargo, 'ENTREVISTA_RECHAZADA')}>
-                                      ❌ No aprobó
-                                    </button>
-                                  </>
-                                )}
-                                {p.status === 'ENTREVISTA_APROBADA' && (
-                                  <button className="track-btn track-btn-onboarding" disabled={isUpd}
-                                    onClick={() => updatePipelineStatus(p.id, p.resume_id, p.cargo, 'ONBOARDING')}>
-                                    🚀 Pasar a Onboarding
-                                  </button>
-                                )}
-                                {p.status !== 'MENSAJE_ENVIADO' && (
-                                  <button className="track-btn" disabled={isUpd}
-                                    style={{ color: '#9ca3af', borderColor: '#e5e7eb', fontSize: '10px' }}
-                                    onClick={() => updatePipelineStatus(p.id, p.resume_id, p.cargo, 'MENSAJE_ENVIADO')}>
-                                    ↺ Retroceder
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                            <td>
-                              {c?.pdf_url
-                                ? <a href={c.pdf_url} target="_blank" rel="noreferrer" className="pdf-link"><FileText size={14}/> CV</a>
-                                : <span style={{ color: '#9ca3af', fontSize: '11px' }}>—</span>
-                              }
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </>
-          )
-        })()}
-
+            </div>
+          </div>
+        )}
       </div>
     </>
   )

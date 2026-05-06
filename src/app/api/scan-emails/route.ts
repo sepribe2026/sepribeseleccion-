@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     // Solución: Traemos los últimos 30 correos y filtramos manualmente en memoria.
     const response = await graphClient
       .api(`/users/${userEmail}/mailFolders/inbox/messages`)
-      .select('id,subject,from,receivedDateTime,hasAttachments')
+      .select('id,subject,from,receivedDateTime,hasAttachments,body')
       .top(30)
       .orderby('receivedDateTime DESC')
       .get();
@@ -58,7 +58,36 @@ export async function POST(req: NextRequest) {
 
       if (existing) continue;
 
-      // 4. Descargar los adjuntos de ese correo
+      // 4. Analizar cuerpo del mensaje para formato estándar
+      const bodyContent = msg.body?.content || '';
+      // Limpieza profunda de HTML y entidades
+      let cleanBody = bodyContent
+        .replace(/<[^>]*>?/gm, '\n') // Reemplazar tags por saltos de línea para mejor separación
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&aacute;/g, 'a').replace(/&eacute;/g, 'e').replace(/&iacute;/g, 'i').replace(/&oacute;/g, 'o').replace(/&uacute;/g, 'u')
+        .replace(/&Aacute;/g, 'A').replace(/&Eacute;/g, 'E').replace(/&Iacute;/g, 'I').replace(/&Oacute;/g, 'O').replace(/&Uacute;/g, 'U')
+        .replace(/\s+/g, ' ') // Colapsar espacios múltiples
+        .trim();
+      
+      // Regex mejoradas: capturan hasta el final de la línea o hasta el siguiente campo conocido
+      const nameMatch = cleanBody.match(/Nombre\s*:\s*([^:\n\r]*?)(?=(?:Carg[oó]\s*Aplica|A[ñn]os\s*de|Ciudad|$))/i);
+      const cargoMatch = cleanBody.match(/Carg[oó]\s*Aplica\s*:\s*([^:\n\r]*?)(?=(?:Nombre|A[ñn]os\s*de|Ciudad|$))/i);
+      const expMatch = cleanBody.match(/A[ñn]os\s*de\s*experiencia\s*:\s*(\d+)/i);
+      const cityMatch = cleanBody.match(/Ciudad\s*:\s*([^:\n\r]*?)(?=(?:Nombre|Carg[oó]\s*Aplica|A[ñn]os\s*de|$))/i);
+
+      let autoData: any = null;
+      if (nameMatch && cargoMatch && expMatch) {
+        autoData = {
+          sender_name: nameMatch[1].trim(),
+          position: cargoMatch[1].trim(),
+          experience_years: expMatch[1].trim(),
+          city: cityMatch ? cityMatch[1].trim() : '',
+          status: 'PENDING',
+          summary: 'Extraído automáticamente del formato estándar del correo.'
+        };
+      }
+
+      // 5. Descargar los adjuntos de ese correo
       const attachmentsRes = await graphClient
         .api(`/users/${userEmail}/messages/${msg.id}/attachments`)
         .get();
@@ -89,15 +118,19 @@ export async function POST(req: NextRequest) {
             .from('candidate-documents')
             .getPublicUrl(fileName);
 
-          const payload = {
+          const payload: any = {
             email_uid: msg.id,
             sender_email: msg.from?.emailAddress?.address || 'Desconocido',
-            sender_name: msg.from?.emailAddress?.name || '',
+            sender_name: autoData?.sender_name || msg.from?.emailAddress?.name || '',
             subject: msg.subject || 'Sin Asunto',
             received_date: msg.receivedDateTime || new Date().toISOString(),
             file_name: file.name,
             pdf_url: publicUrl,
-            classification_status: 'PENDING'
+            classification_status: autoData ? 'REVIEWED' : 'PENDING',
+            position: autoData?.position || '',
+            experience_years: autoData?.experience_years || null,
+            city: autoData?.city || '',
+            ai_summary: autoData?.summary || ''
           };
 
           // Guardar en la base de datos

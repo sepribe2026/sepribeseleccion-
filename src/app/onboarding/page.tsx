@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { UploadCloud, CheckCircle2, AlertCircle, Plus, Trash2, Check, FileCheck } from 'lucide-react'
+import { UploadCloud, CheckCircle2, AlertCircle, Plus, Trash2, Check, FileCheck, Mail, User, Briefcase, MapPin } from 'lucide-react'
 
 const WELCOME_TEXT = `A nombre de SUPERDEPORTE S.A. es un placer darte la bienvenida, esperamos que disfrutes con nosotros de nuestra actividad favorita, el deporte. Estamos orgullosos de ofrecer la mejor experiencia deportiva a nuestros consumidores a través de una asesoría del más alto nivel. Nos caracterizamos por ser un equipo que juega fuerte, que juega para ganar, sin excusas, siempre obedeciendo las reglas del juego. Estamos convencidos que tus competencias nos llevarán a lograr las metas que nos hemos propuesto. Eres parte de esta comunidad de apasionados por el deporte, dispuestos a transformar su entorno y contagiar esta pasión, volviéndose dueños del resultado y siempre trabajando hacia un mismo objetivo.`
 
@@ -32,7 +32,7 @@ export default function OnboardingTabs() {
   const [activeTab, setActiveTab] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [file, setFile] = useState<File | null>(null)
+  const [files, setFiles] = useState<Record<string, File | null>>({})
   const [isSuccess, setIsSuccess] = useState(false)
 
   const [formData, setFormData] = useState({
@@ -72,12 +72,41 @@ export default function OnboardingTabs() {
     }
   }
 
+  const handleFileChange = (docName: string, file: File | null) => {
+    if (file && file.size > 10 * 1024 * 1024) {
+      setError(`El archivo ${docName} excede los 10MB.`);
+      return;
+    }
+    setFiles(prev => ({ ...prev, [docName]: file }));
+    setError('');
+  }
+
   const handleSubmit = async () => {
     if (!formData.consentimiento) { setActiveTab(1); setError('Debes aceptar el consentimiento en la pestaña de Bienvenida.'); return }
-    if (!file) { setActiveTab(5); setError('Debes subir el archivo PDF consolidado.'); return }
+    
+    // Validar que al menos los documentos básicos existan
+    if (!files["Hoja de vida actualizada"]) { 
+      setActiveTab(5); 
+      setError('La Hoja de Vida es obligatoria.'); 
+      return; 
+    }
 
     setLoading(true)
     setError('')
+
+    const prefixes: Record<string, string> = {
+      "Hoja de vida actualizada": "cv",
+      "Fotocopias de tamaño carnet": "foto",
+      "Fotocopias de cédula de identidad y papeleta de votación": "cedula_pap_vot",
+      "Certificado de antecedentes penales": "antecedentes",
+      "Carnet de vacunación (3 dosis)": "vacuna",
+      "Certificados de trabajos anteriores": "cert_trabajo",
+      "Acta de grado o copia de título": "titulo",
+      "Partida de matrimonio (si aplica)": "matrimonio",
+      "Copia de cédula del cónyuge": "cedula_conyuge",
+      "Partida de nacimiento (hijos)": "nacimiento_hijos",
+      "Certificado de cuenta Produbanco": "cuenta_banco"
+    };
 
     try {
       // Doble validación antes de guardar
@@ -94,16 +123,37 @@ export default function OnboardingTabs() {
         return
       }
 
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${formData.cedula}_${Date.now()}_documentos.${fileExt}`
-      const { error: uploadError } = await supabase.storage.from('candidate-documents').upload(fileName, file, { upsert: true })
-      if (uploadError) throw uploadError
+      const documentosUrls: Record<string, string> = {};
 
-      const { data: { publicUrl } } = supabase.storage.from('candidate-documents').getPublicUrl(fileName)
+      // Subir cada archivo
+      for (const docName of REQUIRED_DOCS) {
+        const fileToUpload = files[docName];
+        if (fileToUpload) {
+          const fileExt = fileToUpload.name.split('.').pop();
+          const prefix = prefixes[docName] || "doc";
+          // Formato solicitado: CEDULA_PREFIJO.EXT
+          const fileName = `${formData.cedula}/${formData.cedula}_${prefix}.${fileExt}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('candidate-documents')
+            .upload(fileName, fileToUpload, { upsert: true });
+          
+          if (uploadError) throw new Error(`Error al subir ${docName}: ${uploadError.message}`);
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('candidate-documents')
+            .getPublicUrl(fileName);
+          
+          documentosUrls[docName] = publicUrl;
+        }
+      }
 
       const payload = {
-        cedula: formData.cedula, nombres: formData.nombres, apellidos: `${formData.apellido1} ${formData.apellido2}`.trim(),
-        email: formData.email.toLowerCase(), telefono: formData.celular || formData.telefono,
+        cedula: formData.cedula, 
+        nombres: formData.nombres, 
+        apellidos: `${formData.apellido1} ${formData.apellido2}`.trim(),
+        email: formData.email.toLowerCase(), 
+        telefono: formData.celular || formData.telefono,
         datos_personales: { 
           tratamiento: formData.tratamiento, 
           apellido1: formData.apellido1,
@@ -119,10 +169,13 @@ export default function OnboardingTabs() {
         },
         datos_bancarios: { banco: 'PRODUBANCO', tipo_cuenta: formData.tipo_cuenta, numero_cuenta: formData.banco_produbanco },
         cargas_familiares: { conyuge: conyuge.tiene ? conyuge : null, hijos },
-        estudios: [estudio], documento_pdf_url: publicUrl, status: 'PENDING'
+        estudios: [estudio], 
+        documentos: documentosUrls,
+        status: 'LLENADO'
       }
 
-      const { error: dbError } = await supabase.from('onboarding_candidates').insert([payload])
+      // Actualizamos el registro existente por email
+      const { error: dbError } = await supabase.from('onboarding_candidates').update(payload).eq('email', formData.email.toLowerCase())
       if (dbError) throw dbError
       setIsSuccess(true)
     } catch (err: any) {
@@ -227,7 +280,7 @@ export default function OnboardingTabs() {
 
                   <div className="req-box">
                     <div className="req-title"><FileCheck size={20} /> Requisitos Obligatorios</div>
-                    <p style={{ color: '#1e40af', fontSize: '14px', marginBottom: '16px' }}>Deberás escanear todos estos documentos y unirlos en <strong>un único archivo PDF</strong>.</p>
+                    <p style={{ color: '#1e40af', fontSize: '14px', marginBottom: '16px' }}>Deberás subir cada uno de los siguientes documentos en la pestaña final:</p>
                     <div className="grid-2" style={{ color: '#1e3a8a', fontSize: '13px' }}>
                       {REQUIRED_DOCS.map((doc, i) => <div key={i}>• {doc}</div>)}
                     </div>
@@ -338,28 +391,53 @@ export default function OnboardingTabs() {
               {activeTab === 5 && (
                 <div>
                   <h2 className="section-title">Carga de Documentos</h2>
-                  <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '24px' }}>Sube el PDF consolidado con todos los requisitos solicitados en la pestaña de Bienvenida.</p>
+                  <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '24px' }}>Por favor sube una copia legible de cada documento solicitado.</p>
 
-                  <div className={`upload-area ${file ? 'has-file' : ''}`} onClick={() => document.getElementById('file-upload')?.click()}>
-                    <input type="file" id="file-upload" style={{ display: 'none' }} accept=".pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f && f.type === 'application/pdf') { setFile(f); setError(''); } else { setError('Por favor sube un archivo PDF válido.'); setFile(null); } }} />
-                    {file ? (
-                      <div>
-                        <CheckCircle2 style={{ color: '#10b981', width: '48px', height: '48px', margin: '0 auto 12px' }} />
-                        <p style={{ fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>{file.name}</p>
-                        <p style={{ fontSize: '12px', color: '#059669', margin: 0 }}>{(file.size / 1024 / 1024).toFixed(2)} MB - Archivo listo</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {REQUIRED_DOCS.map((doc) => (
+                      <div key={doc} style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between', 
+                        padding: '12px 16px', 
+                        border: '1px solid #e5e7eb', 
+                        borderRadius: '8px',
+                        background: files[doc] ? '#f0fdf4' : 'white'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          {files[doc] ? <CheckCircle2 size={18} color="#10b981" /> : <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: '2px solid #d1d5db' }} />}
+                          <span style={{ fontSize: '14px', fontWeight: 500, color: files[doc] ? '#166534' : '#374151' }}>{doc}</span>
+                        </div>
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {files[doc] && <span style={{ fontSize: '11px', color: '#059669' }}>{files[doc]!.name.substring(0, 15)}...</span>}
+                          <button 
+                            onClick={() => document.getElementById(`file-${doc}`)?.click()} 
+                            style={{ 
+                              padding: '6px 12px', 
+                              borderRadius: '4px', 
+                              border: '1px solid #d1d5db', 
+                              background: 'white', 
+                              fontSize: '12px', 
+                              cursor: 'pointer' 
+                            }}
+                          >
+                            {files[doc] ? 'Cambiar' : 'Subir'}
+                          </button>
+                          <input 
+                            type="file" 
+                            id={`file-${doc}`} 
+                            style={{ display: 'none' }} 
+                            onChange={(e) => handleFileChange(doc, e.target.files?.[0] || null)} 
+                          />
+                        </div>
                       </div>
-                    ) : (
-                      <div>
-                        <UploadCloud style={{ color: '#9ca3af', width: '48px', height: '48px', margin: '0 auto 12px' }} />
-                        <p style={{ fontWeight: 600, color: '#374151', margin: '0 0 4px' }}>Haz clic para buscar tu archivo PDF</p>
-                        <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>Peso máximo sugerido: 10MB</p>
-                      </div>
-                    )}
+                    ))}
                   </div>
 
                   <div style={{ marginTop: '40px', paddingTop: '24px', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <button onClick={() => setActiveTab(4)} className="btn-secondary">Regresar</button>
-                    <button onClick={handleSubmit} disabled={loading || !file} style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '6px', fontWeight: 'bold', cursor: (loading || !file) ? 'not-allowed' : 'pointer', opacity: (loading || !file) ? 0.5 : 1 }}>
+                    <button onClick={handleSubmit} disabled={loading} style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '6px', fontWeight: 'bold', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1 }}>
                       {loading ? 'Procesando...' : 'FINALIZAR Y ENVIAR FICHA'}
                     </button>
                   </div>

@@ -22,7 +22,6 @@ export async function GET(req: NextRequest) {
   const { data: tracking, error: trackError } = await supabase
     .from('candidate_tracking')
     .select('*')
-    .neq('status', 'PENDIENTE')
     .order('updated_at', { ascending: false });
 
   if (trackError) return NextResponse.json({ error: trackError.message }, { status: 500 });
