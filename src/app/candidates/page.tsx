@@ -300,9 +300,10 @@ export default function CandidatesAdmin() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, name, cargo, interviewDate, notes })
       });
-      if (res.ok) alert('Correo enviado con éxito.');
-      else alert('Error al enviar correo.');
-    } catch (e) { alert('Error de conexión.'); }
+      const data = await res.json();
+      if (res.ok) alert('✅ Correo enviado con éxito.');
+      else alert('❌ Error al enviar correo: ' + (data.error || 'Fallo en el servidor SMTP'));
+    } catch (e: any) { alert('❌ Error de conexión: ' + e.message); }
   }
 
   const handleScanEmails = async () => {

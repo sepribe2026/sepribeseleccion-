@@ -33,8 +33,11 @@ export async function POST(req: NextRequest) {
       host: smtpHost,
       port: smtpPort,
       secure: false, // TLS
+      requireTLS: true,
       auth: { user: smtpUser, pass: smtpPass },
-      tls: { ciphers: 'SSLv3' },
+      tls: {
+        rejectUnauthorized: false
+      }
     });
 
     // 3. Cuerpo HTML del correo

@@ -20,16 +20,19 @@ export async function POST(req: NextRequest) {
     const transporter = nodemailer.createTransport({
       host: smtpHost,
       port: smtpPort,
-      secure: false, // TLS
+      secure: false, // TLS (use STARTTLS)
+      requireTLS: true,
       auth: { user: smtpUser, pass: smtpPass },
-      tls: { ciphers: 'SSLv3' },
+      tls: {
+        rejectUnauthorized: false // Helps with some server certificates
+      }
     });
 
     const formattedDate = isInterview ? new Date(interviewDate.split(' ')[0] + 'T12:00:00').toLocaleDateString('es-EC', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '';
     const time = isInterview ? interviewDate.split(' ')[1] || '09:00' : '';
 
     const message = isInterview 
-      ? `Estimad@ candidat@,\n\nNos complace informarte que has pasado la primera etapa de nuestro proceso de selección para Superdeporte S.A. Para la siguiente fase, deberás asistir a una entrevista presencial y/o virtual.\n\nTe enviamos los detalles para que puedas asistir:\n📅Fecha: ${formattedDate}\n⏰Hora: ${time}\n📍Lugar: Av Galo Plaza Lasso 13205 de los Ceresos.\n\nTe esperamos.`
+      ? `Hola ${name || 'candidat@'},\n\nNos complace informarte que has pasado la primera etapa de nuestro proceso de selección para Superdeporte S.A. Para la siguiente fase, deberás asistir a una entrevista presencial y/o virtual.\n\nTe enviamos los detalles para que puedas asistir:\n📅Fecha: ${formattedDate}\n⏰Hora: ${time}\n📍Lugar: Av Galo Plaza Lasso 13205 de los Ceresos.\n\nTe esperamos.`
       : `Hola ${name || 'Candidato'},\n\nTe saludamos de RRHH de Superdeporte S.A. Estamos revisando tu perfil para el cargo de ${cargo} y nos gustaría agendar una entrevista.\n\nPor favor, confírmanos tu disponibilidad.\n\nSaludos cordiales,\nEquipo de Selección.`;
 
     const htmlMessage = isInterview 
@@ -39,7 +42,7 @@ export async function POST(req: NextRequest) {
             <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px;">Superdeporte S.A.</p>
           </div>
           <div style="padding: 32px; background: white;">
-            <p>Estimad@ candidat@,</p>
+            <p>Hola <strong>${name || 'candidat@'}</strong>,</p>
             <p>Nos complace informarte que <strong>has pasado la primera etapa</strong> de nuestro proceso de selección. Para la siguiente fase, deberás asistir a una entrevista presencial y/o virtual.</p>
             
             <div style="background: #f8fafc; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; margin: 24px 0;">
