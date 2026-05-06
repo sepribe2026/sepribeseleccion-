@@ -75,7 +75,8 @@ export async function POST(req: NextRequest) {
 
     await client.api(`/users/${senderEmail}/sendMail`).post(sendMail);
 
-    } catch (error: any) {
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
     console.error('Error enviando mail con Graph API:', error);
     // Extraemos más info del error de Graph si existe
     const errorDetail = error.response?.data?.error?.message || error.message;
