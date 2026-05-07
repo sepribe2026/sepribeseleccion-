@@ -1026,13 +1026,13 @@ export default function CandidatesAdmin() {
                                   ? `Hola ${p.candidate?.sender_name || 'candidat@'}, nos complace informarte que has pasado la primera etapa de nuestro proceso de selección para Superdeporte S.A. Para la siguiente fase, deberás asistir a una entrevista presencial y/o virtual.\n\nTe enviamos los detalles para que puedas asistir:\n📅Fecha: ${p.interview_date ? new Date(p.interview_date.split(' ')[0] + 'T12:00:00').toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long' }) : '—'}\n⏰Hora: ${p.interview_date?.split(' ')[1] || '09:00'}\n📍Lugar: Av Galo Plaza Lasso 13205 de los Ceresos.`
                                   : `Hola ${p.candidate?.sender_name || 'candidat@'}, te saludamos de RRHH de Superdeporte S.A. Estamos revisando tu perfil para el cargo de ${p.cargo} y nos gustaría agendar una entrevista.`
                                 )}`} 
-                                onClick={(e) => p.status === 'PENDIENTE' && e.preventDefault()}
-                                target={p.status === 'PENDIENTE' ? undefined : "_blank"} 
+                                onClick={(e) => (p.status === 'PENDIENTE' || p.status === 'ENTREVISTA_APROBADA' || p.status === 'RECHAZADO') && e.preventDefault()}
+                                target={(p.status === 'PENDIENTE' || p.status === 'ENTREVISTA_APROBADA' || p.status === 'RECHAZADO') ? undefined : "_blank"} 
                                 className="wa-link"
                                 style={{ 
-                                  opacity: p.status === 'PENDIENTE' ? 0.5 : 1, 
-                                  cursor: p.status === 'PENDIENTE' ? 'not-allowed' : 'pointer',
-                                  filter: p.status === 'PENDIENTE' ? 'grayscale(1)' : 'none',
+                                  opacity: (p.status === 'PENDIENTE' || p.status === 'ENTREVISTA_APROBADA' || p.status === 'RECHAZADO') ? 0.5 : 1, 
+                                  cursor: (p.status === 'PENDIENTE' || p.status === 'ENTREVISTA_APROBADA' || p.status === 'RECHAZADO') ? 'not-allowed' : 'pointer',
+                                  filter: (p.status === 'PENDIENTE' || p.status === 'ENTREVISTA_APROBADA' || p.status === 'RECHAZADO') ? 'grayscale(1)' : 'none',
                                   justifyContent: 'center'
                                 }}
                               >
@@ -1087,21 +1087,32 @@ export default function CandidatesAdmin() {
   
                             {/* Estados Finales */}
                             {p.status === 'ENTREVISTA_APROBADA' && (
-                              <span className="pipeline-badge" style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0' }}>✅ APROBADO</span>
+                              <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                <span className="pipeline-badge" style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0' }}>✅ APROBADO</span>
+                                <button 
+                                  className="track-btn" 
+                                  style={{ background: '#0f172a', color: 'white', border: 'none' }}
+                                  onClick={() => handleSendApprovalEmail(p.candidate?.sender_name, p.candidate?.sender_email)}
+                                >
+                                  📧 Enviar Documentos (QR)
+                                </button>
+                              </div>
                             )}
                             {p.status === 'RECHAZADO' && (
                               <span className="pipeline-badge" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>❌ RECHAZADO</span>
                             )}
   
                             {/* Botón Reiniciar siempre disponible */}
-                            <button 
-                              className="track-btn" 
-                              style={{ color: '#94a3b8', padding: '6px' }} 
-                              onClick={() => updatePipelineStatus(p.id, p.resume_id, p.cargo, 'PENDIENTE')}
-                              title="Reiniciar a Pendiente"
-                            >
-                              ↺
-                            </button>
+                            {p.status !== 'ENTREVISTA_APROBADA' && p.status !== 'RECHAZADO' && (
+                              <button 
+                                className="track-btn" 
+                                style={{ color: '#94a3b8', padding: '6px' }} 
+                                onClick={() => updatePipelineStatus(p.id, p.resume_id, p.cargo, 'PENDIENTE')}
+                                title="Reiniciar a Pendiente"
+                              >
+                                ↺
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
