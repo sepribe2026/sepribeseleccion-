@@ -583,7 +583,6 @@ export default function CandidatesAdmin() {
           <div>
             <h1 className="admin-title">Candidatos Registrados</h1>
             <p className="admin-subtitle">Portal de Onboarding - Zero Paper</p>
-            <button onClick={exportToExcel} style={{ marginTop: '16px', background: '#10b981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}><FileSpreadsheet size={16} /> Exportar Excel</button>
           </div>
           <div className="qr-card">
             <div>

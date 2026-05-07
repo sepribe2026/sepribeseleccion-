@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { UploadCloud, CheckCircle2, AlertCircle, Plus, Trash2, Check, FileCheck, Mail, User, Briefcase, MapPin, Eye } from 'lucide-react'
+import { UploadCloud, CheckCircle2, AlertCircle, Plus, Trash2, Check, FileCheck, Mail, User, Briefcase, MapPin, Eye, RefreshCw } from 'lucide-react'
 
 const WELCOME_TEXT = `A nombre de SUPERDEPORTE S.A. es un placer darte la bienvenida, esperamos que disfrutes con nosotros de nuestra actividad favorita, el deporte. Estamos orgullosos de ofrecer la mejor experiencia deportiva a nuestros consumidores a través de una asesoría del más alto nivel. Nos caracterizamos por ser un equipo que juega fuerte, que juega para ganar, sin excusas, siempre obedeciendo las reglas del juego. Estamos convencidos que tus competencias nos llevarán a lograr las metas que nos hemos propuesto. Eres parte de esta comunidad de apasionados por el deporte, dispuestos a transformar su entorno y contagiar esta pasión, volviéndose dueños del resultado y siempre trabajando hacia un mismo objetivo.`
 
@@ -318,9 +318,29 @@ export default function OnboardingTabs() {
       `}</style>
 
       <div className="onboarding-container">
-        <header className="onboarding-header">
-          <h1 className="onboarding-title">SUPERDEPORTE S.A.</h1>
-          <p className="onboarding-subtitle">Ficha de Ingreso de Personal</p>
+        <header className="onboarding-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1 className="onboarding-title">SUPERDEPORTE S.A.</h1>
+            <p className="onboarding-subtitle">Ficha de Ingreso de Personal</p>
+          </div>
+          <button 
+            onClick={() => window.location.reload()} 
+            style={{ 
+              background: 'rgba(255,255,255,0.1)', 
+              border: '1px solid rgba(255,255,255,0.2)', 
+              color: 'white', 
+              padding: '8px', 
+              borderRadius: '50%', 
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'background 0.2s'
+            }}
+            title="Refrescar página"
+          >
+            <RefreshCw size={18} />
+          </button>
         </header>
 
         <main className="onboarding-main">
