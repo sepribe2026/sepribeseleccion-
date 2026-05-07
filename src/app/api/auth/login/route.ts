@@ -1,18 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
 
-/**
- * API Route: POST /api/auth/login
- * 
- * Server-side proxy for authenticating with the external Aseyco service.
- * This avoids CORS issues when making requests from the browser.
- */
 export async function POST(request: NextRequest) {
     try {
-        // Parse the request body
         const body = await request.json();
         const { cedula, password } = body;
 
-        // Validate inputs
         if (!cedula || !password) {
             return NextResponse.json(
                 { success: false, error: 'Cédula y contraseña son requeridos' },
@@ -20,28 +13,22 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Forward the request to the external authentication service
+        // 1. Validar contra el Web Service externo
         const response = await fetch('https://ns.aseyco.com:444/MSWebServiceNomina/rest/service/wsNominaEmp', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'text/plain',
-            },
-            body: JSON.stringify({
-                cedula: cedula,
-                password: password
-            })
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ cedula, password })
         });
 
         if (!response.ok) {
             return NextResponse.json(
-                { success: false, error: 'Credenciales inválidas' },
+                { success: false, error: 'Credenciales inválidas en el sistema de nómina' },
                 { status: 401 }
             );
         }
 
         const data = await response.json();
 
-        // Check if the external service returned an error
         if (data.error || data.success === false) {
             return NextResponse.json(
                 { success: false, error: data.message || 'Credenciales inválidas' },
@@ -49,16 +36,34 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Return successful authentication
+        // 2. Validar que la cédula esté autorizada en admin_profiles
+        const { data: profile, error: profileError } = await supabase
+            .from('admin_profiles')
+            .select('*')
+            .eq('cedula', cedula)
+            .eq('is_active', true)
+            .single();
+
+        if (profileError || !profile) {
+            return NextResponse.json(
+                { success: false, error: 'Usuario no autorizado para acceder al panel administrativo' },
+                { status: 403 }
+            );
+        }
+
+        // 3. Retornar éxito con los datos del perfil
         return NextResponse.json({
             success: true,
-            data: data
+            user: {
+                cedula: profile.cedula,
+                name: profile.name
+            }
         });
 
     } catch (error) {
-        console.error('Error in authentication proxy:', error);
+        console.error('Error in authentication:', error);
         return NextResponse.json(
-            { success: false, error: 'Error de conexión con el servidor de autenticación' },
+            { success: false, error: 'Error de conexión con el servidor' },
             { status: 500 }
         );
     }

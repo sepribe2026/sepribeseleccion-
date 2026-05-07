@@ -7,27 +7,25 @@ import { supabase } from '@/lib/supabase';
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const cargo = searchParams.get('cargo');
+  const cedula = searchParams.get('cedula');
 
-  // --- Modo 1: filtrado por cargo (comportamiento original) ---
+  let query = supabase.from('candidate_tracking').select('*');
+  
+  if (cedula) {
+    query = query.eq('created_by_cedula', cedula);
+  }
+
   if (cargo) {
-    const { data, error } = await supabase
-      .from('candidate_tracking')
-      .select('*')
-      .eq('cargo', cargo);
+    const { data, error } = await query.eq('cargo', cargo);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ data });
   }
 
-  // --- Modo 2: pipeline global - todos excepto PENDIENTE ---
-  const { data: tracking, error: trackError } = await supabase
-    .from('candidate_tracking')
-    .select('*')
-    .order('updated_at', { ascending: false });
+  const { data: tracking, error: trackError } = await query.order('updated_at', { ascending: false });
 
   if (trackError) return NextResponse.json({ error: trackError.message }, { status: 500 });
   if (!tracking || tracking.length === 0) return NextResponse.json({ data: [] });
 
-  // Obtener IDs únicos de resumes
   const resumeIds = [...new Set(tracking.map((t: any) => t.resume_id))];
 
   const { data: resumes, error: resumeError } = await supabase
@@ -48,10 +46,9 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ data: enriched });
 }
 
-// POST: crear o actualizar el estado de seguimiento de un candidato
 export async function POST(req: NextRequest) {
   try {
-    const { resume_id, cargo, status, interview_date, notes } = await req.json();
+    const { resume_id, cargo, status, interview_date, notes, created_by_cedula } = await req.json();
 
     if (!resume_id || !cargo || !status) {
       return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 });
@@ -60,7 +57,15 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase
       .from('candidate_tracking')
       .upsert(
-        { resume_id, cargo, status, interview_date: interview_date || null, notes: notes || null, updated_at: new Date().toISOString() },
+        { 
+          resume_id, 
+          cargo, 
+          status, 
+          interview_date: interview_date || null, 
+          notes: notes || null, 
+          updated_at: new Date().toISOString(),
+          created_by_cedula: created_by_cedula || null
+        },
         { onConflict: 'resume_id,cargo' }
       )
       .select()

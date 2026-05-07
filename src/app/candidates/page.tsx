@@ -1,11 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { CheckCircle2, FileText, User, Download, FileSpreadsheet, Trash2, Mail, RefreshCw, Brain, Settings, MapPin, Briefcase, Trophy, Save, X, UploadCloud, Clock } from 'lucide-react'
+import { CheckCircle2, FileText, User, Download, FileSpreadsheet, Trash2, Mail, RefreshCw, Brain, Settings, MapPin, Briefcase, Trophy, Save, X, UploadCloud, Clock, LogOut } from 'lucide-react'
 import * as XLSX from 'xlsx'
+import { useAuth } from '@/context/AuthContext'
+import { useRouter } from 'next/navigation'
 
 export default function CandidatesAdmin() {
+  const { user, loading: authLoading, logout } = useAuth()
+  const router = useRouter()
+
   const [candidates, setCandidates] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [portalUrl, setPortalUrl] = useState('https://superdeporte.com/onboarding')
@@ -68,19 +73,28 @@ export default function CandidatesAdmin() {
 
   useEffect(() => {
     setIsMounted(true)
-    const savedKey = localStorage.getItem('openai_api_key')
-    if (savedKey) setOpenAiKey(savedKey)
-    fetchCandidates()
-    fetchResumes()
-    fetchJobPositions()
-    fetchPipeline()
-  }, [])
+    if (!authLoading && !user) {
+      router.push('/login')
+    }
+  }, [authLoading, user, router])
+
+  useEffect(() => {
+    if (user) {
+      const savedKey = localStorage.getItem('openai_api_key')
+      if (savedKey) setOpenAiKey(savedKey)
+      fetchCandidates()
+      fetchResumes()
+      fetchJobPositions()
+      fetchPipeline()
+    }
+  }, [user])
 
   const fetchPipeline = async () => {
+    if (!user) return
     setPipelineLoading(true)
     const res = await fetch('/api/candidate-tracking')
     const data = await res.json()
-    if (data.data) setPipelineData(data.data)
+    if (data.data) setPipelineData(data.data.filter((p: any) => p.created_by_cedula === user.cedula))
     setPipelineLoading(false)
   }
 
@@ -89,7 +103,7 @@ export default function CandidatesAdmin() {
     const res = await fetch('/api/candidate-tracking', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ resume_id: resumeId, cargo, status, interview_date, notes })
+      body: JSON.stringify({ resume_id: resumeId, cargo, status, interview_date, notes, created_by_cedula: user?.cedula, audit_user: user?.email })
     })
     const result = await res.json()
     if (result.success) {
@@ -115,19 +129,18 @@ export default function CandidatesAdmin() {
     if (!candidate || !candidate.sender_email) return;
 
     try {
-      // 1. Registrar PRIMERO en la tabla de onboarding (aseguramos que pueda entrar)
       const names = (candidate.sender_name || candidate.name || '').split(' ');
       const candidatePayload = {
         email: candidate.sender_email,
         nombres: names[0] || '',
         apellidos: names.slice(1).join(' ') || '',
         telefono: candidate.sender_phone || '',
-        cedula: `PENDIENTE-${candidate.sender_email}`, // Usamos un placeholder único para evitar el error de duplicados
+        cedula: `PENDIENTE-${candidate.sender_email}`,
         cargo: candidate.position || (pipelineData.find(p => p.resume_id === resumeId)?.cargo) || '',
-        status: 'PENDING'
+        status: 'PENDING',
+        created_by_cedula: user?.cedula
       };
 
-      // Buscamos si ya existe
       const { data: existing } = await supabase.from('onboarding_candidates').select('id').eq('email', candidate.sender_email).single();
 
       let onboardErr;
@@ -141,9 +154,8 @@ export default function CandidatesAdmin() {
 
       if (onboardErr) throw new Error("Error al registrar en Onboarding: " + onboardErr.message);
       
-      fetchCandidates(); // Refrescar pestaña onboarding
+      fetchCandidates(); 
 
-      // 2. Intentar enviar correo de aprobación
       const mailRes = await fetch('/api/send-approval-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -167,14 +179,15 @@ export default function CandidatesAdmin() {
   }
 
   const fetchJobPositions = async () => {
-    const { data } = await supabase.from('job_positions').select('*').order('created_at', { ascending: false })
+    if (!user) return
+    const { data } = await supabase.from('job_positions').select('*').eq('created_by_cedula', user.cedula).order('created_at', { ascending: false })
     if (data) setJobPositions(data)
   }
 
   const handleSavePosition = async () => {
-    if (!rankingCargo || !rankingFunciones) return
+    if (!rankingCargo || !rankingFunciones || !user) return
     setSavingPosition(true)
-    const payload = { cargo: rankingCargo, ciudad: rankingCiudad, funciones: rankingFunciones }
+    const payload = { cargo: rankingCargo, ciudad: rankingCiudad, funciones: rankingFunciones, created_by_cedula: user.cedula }
     if (editingPositionId) {
       await supabase.from('job_positions').update(payload).eq('id', editingPositionId)
     } else {
@@ -221,7 +234,7 @@ export default function CandidatesAdmin() {
       const res = await fetch('/api/rank-candidates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cargo: rankingCargo, ciudad: rankingCiudad, funciones: rankingFunciones, apiKey: openAiKey })
+        body: JSON.stringify({ cargo: rankingCargo, ciudad: rankingCiudad, funciones: rankingFunciones, apiKey: openAiKey, cedula: user?.cedula })
       })
       const data = await res.json()
       if (res.ok) {
@@ -254,7 +267,7 @@ export default function CandidatesAdmin() {
     const res = await fetch('/api/candidate-tracking', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ resume_id, cargo: rankingCargo, status, interview_date, notes })
+      body: JSON.stringify({ resume_id, cargo: rankingCargo, status, interview_date, notes, created_by_cedula: user?.cedula })
     })
     const data = await res.json()
     if (data.success) {
@@ -265,15 +278,21 @@ export default function CandidatesAdmin() {
   }
 
   const fetchCandidates = async () => {
+    if (!user) return
     setLoading(true)
-    const { data } = await supabase.from('onboarding_candidates').select('*').neq('status', 'DELETED').order('created_at', { ascending: false })
+    const { data } = await supabase.from('onboarding_candidates').select('*').eq('created_by_cedula', user.cedula).neq('status', 'DELETED').order('created_at', { ascending: false })
     if (data) setCandidates(data)
     setLoading(false)
   }
 
   const fetchResumes = async () => {
+    if (!user) return
     setLoadingResumes(true)
-    const { data } = await supabase.from('email_resumes').select('*').order('received_date', { ascending: false })
+    const { data } = await supabase
+      .from('email_resumes')
+      .select('*')
+      .eq('created_by_cedula', user.cedula)
+      .order('received_date', { ascending: false })
     if (data) setResumes(data)
     setLoadingResumes(false)
   }
@@ -307,9 +326,14 @@ export default function CandidatesAdmin() {
   }
 
   const handleScanEmails = async () => {
+    if (!user) return
     setScanning(true)
     try {
-      const res = await fetch('/api/scan-emails', { method: 'POST' })
+      const res = await fetch('/api/scan-emails', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cedula: user.cedula })
+      })
       if (res.ok) fetchResumes()
     } finally { setScanning(false) }
   }
@@ -590,11 +614,11 @@ export default function CandidatesAdmin() {
       )}
 
       <div className="admin-container">
-        <div className="admin-header">
+        <header className="onboarding-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#002f6c' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
             <div>
-              <h1 className="admin-title">Candidatos Registrados</h1>
-              <p className="admin-subtitle">Portal de Onboarding - Zero Paper</p>
+              <h1 className="onboarding-title">SUPERDEPORTE S.A.</h1>
+              <p className="onboarding-subtitle">Panel de Gestión Administrativa</p>
             </div>
             <button 
               onClick={() => {
@@ -603,21 +627,47 @@ export default function CandidatesAdmin() {
                 fetchPipeline();
               }} 
               style={{ 
-                background: '#f0f7ff', 
-                border: '1px solid #cce3ff', 
-                color: '#2563eb', 
+                background: 'rgba(255,255,255,0.1)', 
+                border: '1px solid rgba(255,255,255,0.2)', 
+                color: 'white', 
                 padding: '8px 20px', 
                 borderRadius: '10px', 
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: '13px',
                 fontWeight: '600',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
                 transition: 'all 0.2s'
               }}
             >
               Actualizar
             </button>
           </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ textAlign: 'right', color: 'white' }}>
+              <p style={{ margin: 0, fontSize: '13px', fontWeight: 'bold' }}>{user?.name}</p>
+              <p style={{ margin: 0, fontSize: '11px', opacity: 0.8 }}>{user?.cedula}</p>
+            </div>
+            <button 
+              onClick={logout}
+              style={{ 
+                background: 'rgba(239, 68, 68, 0.2)', 
+                border: '1px solid rgba(239, 68, 68, 0.4)', 
+                color: '#fca5a5', 
+                padding: '8px 12px', 
+                borderRadius: '8px', 
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '12px',
+                fontWeight: 'bold'
+              }}
+              title="Cerrar Sesión"
+            >
+              <LogOut size={16} /> Salir
+            </button>
+          </div>
+        </header>
           <div className="qr-card">
             <div>
               <label className="ranking-label">Link Candidatos</label>
