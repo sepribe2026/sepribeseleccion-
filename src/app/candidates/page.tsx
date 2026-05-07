@@ -1087,16 +1087,7 @@ export default function CandidatesAdmin() {
   
                             {/* Estados Finales */}
                             {p.status === 'ENTREVISTA_APROBADA' && (
-                              <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                                <span className="pipeline-badge" style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0' }}>✅ APROBADO</span>
-                                <button 
-                                  className="track-btn" 
-                                  style={{ background: '#0f172a', color: 'white', border: 'none' }}
-                                  onClick={() => handleSendApprovalEmail(p.resume_id)}
-                                >
-                                  📧 Enviar Documentos (QR)
-                                </button>
-                              </div>
+                              <span className="pipeline-badge" style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0' }}>✅ APROBADO</span>
                             )}
                             {p.status === 'RECHAZADO' && (
                               <span className="pipeline-badge" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>❌ RECHAZADO</span>
