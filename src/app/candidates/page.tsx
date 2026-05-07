@@ -103,7 +103,7 @@ export default function CandidatesAdmin() {
     const res = await fetch('/api/candidate-tracking', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ resume_id: resumeId, cargo, status, interview_date, notes, created_by_cedula: user?.cedula, audit_user: user?.email })
+      body: JSON.stringify({ resume_id: resumeId, cargo, status, interview_date, notes, created_by_cedula: user?.cedula })
     })
     const result = await res.json()
     if (result.success) {
@@ -675,7 +675,6 @@ export default function CandidatesAdmin() {
             </div>
             <img src={qrCodeUrl} alt="QR" style={{ width: '64px', height: '64px' }} />
           </div>
-        </div>
 
         <div className="tabs-nav">
           <button className={`tab-btn ${activeTab === 'seleccion' ? 'active' : ''}`} onClick={() => setActiveTab('seleccion')}>Inbox</button>

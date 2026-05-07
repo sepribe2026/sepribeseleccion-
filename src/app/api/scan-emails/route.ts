@@ -44,6 +44,9 @@ export async function POST(req: NextRequest) {
       .orderby('receivedDateTime DESC')
       .get();
 
+    const body = await req.json().catch(() => ({}));
+    const requesterCedula = body.cedula || null;
+
     const messages = response.value.filter((m: any) => m.hasAttachments === true);
     const resumes = [];
     let processedCount = 0;
