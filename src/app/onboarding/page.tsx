@@ -92,7 +92,19 @@ export default function OnboardingTabs() {
   }
 
   const getDynamicDocs = () => {
-    const docs = [...REQUIRED_DOCS.filter(d => d !== "Partida de nacimiento (hijos)")];
+    let docs = [...REQUIRED_DOCS.filter(d => 
+      d !== "Partida de nacimiento (hijos)" && 
+      d !== "Copia de cédula del cónyuge" && 
+      d !== "Partida de matrimonio (si aplica)"
+    )];
+
+    // Si tiene cónyuge, agregar documentos de cónyuge
+    if (conyuge.tiene) {
+      docs.push("Copia de cédula del cónyuge");
+      docs.push("Partida de matrimonio (si aplica)");
+    }
+
+    // Manejo de hijos
     if (hijos.length > 0) {
       hijos.forEach((_, idx) => {
         docs.push(`Partida de nacimiento - Hijo ${idx + 1}`);

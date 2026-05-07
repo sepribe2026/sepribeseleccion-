@@ -355,7 +355,8 @@ export default function CandidatesAdmin() {
         body: JSON.stringify({ 
           email: rejectionModal.email, 
           name: rejectionModal.name, 
-          observation: rejectionObs 
+          observation: rejectionObs,
+          portalUrl: portalUrl
         })
       });
       if (res.ok) {

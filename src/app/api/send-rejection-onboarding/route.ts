@@ -3,7 +3,8 @@ import nodemailer from 'nodemailer';
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, name, observation } = await req.json();
+    const { email, name, observation, portalUrl } = await req.json();
+    const onboardingUrl = portalUrl || `https://tensor-planetoid.vercel.app/onboarding`;
 
     if (!email) return NextResponse.json({ error: 'Email requerido' }, { status: 400 });
 
@@ -23,8 +24,6 @@ export async function POST(req: NextRequest) {
       auth: { user: smtpUser, pass: smtpPass },
       tls: { ciphers: 'SSLv3' },
     });
-
-    const onboardingUrl = `https://superdeporte.com/onboarding`; // URL base del portal
 
     const message = `Hola ${name},\n\nTu expediente de ingreso a Superdeporte S.A. ha sido revisado y requiere algunas correcciones.\n\nOBSERVACIÓN:\n${observation}\n\nPor favor, ingresa nuevamente al portal de onboarding y completa la información solicitada correctamente.\n\nPortal: ${onboardingUrl}\n\nSaludos cordiales,\nTalento Humano - Superdeporte S.A.`;
 
