@@ -179,8 +179,10 @@ export default function CandidatesAdmin() {
   }
 
   const fetchJobPositions = async () => {
-    if (!user) return
-    const { data } = await supabase.from('job_positions').select('*').eq('created_by_cedula', user.cedula).order('created_at', { ascending: false })
+    const { data } = await supabase
+      .from('job_positions')
+      .select('*')
+      .order('created_at', { ascending: false })
     if (data) setJobPositions(data)
   }
 
