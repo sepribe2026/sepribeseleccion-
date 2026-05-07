@@ -1131,50 +1131,71 @@ export default function CandidatesAdmin() {
                 <button onClick={() => setShowCalendarModal(false)} className="track-btn" style={{ padding: '10px' }}><X /></button>
               </div>
               
-              <div className="calendar-grid">
+              <div className="calendar-grid" style={{ gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
+                {/* Cabecera de días */}
+                {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(d => (
+                  <div key={d} style={{ textAlign: 'center', fontWeight: 800, color: '#475569', fontSize: '12px', paddingBottom: '8px', borderBottom: '2px solid #e2e8f0' }}>{d}</div>
+                ))}
+                
                 {(() => {
                   const today = new Date();
-                  const dayOfWeek = today.getDay(); // 0 (Dom) a 6 (Sab)
-                  const startOfWeek = new Date(today);
-                  startOfWeek.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)); // Empezar en Lunes
-
-                  const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+                  const year = today.getFullYear();
+                  const month = today.getMonth(); // 0-indexed
                   
-                  return days.map((dayName, index) => {
-                    const currentDate = new Date(startOfWeek);
-                    currentDate.setDate(startOfWeek.getDate() + index);
+                  // Primer día del mes
+                  const firstDay = new Date(year, month, 1);
+                  // Ajustar a Lunes como primer día (JS: 0=Dom, 1=Lun...)
+                  // Si es Dom(0), queremos 6 espacios. Si es Lun(1), 0 espacios.
+                  let startPadding = firstDay.getDay() - 1;
+                  if (startPadding === -1) startPadding = 6; 
+                  
+                  const daysInMonth = new Date(year, month + 1, 0).getDate();
+                  
+                  const elements = [];
+                  
+                  // Espacios vacíos antes del día 1
+                  for (let i = 0; i < startPadding; i++) {
+                    elements.push(<div key={`pad-${i}`} style={{ background: '#f1f5f9', opacity: 0.3, borderRadius: '8px', minHeight: '100px' }}></div>);
+                  }
+                  
+                  // Días del mes
+                  for (let d = 1; d <= daysInMonth; d++) {
+                    const currentDate = new Date(year, month, d);
                     const dateStr = currentDate.toISOString().split('T')[0];
-                    const isToday = today.toISOString().split('T')[0] === dateStr;
+                    const isToday = new Date().toISOString().split('T')[0] === dateStr;
                     
                     const dayEvents = pipelineData.filter(p => p.status === 'ENTREVISTA_PROGRAMADA' && p.interview_date && p.interview_date.startsWith(dateStr));
                     
-                    return (
-                      <div key={dayName} className={`calendar-day ${isToday ? 'today' : ''}`} style={{ minHeight: '200px' }}>
-                        <div className="calendar-date">
-                          <span>{dayName}</span>
-                          <span style={{ background: isToday ? '#2563eb' : 'transparent', color: isToday ? 'white' : 'inherit', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}>
-                            {currentDate.getDate()}
+                    elements.push(
+                      <div key={d} className={`calendar-day ${isToday ? 'today' : ''}`} style={{ minHeight: '120px', padding: '8px' }}>
+                        <div className="calendar-date" style={{ marginBottom: '4px', fontSize: '12px' }}>
+                          <span style={{ 
+                            background: isToday ? '#2563eb' : 'transparent', 
+                            color: isToday ? 'white' : '#64748b', 
+                            width: '22px', 
+                            height: '22px', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            borderRadius: '50%',
+                            fontWeight: 800
+                          }}>
+                            {d}
                           </span>
                         </div>
-                        <div style={{ overflowY: 'auto' }}>
-                          {dayEvents.length === 0 ? (
-                            <div style={{ textAlign: 'center', marginTop: '40px', opacity: 0.3 }}>
-                              <div style={{ fontSize: '20px', marginBottom: '8px' }}>🕒</div>
-                              <p style={{ fontSize: '10px' }}>Libre</p>
+                        <div style={{ maxHeight: '80px', overflowY: 'auto' }}>
+                          {dayEvents.map(ev => (
+                            <div key={ev.id} className="event-card" style={{ padding: '4px', marginBottom: '3px', fontSize: '10px' }} title={ev.candidate?.sender_name}>
+                              <div className="event-time" style={{ fontSize: '9px' }}>{ev.interview_date?.split(' ')[1] || '09:00'}</div>
+                              <div className="event-title" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.candidate?.sender_name?.split(' ')[0] || 'Candidato'}</div>
                             </div>
-                          ) : (
-                            dayEvents.map(ev => (
-                              <div key={ev.id} className="event-card" style={{ cursor: 'pointer' }}>
-                                <div className="event-time">{ev.interview_date?.split(' ')[1] || '09:00'}</div>
-                                <div className="event-title">{ev.candidate?.sender_name || 'Candidato'}</div>
-                                <div style={{ fontSize: '9px', color: '#64748b', marginTop: '2px' }}>{ev.cargo}</div>
-                              </div>
-                            ))
-                          )}
+                          ))}
                         </div>
                       </div>
                     );
-                  });
+                  }
+                  
+                  return elements;
                 })()}
               </div>
             </div>
