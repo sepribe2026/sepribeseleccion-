@@ -1253,7 +1253,7 @@ export default function CandidatesAdmin() {
                             <button onClick={() => alert('Ventana de Nómina próximamente...')} className="track-btn" style={{ color: '#8b5cf6', borderColor: '#ddd6fe' }}>🏦 Nómina</button>
                             <button onClick={() => setRejectionModal({ id: c.id, email: c.email, name: `${c.nombres} ${c.apellidos}` })} className="track-btn" style={{ color: '#ef4444', borderColor: '#fecaca' }}>❌ Rechazar</button>
                             <button onClick={() => handleApproveOnboarding(c.id)} className="track-btn" style={{ color: '#002f6c', borderColor: '#002f6c' }}>🌟 Aprobar</button>
-                            <button onClick={() => handleSyncToOracle(c.id)} className="track-btn" style={{ color: '#002f6c', background: '#002f6c', color: 'white' }}>🚀 Sincronizar</button>
+                            <button onClick={() => handleSyncToOracle(c.id)} className="track-btn" style={{ background: '#002f6c', color: 'white', borderColor: '#002f6c' }}>🚀 Sincronizar</button>
                           </>
                         )}
                         {c.status === 'PENDING' && <span style={{ color: '#94a3b8', fontSize: '12px' }}>Esperando llenado</span>}
