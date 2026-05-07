@@ -56,7 +56,7 @@ export function ZPAuthProvider({ children }: { children: ReactNode }) {
             const authResult = await authenticateWithExternalService(cedula, password);
 
             if (!authResult.success) {
-                console.error('Authentication failed:', authResult.error);
+                console.error('Authentication failed details:', authResult);
                 return false;
             }
 

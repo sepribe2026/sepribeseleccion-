@@ -23,7 +23,8 @@ export async function authenticateWithExternalService(
             },
             body: JSON.stringify({
                 cedula: cedula,
-                password: password
+                password: password,
+                app: 'zero-paper'
             })
         });
 

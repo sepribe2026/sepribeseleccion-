@@ -4,7 +4,8 @@ import { supabase } from '@/lib/supabase';
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { cedula, password } = body;
+        const { cedula, password, app } = body;
+        console.log(`Login attempt: app=${app}, cedula=${cedula}`);
 
         if (!cedula || !password) {
             return NextResponse.json(
@@ -27,43 +28,70 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const data = await response.json();
-
-        if (data.error || data.success === false) {
+        const responseText = await response.text();
+        let authData;
+        try {
+            authData = JSON.parse(responseText);
+        } catch (e) {
+            console.error('WS Response is not JSON:', responseText);
             return NextResponse.json(
-                { success: false, error: data.message || 'Credenciales inválidas' },
+                { success: false, error: 'Respuesta inválida del servidor de nómina', debug: responseText },
+                { status: 502 }
+            );
+        }
+
+        if (authData.error || authData.success === false) {
+            return NextResponse.json(
+                { success: false, error: authData.message || 'Credenciales inválidas' },
                 { status: 401 }
             );
         }
 
-        // 2. Validar que la cédula esté autorizada en admin_profiles
-        const { data: profile, error: profileError } = await supabase
-            .from('admin_profiles')
-            .select('*')
-            .eq('cedula', cedula)
-            .eq('is_active', true)
-            .single();
+        let profile = null;
 
-        if (profileError || !profile) {
-            return NextResponse.json(
-                { success: false, error: 'Usuario no autorizado para acceder al panel administrativo' },
-                { status: 403 }
-            );
+        // 2. Si es para el panel de candidatos, validar que la cédula esté autorizada en admin_profiles
+        if (app === 'candidates') {
+            const { data: profileData, error: profileError } = await supabase
+                .from('admin_profiles')
+                .select('*')
+                .eq('cedula', cedula)
+                .eq('is_active', true)
+                .single();
+            
+            profile = profileData;
+
+            if (profileError || !profile) {
+                return NextResponse.json(
+                    { success: false, error: 'Usuario no autorizado para acceder al panel administrativo de candidatos' },
+                    { status: 403 }
+                );
+            }
         }
 
-        // 3. Retornar éxito con los datos del perfil
+        // 3. Preparar datos de respuesta
+        let userData = {
+            cedula: authData.cedula || cedula,
+            name: authData.nombre || 'Usuario'
+        };
+
+        if (app === 'candidates' && profile) {
+            userData.name = profile.name;
+        }
+
         return NextResponse.json({
             success: true,
-            user: {
-                cedula: profile.cedula,
-                name: profile.name
-            }
+            user: userData
         });
 
-    } catch (error) {
-        console.error('Error in authentication:', error);
+    } catch (error: any) {
+        console.error('Error in authentication route:', error);
         return NextResponse.json(
-            { success: false, error: 'Error de conexión con el servidor' },
+            { 
+                success: false, 
+                error: 'Error de conexión con el servidor', 
+                debug: error.message,
+                stack: error.stack
+            },
             { status: 500 }
         );
     }
