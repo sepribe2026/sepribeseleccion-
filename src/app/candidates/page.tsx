@@ -637,30 +637,6 @@ export default function CandidatesAdmin() {
               <h1 className="onboarding-title" style={{ fontSize: '28px', letterSpacing: '0.5px', marginBottom: '4px', color: '#ffffff', textShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>SUPERDEPORTE S.A.</h1>
               <p className="onboarding-subtitle" style={{ color: '#94a3b8', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>Panel de Gestión Administrativa</p>
             </div>
-            
-            <button 
-              onClick={() => { fetchCandidates(); fetchResumes(); fetchPipeline(); }} 
-              style={{ 
-                background: 'rgba(255,255,255,0.1)', 
-                border: '1px solid rgba(255,255,255,0.2)', 
-                color: 'white', 
-                padding: '10px 24px', 
-                borderRadius: '12px', 
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '700',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                backdropFilter: 'blur(10px)',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-              }}
-              onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.2)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-              onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.transform = 'translateY(0)'; }}
-            >
-              <RefreshCw size={18} /> Actualizar
-            </button>
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px', position: 'relative', zIndex: 1 }}>
@@ -701,6 +677,13 @@ export default function CandidatesAdmin() {
               <input type="text" value={portalUrl} onChange={e => setPortalUrl(e.target.value)} className="qr-input" />
             </div>
             <img src={qrCodeUrl} alt="QR" style={{ width: '64px', height: '64px' }} />
+            <button 
+              onClick={() => { fetchCandidates(); fetchResumes(); fetchPipeline(); }} 
+              className="ranking-btn-primary"
+              style={{ width: 'auto', padding: '12px 24px', marginLeft: 'auto', borderRadius: '10px' }}
+            >
+              <RefreshCw size={18} /> Actualizar Todo
+            </button>
           </div>
 
         <div className="tabs-nav">
