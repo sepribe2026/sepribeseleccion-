@@ -8,7 +8,7 @@ const WELCOME_TEXT = `A nombre de SUPERDEPORTE S.A. es un placer darte la bienve
 
 const REQUIRED_DOCS = [
   "Hoja de vida actualizada",
-  "Fotocopias de tamaño carnet",
+  "Foto tamaño carnet",
   "Fotocopias de cédula de identidad y papeleta de votación",
   "Certificado de antecedentes penales",
   "Carnet de vacunación (3 dosis)",
@@ -165,7 +165,7 @@ export default function OnboardingTabs() {
       }
       const map: Record<string, string> = {
         "Hoja de vida actualizada": "cv",
-        "Fotocopias de tamaño carnet": "foto",
+        "Foto tamaño carnet": "foto",
         "Fotocopias de cédula de identidad y papeleta de votación": "cedula_pap_vot",
         "Certificado de antecedentes penales": "antecedentes",
         "Carnet de vacunación (3 dosis)": "vacuna",
