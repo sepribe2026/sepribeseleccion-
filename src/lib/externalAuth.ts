@@ -15,6 +15,7 @@ export async function authenticateWithExternalService(
     password: string
 ): Promise<AuthResponse> {
     try {
+        console.log('Initiating external authentication for:', cedula);
         // Use the internal API route to avoid CORS issues
         const response = await fetch('/api/auth/login', {
             method: 'POST',
