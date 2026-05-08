@@ -38,28 +38,34 @@ export async function POST(request: NextRequest) {
         } catch (e) {
             console.error('WS Response is not JSON:', responseText);
             return NextResponse.json(
-                { success: false, error: 'Respuesta inválida del servidor de nómina', debug: responseText },
+                { success: false, error: 'Respuesta inválida del servidor de AD', debug: responseText },
                 { status: 502 }
             );
         }
 
-        if (authData.error || authData.success === false) {
+        // Si el AD falla, devolvemos el error con debug info
+        if (authData.error || authData.success === false || (authData.codigo && authData.codigo !== '1')) {
             return NextResponse.json(
-                { success: false, error: authData.message || 'Credenciales inválidas' },
+                { 
+                    success: false, 
+                    error: authData.message || authData.mensaje || 'Credenciales de Windows inválidas',
+                    debug_ad: authData 
+                },
                 { status: 401 }
             );
         }
 
         let profile = null;
-        const cleanCedula = cedula.trim();
+        const cleanUser = cedula.trim();
+        const shortUser = cleanUser.split('@')[0]; // Extraer 'jsoto' de 'jsoto@ec.aseyco.com'
 
-        // 2. Si es para el panel de candidatos, validar que la cédula esté autorizada en admin_profiles
+        // 2. Si es para el panel de candidatos, validar que el usuario esté autorizado en admin_profiles
         if (app === 'candidates') {
-            console.log(`Checking admin_profiles for cedula: "${cleanCedula}"`);
+            console.log(`Checking admin_profiles for user: "${cleanUser}" or "${shortUser}"`);
             const { data: profileData, error: profileError } = await supabase
                 .from('admin_profiles')
                 .select('*')
-                .eq('cedula', cleanCedula)
+                .or(`cedula.ilike."${cleanUser}",cedula.ilike."${shortUser}"`) // ilike para case-insensitive
                 .eq('is_active', true)
                 .maybeSingle();
             
