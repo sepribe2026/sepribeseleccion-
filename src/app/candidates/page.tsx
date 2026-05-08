@@ -82,6 +82,12 @@ export default function CandidatesAdmin() {
     if (user) {
       const savedKey = localStorage.getItem('openai_api_key')
       if (savedKey) setOpenAiKey(savedKey)
+      
+      // Ajustar pestaña inicial según el perfil
+      if (user.perfil === 'NOMINA' && activeTab !== 'nomina') {
+        setActiveTab('nomina')
+      }
+
       fetchCandidates()
       fetchResumes()
       fetchJobPositions()
@@ -734,11 +740,15 @@ export default function CandidatesAdmin() {
           </div>
 
         <div className="tabs-nav">
-          <button className={`tab-btn ${activeTab === 'seleccion' ? 'active' : ''}`} onClick={() => setActiveTab('seleccion')}>Inbox</button>
-          <button className={`tab-btn ${activeTab === 'ranking' ? 'active' : ''}`} onClick={() => setActiveTab('ranking')}>🏆 Ranking IA</button>
-          <button className={`tab-btn ${activeTab === 'pipeline' ? 'active' : ''}`} onClick={() => { setActiveTab('pipeline'); fetchPipeline() }}>📑 Resumen</button>
-          <button className={`tab-btn ${activeTab === 'onboarding' ? 'active' : ''}`} onClick={() => setActiveTab('onboarding')}>🚀 Onboarding</button>
-          <button className={`tab-btn ${activeTab === 'estadisticas' ? 'active' : ''}`} onClick={() => setActiveTab('estadisticas')}>📈 Estadísticas</button>
+          {(user?.perfil === 'RECLUTADOR' || user?.perfil === 'ADMIN') && (
+            <>
+              <button className={`tab-btn ${activeTab === 'seleccion' ? 'active' : ''}`} onClick={() => setActiveTab('seleccion')}>Inbox</button>
+              <button className={`tab-btn ${activeTab === 'ranking' ? 'active' : ''}`} onClick={() => setActiveTab('ranking')}>🏆 Ranking IA</button>
+              <button className={`tab-btn ${activeTab === 'pipeline' ? 'active' : ''}`} onClick={() => { setActiveTab('pipeline'); fetchPipeline() }}>📑 Resumen</button>
+              <button className={`tab-btn ${activeTab === 'onboarding' ? 'active' : ''}`} onClick={() => setActiveTab('onboarding')}>🚀 Onboarding</button>
+              <button className={`tab-btn ${activeTab === 'estadisticas' ? 'active' : ''}`} onClick={() => setActiveTab('estadisticas')}>📈 Estadísticas</button>
+            </>
+          )}
           {(user?.perfil === 'NOMINA' || user?.perfil === 'ADMIN') && (
             <button className={`tab-btn ${activeTab === 'nomina' ? 'active' : ''}`} onClick={() => setActiveTab('nomina')}>💼 Nómina</button>
           )}
