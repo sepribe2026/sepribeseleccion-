@@ -65,7 +65,8 @@ export async function POST(request: NextRequest) {
             const { data: profileData, error: profileError } = await supabase
                 .from('admin_profiles')
                 .select('*')
-                .or(`cedula.ilike."${cleanUser}",cedula.ilike."${shortUser}"`) // ilike para case-insensitive
+                // Buscamos en la nueva columna ad_user o mantenemos compatibilidad con cedula
+                .or(`ad_user.ilike."${cleanUser}",ad_user.ilike."${shortUser}",cedula.ilike."${cleanUser}",cedula.ilike."${shortUser}"`)
                 .eq('is_active', true)
                 .maybeSingle();
             
