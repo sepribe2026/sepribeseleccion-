@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
                     { 
                         success: false, 
                         error: 'Usuario no autorizado para acceder al panel administrativo de candidatos',
-                        debug_cedula: cleanCedula 
+                        debug_cedula: cleanUser 
                     },
                     { status: 403 }
                 );
