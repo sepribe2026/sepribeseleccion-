@@ -867,9 +867,18 @@ export default function CandidatesAdmin() {
                                 )}
                                 {/* Botón de IA extra por si quieren profundizar aunque ya tengan datos básicos */}
                                 {r.classification_status !== 'REVIEWED' && (
-                                  <button className="ai-btn" style={{ marginTop: '8px', background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }} onClick={() => handleAnalyzeResume(r.id)} disabled={analyzingId === r.id}>
-                                    {analyzingId === r.id ? 'Analizando...' : 'Profundizar con IA'}
-                                  </button>
+                                  <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                                    <button className="ai-btn" style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }} onClick={() => handleAnalyzeResume(r.id)} disabled={analyzingId === r.id}>
+                                      {analyzingId === r.id ? 'Analizando...' : 'Profundizar con IA'}
+                                    </button>
+                                    <button 
+                                      className="ai-btn" 
+                                      style={{ background: '#10b981', boxShadow: '0 4px 10px rgba(16, 185, 129, 0.2)' }} 
+                                      onClick={() => handleMarkAsReviewed(r.id)}
+                                    >
+                                      Aceptar Directo (Sin IA)
+                                    </button>
+                                  </div>
                                 )}
                               </div>
                             ) : (
