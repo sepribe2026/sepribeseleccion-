@@ -47,8 +47,8 @@ export async function POST(req: NextRequest) {
     let pdfText = '';
     try {
       const buffer = Buffer.from(await fileData.arrayBuffer());
-      // Importación dinámica para evitar problemas de bundling
-      const pdfParse = (await import('pdf-parse')).default;
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const pdfParse = require('pdf-parse') as (buffer: Buffer) => Promise<{ text: string }>;
       const pdfData = await pdfParse(buffer);
       pdfText = pdfData.text || '';
     } catch (pdfError: any) {
