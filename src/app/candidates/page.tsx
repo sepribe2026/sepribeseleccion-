@@ -799,7 +799,8 @@ export default function CandidatesAdmin() {
           <>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginBottom: '16px' }}>
               <button onClick={() => setShowSettings(true)} style={{ background: 'white', border: '1px solid #ddd', padding: '8px', borderRadius: '6px' }}><Settings size={16}/></button>
-              <button onClick={handleScanEmails} disabled={scanning} className="ai-btn" style={{ background: '#3b82f6' }}><RefreshCw size={16} className={scanning ? "animate-spin" : ""}/> {scanning ? 'Escaneando...' : 'Buscar Nuevos Correos'}</button>
+              {/* BOTÓN DESACTIVADO TEMPORALMENTE - para reactivar quitar display:none */}
+              <button onClick={handleScanEmails} disabled={scanning} className="ai-btn" style={{ background: '#3b82f6', display: 'none' }}><RefreshCw size={16} className={scanning ? "animate-spin" : ""}/> {scanning ? 'Escaneando...' : 'Buscar Nuevos Correos'}</button>
             </div>
             <div style={{ 
               display: 'flex', 

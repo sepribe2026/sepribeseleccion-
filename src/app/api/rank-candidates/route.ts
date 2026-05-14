@@ -4,27 +4,33 @@ import OpenAI from 'openai';
 
 export async function POST(req: NextRequest) {
   try {
-    const { cargo, ciudad, funciones, apiKey, cedula } = await req.json();
+    const { cargo, ciudad, funciones, apiKey, cedula, company_slug } = await req.json();
     const openaiKey = (apiKey || process.env.OPENAI_API_KEY || '').trim();
 
     if (!openaiKey) return NextResponse.json({ error: 'Falta API Key de OpenAI' }, { status: 401 });
 
     const openai = new OpenAI({ apiKey: openaiKey });
 
-    // 1. Cargar candidatos del usuario
+    // 1. Cargar candidatos filtrados por empresa
     let query = supabase
       .from('email_resumes')
       .select('*')
-      .or('classification_status.eq.REVIEWED,position.neq.""');
-    
-    if (cedula) {
+      .neq('classification_status', 'DELETED');
+
+    // Filtrar por empresa si viene el slug
+    if (company_slug) {
+      query = query.eq('company_slug', company_slug);
+    } else if (cedula) {
+      // Fallback: filtrar por usuario si no hay empresa
       query = query.eq('created_by_cedula', cedula);
     }
 
     const { data: resumes, error: dbError } = await query;
 
     if (dbError) throw dbError;
-    if (!resumes || resumes.length === 0) return NextResponse.json({ error: 'No hay candidatos listos para rankear' }, { status: 404 });
+    if (!resumes || resumes.length === 0) {
+      return NextResponse.json({ error: 'No hay candidatos en la base de datos para esta empresa.' }, { status: 404 });
+    }
 
     const perfiles = resumes.map(r => {
       return `[ID: ${r.id}] 
