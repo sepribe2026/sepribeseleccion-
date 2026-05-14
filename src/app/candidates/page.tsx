@@ -198,9 +198,19 @@ export default function CandidatesAdmin() {
     const { data } = await supabase
       .from('job_positions')
       .select('*')
-      .eq('company_slug', user?.company_slug)
-      .order('created_at', { ascending: false })
-    if (data) setJobPositions(data)
+      .or(`company_slug.eq.${user?.company_slug},company_slug.eq.superdeporte`)
+      .order('cargo', { ascending: true })
+    if (data) {
+      // Eliminar duplicados por nombre de cargo (preferir los propios sobre los de superdeporte)
+      const seen = new Set<string>()
+      const unique = data.filter(p => {
+        const key = p.cargo.toLowerCase()
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+      setJobPositions(unique)
+    }
   }
 
   const handleSavePosition = async () => {

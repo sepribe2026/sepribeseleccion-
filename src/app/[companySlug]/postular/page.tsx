@@ -86,9 +86,18 @@ export default function ApplyPage() {
     const { data } = await supabase
       .from('job_positions')
       .select('*')
-      .eq('company_slug', companySlug)
+      .or(`company_slug.eq.${companySlug},company_slug.eq.superdeporte`)
       .order('cargo', { ascending: true })
-    if (data) setJobPositions(data)
+    if (data) {
+      const seen = new Set<string>()
+      const unique = data.filter(p => {
+        const key = p.cargo.toLowerCase()
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+      setJobPositions(unique)
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
