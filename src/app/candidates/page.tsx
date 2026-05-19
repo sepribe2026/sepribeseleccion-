@@ -942,6 +942,7 @@ export default function CandidatesAdmin() {
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
                                   {r.city && <span className="ai-tag"><MapPin size={12} /> {r.city}</span>}
                                   {r.position && <span className="ai-tag"><Briefcase size={12} /> {r.position}</span>}
+                                  {r.age && <span className="ai-tag" style={{ background: '#fce7f3', color: '#9d174d' }}><User size={12} /> {r.age} años</span>}
                                   {r.experience_years && <span className="ai-tag" style={{ background: '#fef9c3', color: '#854d0e' }}>⏱ {r.experience_years} años</span>}
                                   {r.skills && r.skills.split(',').map((s: string, i: number) => i < 3 && <span key={i} className="ai-tag" style={{ background: '#f0fdf4', color: '#166534' }}>{s.trim()}</span>)}
                                 </div>

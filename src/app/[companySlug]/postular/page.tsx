@@ -54,6 +54,7 @@ export default function ApplyPage() {
     cargo: '',
     ciudad: '',
     experiencia: '',
+    edad: '',
     logro: '',
     herramientas: '',
     consentimiento: false,
@@ -188,6 +189,7 @@ export default function ApplyPage() {
         position: formData.cargo,
         city: formData.ciudad,
         experience_years: formData.experiencia,
+        age: formData.edad,
         skills: formData.herramientas,
         main_achievement: formData.logro,
         key_tools: formData.herramientas,
@@ -327,12 +329,19 @@ export default function ApplyPage() {
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Años de experiencia</label>
                 <div style={{ position: 'relative' }}>
                   <Clock size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                   <input type="number" name="experiencia" required placeholder="Ej: 3" value={formData.experiencia} onChange={handleChange} style={{ width: '100%', padding: '12px 12px 12px 42px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Edad</label>
+                <div style={{ position: 'relative' }}>
+                  <User size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                  <input type="number" name="edad" required placeholder="Ej: 25" value={formData.edad} onChange={handleChange} style={{ width: '100%', padding: '12px 12px 12px 42px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} />
                 </div>
               </div>
             </div>
