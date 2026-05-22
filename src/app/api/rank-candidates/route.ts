@@ -59,7 +59,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No hay candidatos recientes (últimos 90 días) en la base de datos para esta empresa.' }, { status: 404 });
     }
 
-    const perfiles = resumes.map(r => {
+    // 2. Pre-filtrar por palabras clave del cargo buscado
+    let finalResumes = resumes;
+    if (cargo) {
+      const cargoKeywords = cargo.toLowerCase().split(' ').filter((w: string) => w.length > 3);
+      if (cargoKeywords.length > 0) {
+        const keywordMatched = resumes.filter(r => {
+          const pos = (r.position || '').toLowerCase();
+          return cargoKeywords.some((word: string) => pos.includes(word));
+        });
+        if (keywordMatched.length > 0) {
+          finalResumes = keywordMatched;
+        }
+      }
+    }
+
+    // 3. Limitar a un máximo de 60 candidatos (los más recientes) para prevenir desbordamiento de contexto
+    finalResumes = finalResumes
+      .sort((a, b) => new Date(b.received_date || 0).getTime() - new Date(a.received_date || 0).getTime())
+      .slice(0, 60);
+
+    const perfiles = finalResumes.map(r => {
       return `[ID: ${r.id}] 
       Nombre: ${r.sender_name}
       Cargo: ${r.position}
@@ -69,13 +89,13 @@ export async function POST(req: NextRequest) {
       Resumen: ${r.ai_summary}`;
     }).join('\n\n');
 
-    const prompt = `Evalúa a TODOS los ${resumes.length} candidatos para el cargo "${cargo}" en "${ciudad}".
+    const prompt = `Evalúa a TODOS los ${finalResumes.length} candidatos para el cargo "${cargo}" en "${ciudad}".
     REQUISITOS: ${funciones}
     
     CANDIDATOS A EVALUAR:
     ${perfiles}
     
-    INSTRUCCIÓN CRÍTICA: Debes incluir obligatoriamente a los ${resumes.length} candidatos en tu respuesta. No omitas a ninguno.
+    INSTRUCCIÓN CRÍTICA: Debes incluir obligatoriamente a los ${finalResumes.length} candidatos en tu respuesta. No omitas a ninguno.
     Responde ÚNICAMENTE con un objeto JSON que tenga una propiedad "rankings": [{"id": "...", "score": 0-100, "justification": "..."}]`;
 
     const response = await openai.chat.completions.create({
