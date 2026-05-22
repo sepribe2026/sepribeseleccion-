@@ -11,11 +11,15 @@ export async function POST(req: NextRequest) {
 
     const openai = new OpenAI({ apiKey: openaiKey });
 
-    // 1. Cargar candidatos filtrados por empresa
+    // 1. Cargar candidatos filtrados por empresa de los últimos 30 días
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
     let query = supabase
       .from('email_resumes')
       .select('*')
-      .neq('classification_status', 'DELETED');
+      .neq('classification_status', 'DELETED')
+      .gte('received_date', thirtyDaysAgo.toISOString());
 
     // Filtrar por empresa si viene el slug
     if (company_slug) {
@@ -25,11 +29,34 @@ export async function POST(req: NextRequest) {
       query = query.eq('created_by_cedula', cedula);
     }
 
-    const { data: resumes, error: dbError } = await query;
+    let { data: resumes, error: dbError } = await query;
 
     if (dbError) throw dbError;
+
+    // Si no hay candidatos en los últimos 30 días, buscar en los últimos 90 días como fallback
     if (!resumes || resumes.length === 0) {
-      return NextResponse.json({ error: 'No hay candidatos en la base de datos para esta empresa.' }, { status: 404 });
+      const ninetyDaysAgo = new Date();
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+      let fallbackQuery = supabase
+        .from('email_resumes')
+        .select('*')
+        .neq('classification_status', 'DELETED')
+        .gte('received_date', ninetyDaysAgo.toISOString());
+
+      if (company_slug) {
+        fallbackQuery = fallbackQuery.eq('company_slug', company_slug);
+      } else if (cedula) {
+        fallbackQuery = fallbackQuery.eq('created_by_cedula', cedula);
+      }
+
+      const { data: fallbackResumes, error: fallbackError } = await fallbackQuery;
+      if (fallbackError) throw fallbackError;
+      resumes = fallbackResumes;
+    }
+
+    if (!resumes || resumes.length === 0) {
+      return NextResponse.json({ error: 'No hay candidatos recientes (últimos 90 días) en la base de datos para esta empresa.' }, { status: 404 });
     }
 
     const perfiles = resumes.map(r => {
@@ -52,7 +79,7 @@ export async function POST(req: NextRequest) {
     Responde ÚNICAMENTE con un objeto JSON que tenga una propiedad "rankings": [{"id": "...", "score": 0-100, "justification": "..."}]`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: "Eres un experto en selección de personal que responde exclusivamente en JSON." },
         { role: "user", content: prompt }

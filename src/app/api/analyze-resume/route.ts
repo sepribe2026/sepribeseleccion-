@@ -64,9 +64,9 @@ export async function POST(req: NextRequest) {
       }, { status: 422 });
     }
 
-    // 5. Analizar con OpenAI GPT-4o
+    // 5. Analizar con OpenAI GPT-4o-mini
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       messages: [
         { 
           role: 'system', 
