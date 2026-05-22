@@ -64,6 +64,12 @@ export default function CandidatesAdmin() {
   const [pipelineCargoFilter, setPipelineCargoFilter] = useState('')
   const [pipelineUpdating, setPipelineUpdating] = useState<string | null>(null)
 
+  // === EVALUACIÓN PSICOMÉTRICA ===
+  const [psychometricTests, setPsychometricTests] = useState<any[]>([])
+  const [viewingPsychometric, setViewingPsychometric] = useState<any | null>(null)
+  const [sendingPsychometricId, setSendingPsychometricId] = useState<string | null>(null)
+  const [qrModalUrl, setQrModalUrl] = useState<string | null>(null)
+
   // === BANDEJA FILTERS ===
   const [inboxSearch, setInboxSearch] = useState('')
   const [inboxCargo, setInboxCargo] = useState('')
@@ -109,6 +115,9 @@ export default function CandidatesAdmin() {
         p.created_by_cedula === user.cedula
       ))
     }
+    // Cargar pruebas psicométricas
+    const { data: psychData } = await supabase.from('candidate_psychometric_tests').select('*')
+    if (psychData) setPsychometricTests(psychData)
     setPipelineLoading(false)
   }
 
@@ -191,6 +200,36 @@ export default function CandidatesAdmin() {
     } catch (error: any) {
       console.error("Error en proceso de aprobación:", error);
       alert("❌ Error crítico: " + error.message);
+    }
+  }
+
+  const handleSendPsychometricEmail = async (candidate: any, cargo: string) => {
+    if (!candidate || !candidate.id) return
+    if (!confirm(`¿Deseas enviar la citación de evaluación psicométrica a ${candidate.sender_email}?`)) return
+    
+    setSendingPsychometricId(candidate.id)
+    try {
+      const res = await fetch('/api/send-test-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: candidate.sender_email,
+          name: candidate.sender_name || candidate.name,
+          cargo,
+          candidateId: candidate.id
+        })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        alert('✅ Correo de invitación con el enlace y QR enviado con éxito.')
+        fetchPipeline()
+      } else {
+        alert('❌ Error al enviar correo: ' + (data.error || 'Fallo desconocido'))
+      }
+    } catch (e: any) {
+      alert('❌ Error de conexión: ' + e.message)
+    } finally {
+      setSendingPsychometricId(null)
     }
   }
 
@@ -1216,6 +1255,7 @@ export default function CandidatesAdmin() {
                     <th>Candidato</th>
                     <th>Cargo</th>
                     <th>Teléfono / WhatsApp</th>
+                    <th>Psicométrico</th>
                     <th>Estado</th>
                     <th>Entrevista</th>
                     <th style={{ textAlign: 'right' }}>Acciones</th>
@@ -1224,7 +1264,7 @@ export default function CandidatesAdmin() {
                 <tbody>
                   {pipelineData.length === 0 ? (
                     <tr>
-                      <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+                      <td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
                         No hay candidatos en el resumen actualmente.
                       </td>
                     </tr>
@@ -1278,6 +1318,99 @@ export default function CandidatesAdmin() {
                             </button>
                           </div>
                         </td>
+                        {(() => {
+                          const psychTest = psychometricTests.find(t => t.resume_id === p.resume_id);
+                          if (!psychTest) {
+                            return (
+                              <td>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                  <span className="pipeline-badge" style={{ background: '#f1f5f9', color: '#64748b', border: '1px solid #cbd5e1', textAlign: 'center', fontSize: '11px', display: 'block' }}>
+                                    ⏳ PENDIENTE
+                                  </span>
+                                  <div style={{ display: 'flex', gap: '4px' }}>
+                                    <button 
+                                      className="track-btn" 
+                                      style={{ padding: '4px 8px', fontSize: '11px', color: '#2563eb', borderColor: '#dbeafe', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                      onClick={() => handleSendPsychometricEmail(p.candidate, p.cargo)}
+                                      disabled={sendingPsychometricId === p.candidate?.id}
+                                    >
+                                      {sendingPsychometricId === p.candidate?.id ? '...' : '✉️ Enviar'}
+                                    </button>
+                                    <button 
+                                      className="track-btn" 
+                                      style={{ padding: '4px 8px', fontSize: '11px', color: '#8b5cf6', borderColor: '#ddd6fe', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                      onClick={() => {
+                                        const protocol = window.location.protocol;
+                                        const host = window.location.host;
+                                        setQrModalUrl(`${protocol}//${host}/evaluacion/${p.resume_id}`);
+                                      }}
+                                    >
+                                      📱 QR
+                                    </button>
+                                  </div>
+                                </div>
+                              </td>
+                            );
+                          }
+
+                          const isCompleted = psychTest.status === 'COMPLETADO';
+                          const sections = psychTest.sections_status || {};
+                          const totalSecs = Object.keys(sections).length || 7;
+                          const completedSecs = Object.values(sections).filter(s => s === 'COMPLETADO').length;
+
+                          return (
+                            <td>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                <span 
+                                  className="pipeline-badge" 
+                                  style={{ 
+                                    background: isCompleted ? '#dcfce7' : '#fef9c3', 
+                                    color: isCompleted ? '#166534' : '#854d0e', 
+                                    border: '1px solid currentColor',
+                                    textAlign: 'center',
+                                    fontSize: '11px',
+                                    display: 'block'
+                                  }}
+                                >
+                                  {isCompleted ? '✅ COMPLETADO' : `⏳ EN PROCESO (${completedSecs}/${totalSecs})`}
+                                </span>
+                                <div style={{ display: 'flex', gap: '4px' }}>
+                                  {isCompleted ? (
+                                    <button 
+                                      className="track-btn" 
+                                      style={{ padding: '4px 8px', fontSize: '11px', color: '#10b981', borderColor: '#bbf7d0', width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                      onClick={() => setViewingPsychometric({ test: psychTest, candidate: p.candidate })}
+                                    >
+                                      📊 Resultados
+                                    </button>
+                                  ) : (
+                                    <>
+                                      <button 
+                                        className="track-btn" 
+                                        style={{ padding: '4px 8px', fontSize: '11px', color: '#2563eb', borderColor: '#dbeafe', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                        onClick={() => handleSendPsychometricEmail(p.candidate, p.cargo)}
+                                        disabled={sendingPsychometricId === p.candidate?.id}
+                                      >
+                                        {sendingPsychometricId === p.candidate?.id ? '...' : '✉️ Reenviar'}
+                                      </button>
+                                      <button 
+                                        className="track-btn" 
+                                        style={{ padding: '4px 8px', fontSize: '11px', color: '#8b5cf6', borderColor: '#ddd6fe', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                        onClick={() => {
+                                          const protocol = window.location.protocol;
+                                          const host = window.location.host;
+                                          setQrModalUrl(`${protocol}//${host}/evaluacion/${p.resume_id}`);
+                                        }}
+                                      >
+                                        📱 QR
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                          );
+                        })()}
                         <td>
                           <span className="pipeline-badge" style={{ background: '#dbeafe', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
                             {p.status || 'PENDIENTE'}
@@ -1589,6 +1722,122 @@ export default function CandidatesAdmin() {
             <p style={{ color: '#64748b' }}>Bienvenido al panel de gestión de nómina para {user?.company_name}.</p>
           </div>
         )}
+
+          {/* Modales de Evaluación Psicométrica */}
+          {qrModalUrl && (
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
+              <div style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '90%', maxWidth: '400px', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', color: '#0f172a' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>Código QR de Evaluación</h3>
+                  <button onClick={() => setQrModalUrl(null)} className="track-btn" style={{ padding: '6px' }}><X size={16} /></button>
+                </div>
+                <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px' }}>Indique al candidato que escanee este código con su teléfono celular para iniciar la evaluación psicométrica.</p>
+                <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'inline-block' }}>
+                  <img 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrModalUrl)}`} 
+                    alt="QR Code" 
+                    style={{ width: '250px', height: '250px', display: 'block' }}
+                  />
+                </div>
+                <div style={{ marginTop: '20px' }}>
+                  <a href={qrModalUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: '#2563eb', fontWeight: 'bold', textDecoration: 'underline' }}>Abrir enlace directo en el navegador</a>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {viewingPsychometric && (
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
+              <div style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '95%', maxWidth: '750px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', color: '#0f172a' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #f1f5f9', paddingBottom: '16px' }}>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 800 }}>Resultados Psicométricos</h2>
+                    <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '13px' }}>Candidato: <strong>{viewingPsychometric.candidate?.sender_name}</strong> · Cargo: {viewingPsychometric.candidate?.position}</p>
+                  </div>
+                  <button onClick={() => setViewingPsychometric(null)} className="track-btn" style={{ padding: '6px' }}><X /></button>
+                </div>
+
+                <h3 style={{ fontSize: '15px', color: '#1e293b', fontWeight: 700, marginBottom: '12px' }}>Aptitudes Técnicas</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '28px' }}>
+                  {[
+                    { name: 'Raz. Verbal', score: viewingPsychometric.test.verbal_score, color: '#3b82f6' },
+                    { name: 'Raz. Espacial', score: viewingPsychometric.test.espacial_score, color: '#10b981' },
+                    { name: 'Raz. Lógico', score: viewingPsychometric.test.logico_score, color: '#f59e0b' },
+                    { name: 'Raz. Numérico', score: viewingPsychometric.test.numerico_score, color: '#ec4899' },
+                    { name: 'Raz. Abstracto', score: viewingPsychometric.test.abstracto_score, color: '#8b5cf6' },
+                    { name: 'Ética y Cumpl.', score: viewingPsychometric.test.ethics_score, color: '#06b6d4' }
+                  ].map((item, idx) => (
+                    <div key={idx} style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+                      <p style={{ margin: '0 0 6px', fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>{item.name}</p>
+                      <span style={{ fontSize: '28px', fontWeight: 900, color: item.color }}>{item.score}</span>
+                      <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>/100</span>
+                    </div>
+                  ))}
+                </div>
+
+                <h3 style={{ fontSize: '15px', color: '#1e293b', fontWeight: 700, marginBottom: '12px' }}>Perfil de Comportamiento Kudert (DISC)</h3>
+                <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ display: 'grid', gap: '16px' }}>
+                    {[
+                      { 
+                        dim: 'D', 
+                        name: 'Decisión (Dominancia)', 
+                        desc: 'Mide cómo responde el candidato a los problemas y retos. Valores altos indican proactividad, liderazgo y orientación a resultados.',
+                        val: viewingPsychometric.test.kudert_disc?.D || 0, 
+                        color: 'linear-gradient(90deg, #f97316, #ef4444)' 
+                      },
+                      { 
+                        dim: 'I', 
+                        name: 'Interacción (Influencia)', 
+                        desc: 'Mide cómo influye el candidato en otras personas. Valores altos indican sociabilidad, persuasión y optimismo.',
+                        val: viewingPsychometric.test.kudert_disc?.I || 0, 
+                        color: 'linear-gradient(90deg, #f59e0b, #fbbf24)' 
+                      },
+                      { 
+                        dim: 'S', 
+                        name: 'Serenidad (Estabilidad)', 
+                        desc: 'Mide cómo responde a los cambios de ritmo y presiones. Valores altos indican paciencia, constancia y espíritu colaborativo.',
+                        val: viewingPsychometric.test.kudert_disc?.S || 0, 
+                        color: 'linear-gradient(90deg, #10b981, #22c55e)' 
+                      },
+                      { 
+                        dim: 'C', 
+                        name: 'Cumplimiento (Normas)', 
+                        desc: 'Mide cómo responde a las reglas y procedimientos establecidos. Valores altos indican precisión, análisis y disciplina.',
+                        val: viewingPsychometric.test.kudert_disc?.C || 0, 
+                        color: 'linear-gradient(90deg, #3b82f6, #06b6d4)' 
+                      }
+                    ].map((discItem, idx) => (
+                      <div key={idx}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                          <span style={{ fontWeight: 800, color: '#1e293b', fontSize: '14px' }}>
+                            <span style={{ 
+                              background: discItem.dim === 'D' ? '#ef4444' : discItem.dim === 'I' ? '#f59e0b' : discItem.dim === 'S' ? '#10b981' : '#3b82f6', 
+                              color: 'white', 
+                              padding: '2px 6px', 
+                              borderRadius: '4px', 
+                              marginRight: '8px', 
+                              fontSize: '11px' 
+                            }}>{discItem.dim}</span>
+                            {discItem.name}
+                          </span>
+                          <strong style={{ fontSize: '15px', color: '#1e293b' }}>{discItem.val}%</strong>
+                        </div>
+                        <div style={{ background: '#e2e8f0', height: '10px', borderRadius: '5px', overflow: 'hidden', marginBottom: '6px' }}>
+                          <div style={{ width: `${discItem.val}%`, height: '100%', background: discItem.color, borderRadius: '5px' }} />
+                        </div>
+                        <p style={{ margin: 0, fontSize: '11px', color: '#64748b', lineHeight: '1.4' }}>{discItem.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '28px', display: 'flex', justifyContent: 'flex-end' }}>
+                  <button onClick={() => setViewingPsychometric(null)} className="track-btn" style={{ background: '#0f172a', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px' }}>Cerrar Reporte</button>
+                </div>
+              </div>
+            </div>
+          )}
 
         </div>
       </div>
