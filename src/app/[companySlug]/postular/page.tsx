@@ -45,6 +45,8 @@ export default function ApplyPage() {
   const [file, setFile] = useState<File | null>(null)
   const [jobPositions, setJobPositions] = useState<any[]>([])
   const [companyInfo, setCompanyInfo] = useState({ name: 'SUPERDEPORTE S.A.', slug: 'superdeporte' })
+  const [postulationEnabled, setPostulationEnabled] = useState(true)
+  const [checkingSettings, setCheckingSettings] = useState(true)
 
   const [formData, setFormData] = useState({
     nombre: '',
@@ -76,6 +78,7 @@ export default function ApplyPage() {
   }, [companyInfo.name])
 
   const fetchCompanyInfo = async () => {
+    setCheckingSettings(true)
     // Intentar obtener el nombre de la empresa desde los perfiles
     const { data } = await supabase
       .from('admin_profiles')
@@ -90,6 +93,25 @@ export default function ApplyPage() {
       // Fallback simple si no hay perfil creado aún para ese slug
       const name = companySlug.charAt(0).toUpperCase() + companySlug.slice(1) + ' S.A.'
       setCompanyInfo({ name, slug: companySlug })
+    }
+
+    try {
+      const { data: settings, error: settingsError } = await supabase
+        .from('company_settings')
+        .select('postulation_enabled')
+        .eq('company_slug', companySlug)
+        .maybeSingle()
+      if (settingsError) throw settingsError
+      if (settings) {
+        setPostulationEnabled(settings.postulation_enabled)
+      } else {
+        setPostulationEnabled(true)
+      }
+    } catch (e) {
+      console.error('Error fetching company postulation settings:', e)
+      setPostulationEnabled(true) // fallback
+    } finally {
+      setCheckingSettings(false)
     }
   }
 
@@ -207,6 +229,36 @@ export default function ApplyPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (checkingSettings) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #002f6c 0%, #001f4a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif' }}>
+        <div style={{ textAlign: 'center' }}>
+          <Clock size={48} color="white" className="animate-spin" style={{ margin: '0 auto 16px', opacity: 0.8 }} />
+          <p style={{ color: 'white', fontSize: '18px', fontWeight: 'bold' }}>Cargando portal...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!postulationEnabled) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #002f6c 0%, #001f4a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'system-ui, sans-serif' }}>
+        <div style={{ background: 'white', padding: '48px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', textAlign: 'center', maxWidth: '500px', width: '100%' }}>
+          <div style={{ background: '#eff6ff', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+            <Clock size={44} color="#2563eb" />
+          </div>
+          <h2 style={{ fontSize: '26px', fontWeight: '800', color: '#0f172a', margin: '0 0 16px', lineHeight: '1.2' }}>Estamos trabajando en el servicio</h2>
+          <p style={{ color: '#475569', fontSize: '15px', lineHeight: '1.6', margin: '0 0 24px' }}>
+            En este momento, la recepción de nuevas solicitudes de postulación para <strong>{companyInfo.name}</strong> no está disponible.
+          </p>
+          <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', fontSize: '13px', color: '#64748b', border: '1px solid #e2e8f0', margin: '0 0 12px' }}>
+            Pronto habilitaremos el portal para recibir más candidatos. ¡Muchas gracias por tu interés en formar parte de nuestro equipo!
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (isSuccess) {

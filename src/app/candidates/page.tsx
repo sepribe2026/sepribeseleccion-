@@ -315,6 +315,44 @@ export default function CandidatesAdmin() {
   const [aiRecommendation, setAiRecommendation] = useState<any | null>(null)
   const [activeResultsTab, setActiveResultsTab] = useState<'resumen' | 'disc' | 'cognicion' | 'preguntas'>('resumen')
 
+  // === CONFIGURACIÓN DE POSTULACIONES POR EMPRESA ===
+  const [companySettings, setCompanySettings] = useState<Record<string, boolean>>({
+    superdeporte: true,
+    medeport: true,
+    equinox: true
+  })
+
+  const fetchCompanySettings = async () => {
+    try {
+      const { data, error } = await supabase.from('company_settings').select('*')
+      if (error) throw error
+      if (data) {
+        const settings: Record<string, boolean> = { superdeporte: true, medeport: true, equinox: true }
+        data.forEach((row: any) => {
+          settings[row.company_slug] = row.postulation_enabled
+        })
+        setCompanySettings(settings)
+      }
+    } catch (e) {
+      console.error('Error fetching company settings:', e)
+    }
+  }
+
+  const toggleCompanyPostulation = async (slug: string, currentStatus: boolean) => {
+    const newStatus = !currentStatus
+    setCompanySettings(prev => ({ ...prev, [slug]: newStatus }))
+    try {
+      const { error } = await supabase
+        .from('company_settings')
+        .upsert({ company_slug: slug, postulation_enabled: newStatus }, { onConflict: 'company_slug' })
+      if (error) throw error
+    } catch (e: any) {
+      console.error('Error updating company setting:', e)
+      setCompanySettings(prev => ({ ...prev, [slug]: currentStatus }))
+      alert('No se pudo actualizar la configuración en la base de datos: ' + e.message)
+    }
+  }
+
   useEffect(() => {
     if (!viewingPsychometric) {
       setAiRecommendation(null)
@@ -389,6 +427,7 @@ export default function CandidatesAdmin() {
       fetchResumes()
       fetchJobPositions()
       fetchPipeline()
+      fetchCompanySettings()
     }
   }, [user])
 
@@ -1126,6 +1165,34 @@ export default function CandidatesAdmin() {
                 alt="QR Postulación"
                 style={{ width: '64px', height: '64px', borderRadius: '8px' }}
               />
+            </div>
+
+            {/* SEPARADOR */}
+            <div style={{ width: '1px', background: '#e2e8f0', alignSelf: 'stretch' }} />
+
+            {/* ACTIVACIÓN DE POSTULACIÓN POR COMPAÑÍA */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '220px' }}>
+              <label className="ranking-label">🟢 Recepción de Candidatos</label>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', background: '#f8fafc', padding: '10px 16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                {[
+                  { slug: 'superdeporte', name: 'Superdeporte' },
+                  { slug: 'medeport', name: 'Medeport' },
+                  { slug: 'equinox', name: 'Equinox' }
+                ].map(comp => {
+                  const isEnabled = companySettings[comp.slug] !== false;
+                  return (
+                    <label key={comp.slug} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', fontWeight: '800', cursor: 'pointer', color: '#1e293b' }}>
+                      <input
+                        type="checkbox"
+                        checked={isEnabled}
+                        onChange={() => toggleCompanyPostulation(comp.slug, isEnabled)}
+                        style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#2563eb' }}
+                      />
+                      <span>{comp.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
 
             <button
