@@ -108,7 +108,7 @@ export default function CandidatePsychometricPortal() {
 
   // 2. Temporizador para test activo
   useEffect(() => {
-    if (!activeSection) return;
+    if (!activeSection || showInstructions) return;
     const limit = SECTION_DETAILS[activeSection].time;
     if (limit === 0) return; // Sin límite
 
@@ -125,7 +125,7 @@ export default function CandidatePsychometricPortal() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [activeSection]);
+  }, [activeSection, showInstructions]);
 
   // 3. Manejo de inicio de sección
   const handleStartSectionClick = (secKey: string) => {
