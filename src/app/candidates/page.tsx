@@ -545,6 +545,31 @@ export default function CandidatesAdmin() {
     XLSX.writeFile(wb, "Onboarding.xlsx");
   }
 
+  // Métricas para el Inbox
+  const inboxMetrics = (() => {
+    const total = resumes.length;
+    const byCargo: Record<string, number> = {};
+    const byCity: Record<string, number> = {};
+    
+    resumes.forEach(r => {
+      const cargo = (r.position || 'No Especificado').trim();
+      const city = (r.city || 'No Especificada').trim();
+      
+      byCargo[cargo] = (byCargo[cargo] || 0) + 1;
+      byCity[city] = (byCity[city] || 0) + 1;
+    });
+
+    const topCargos = Object.entries(byCargo)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+      
+    const topCities = Object.entries(byCity)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+
+    return { total, topCargos, topCities };
+  })();
+
   if (!isMounted) return null;
 
   return (
@@ -840,6 +865,79 @@ export default function CandidatesAdmin() {
               <button onClick={() => setShowSettings(true)} style={{ background: 'white', border: '1px solid #ddd', padding: '8px', borderRadius: '6px' }}><Settings size={16}/></button>
               {/* BOTÓN DESACTIVADO TEMPORALMENTE - para reactivar quitar display:none */}
               <button onClick={handleScanEmails} disabled={scanning} className="ai-btn" style={{ background: '#3b82f6', display: 'none' }}><RefreshCw size={16} className={scanning ? "animate-spin" : ""}/> {scanning ? 'Escaneando...' : 'Buscar Nuevos Correos'}</button>
+            </div>
+
+            {/* Metricas de Candidatos por Cargo y Ciudad */}
+            <div style={{ 
+              background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', 
+              color: 'white', 
+              padding: '20px 24px', 
+              borderRadius: '16px', 
+              marginBottom: '20px', 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: '24px',
+              boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)',
+              border: '1px solid rgba(255,255,255,0.05)'
+            }}>
+              {/* Total Card */}
+              <div style={{ 
+                borderRight: '1px solid rgba(255,255,255,0.1)', 
+                paddingRight: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center'
+              }}>
+                <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Candidatos</span>
+                <span style={{ fontSize: '42px', fontWeight: 900, color: '#3b82f6', lineHeight: 1, margin: '6px 0 2px' }}>{inboxMetrics.total}</span>
+                <span style={{ fontSize: '12px', color: '#64748b' }}>Postulantes registrados</span>
+              </div>
+
+              {/* Cargos Card */}
+              <div style={{ borderRight: '1px solid rgba(255,255,255,0.1)', paddingRight: '20px' }}>
+                <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>Candidatos por Cargo</span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', maxHeight: '80px', overflowY: 'auto' }}>
+                  {inboxMetrics.topCargos.map(([cargo, count]) => (
+                    <div key={cargo} style={{ 
+                      background: 'rgba(255,255,255,0.05)', 
+                      border: '1px solid rgba(255,255,255,0.1)', 
+                      padding: '4px 10px', 
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '12px'
+                    }}>
+                      <span style={{ fontWeight: 700, color: '#e2e8f0' }}>{cargo}</span>
+                      <span style={{ background: '#3b82f6', color: 'white', padding: '1px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 800 }}>{count}</span>
+                    </div>
+                  ))}
+                  {inboxMetrics.topCargos.length === 0 && <span style={{ fontSize: '12px', color: '#64748b' }}>Sin datos disponibles</span>}
+                </div>
+              </div>
+
+              {/* Ciudades Card */}
+              <div>
+                <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>Candidatos por Ciudad</span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', maxHeight: '80px', overflowY: 'auto' }}>
+                  {inboxMetrics.topCities.map(([city, count]) => (
+                    <div key={city} style={{ 
+                      background: 'rgba(255,255,255,0.05)', 
+                      border: '1px solid rgba(255,255,255,0.1)', 
+                      padding: '4px 10px', 
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '12px'
+                    }}>
+                      <span style={{ fontWeight: 700, color: '#e2e8f0' }}>{city}</span>
+                      <span style={{ background: '#10b981', color: 'white', padding: '1px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 800 }}>{count}</span>
+                    </div>
+                  ))}
+                  {inboxMetrics.topCities.length === 0 && <span style={{ fontSize: '12px', color: '#64748b' }}>Sin datos disponibles</span>}
+                </div>
+              </div>
             </div>
             <div style={{ 
               display: 'flex', 
