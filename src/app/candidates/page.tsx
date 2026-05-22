@@ -69,6 +69,51 @@ export default function CandidatesAdmin() {
   const [viewingPsychometric, setViewingPsychometric] = useState<any | null>(null)
   const [sendingPsychometricId, setSendingPsychometricId] = useState<string | null>(null)
   const [qrModalUrl, setQrModalUrl] = useState<string | null>(null)
+  const [loadingRecommendation, setLoadingRecommendation] = useState(false)
+  const [aiRecommendation, setAiRecommendation] = useState<any | null>(null)
+
+  useEffect(() => {
+    if (!viewingPsychometric) {
+      setAiRecommendation(null)
+      return
+    }
+
+    const rec = viewingPsychometric.test?.kudert_disc?.ai_recommendation
+    if (rec) {
+      setAiRecommendation(rec)
+    } else {
+      const fetchRecommendation = async () => {
+        setLoadingRecommendation(true)
+        try {
+          const res = await fetch('/api/psychometric/recommend', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              testId: viewingPsychometric.test.id,
+              cargo: viewingPsychometric.candidate?.position || viewingPsychometric.test.candidate?.position || 'Candidato'
+            })
+          })
+          const data = await res.json()
+          if (data.success && data.recommendation) {
+            setAiRecommendation(data.recommendation)
+            // Actualizar la lista en memoria
+            setPsychometricTests(prev => prev.map(t => t.id === viewingPsychometric.test.id ? {
+              ...t,
+              kudert_disc: {
+                ...t.kudert_disc,
+                ai_recommendation: data.recommendation
+              }
+            } : t))
+          }
+        } catch (e) {
+          console.error('Error al cargar recomendación:', e)
+        } finally {
+          setLoadingRecommendation(false)
+        }
+      }
+      fetchRecommendation()
+    }
+  }, [viewingPsychometric])
 
   // === BANDEJA FILTERS ===
   const [inboxSearch, setInboxSearch] = useState('')
@@ -1482,7 +1527,7 @@ export default function CandidatesAdmin() {
                                     <button 
                                       className="track-btn" 
                                       style={{ padding: '4px 8px', fontSize: '11px', color: '#10b981', borderColor: '#bbf7d0', width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '4px' }}
-                                      onClick={() => setViewingPsychometric({ test: psychTest, candidate: p.candidate })}
+                                      onClick={() => setViewingPsychometric({ test: psychTest, candidate: { ...p.candidate, position: p.candidate?.position || p.cargo } })}
                                     >
                                       📊 Resultados
                                     </button>
@@ -1934,6 +1979,75 @@ export default function CandidatesAdmin() {
                     ))}
                   </div>
                 </div>
+
+                {/* --- SECCIÓN RECOMENDACIÓN CON IA --- */}
+                <h3 style={{ fontSize: '15px', color: '#1e293b', fontWeight: 700, marginTop: '28px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>🤖 Recomendación de Selección con IA</span>
+                </h3>
+
+                {loadingRecommendation ? (
+                  <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                    <div className="animate-spin" style={{ width: '24px', height: '24px', border: '3px solid #3b82f6', borderTopColor: 'transparent', borderRadius: '50%' }} />
+                    <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '500' }}>Generando recomendación y análisis psicométrico...</span>
+                  </div>
+                ) : aiRecommendation ? (
+                  <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                    {/* Nivel de Compatibilidad */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#475569' }}>Compatibilidad General:</span>
+                      <span style={{ 
+                        background: aiRecommendation.compatibility === 'Alta' ? '#dcfce7' : aiRecommendation.compatibility === 'Media' ? '#fef9c3' : '#fef2f2',
+                        color: aiRecommendation.compatibility === 'Alta' ? '#166534' : aiRecommendation.compatibility === 'Media' ? '#854d0e' : '#991b1b',
+                        border: '1px solid currentColor',
+                        padding: '3px 10px',
+                        borderRadius: '12px',
+                        fontSize: '12px',
+                        fontWeight: 800
+                      }}>
+                        {aiRecommendation.compatibility}
+                      </span>
+                    </div>
+
+                    {/* Resumen */}
+                    <p style={{ margin: '0 0 16px', fontSize: '13px', color: '#334155', lineHeight: '1.6' }}>
+                      {aiRecommendation.summary}
+                    </p>
+
+                    {/* Fortalezas y Riesgos en dos columnas */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+                      <div style={{ background: 'white', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                        <h4 style={{ margin: '0 0 8px', fontSize: '12px', color: '#166534', textTransform: 'uppercase', fontWeight: 800 }}>🌟 Fortalezas del Perfil</h4>
+                        <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '12px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          {aiRecommendation.strengths?.map((s: string, i: number) => (
+                            <li key={i}>{s}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div style={{ background: 'white', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                        <h4 style={{ margin: '0 0 8px', fontSize: '12px', color: '#b91c1c', textTransform: 'uppercase', fontWeight: 800 }}>⚠️ Áreas de Atención</h4>
+                        <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '12px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          {aiRecommendation.risks?.map((r: string, i: number) => (
+                            <li key={i}>{r}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+
+                    {/* Preguntas de Entrevista */}
+                    <div style={{ background: 'white', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                      <h4 style={{ margin: '0 0 8px', fontSize: '12px', color: '#1e3a8a', textTransform: 'uppercase', fontWeight: 800 }}>💬 Preguntas de Entrevista Sugeridas</h4>
+                      <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '12px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {aiRecommendation.interview_questions?.map((q: string, i: number) => (
+                          <li key={i} style={{ fontStyle: 'italic' }}>"{q}"</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+                    <span style={{ fontSize: '13px', color: '#64748b' }}>No se pudo cargar la recomendación de la IA.</span>
+                  </div>
+                )}
 
                 <div style={{ marginTop: '28px', display: 'flex', justifyContent: 'flex-end' }}>
                   <button onClick={() => setViewingPsychometric(null)} className="track-btn" style={{ background: '#0f172a', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px' }}>Cerrar Reporte</button>
