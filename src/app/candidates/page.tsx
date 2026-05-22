@@ -814,7 +814,7 @@ export default function CandidatesAdmin() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '40px', position: 'relative', zIndex: 1 }}>
             <div>
               <h1 className="onboarding-title" style={{ fontSize: '28px', letterSpacing: '0.5px', marginBottom: '4px', color: '#ffffff', textShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
-                {user?.company_name || 'SUPERDEPORTE S.A.'}
+                {user?.company_name === 'SUPERDEPORT S.A.' ? 'SUPERDEPORTE S.A.' : (user?.company_name || 'SUPERDEPORTE S.A.')}
               </h1>
               <p className="onboarding-subtitle" style={{ color: '#94a3b8', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>Panel de Gestión Administrativa</p>
             </div>

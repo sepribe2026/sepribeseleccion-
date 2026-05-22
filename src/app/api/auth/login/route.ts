@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
         if (app === 'candidates' && profile) {
             userData.name = profile.name;
             userData.company_slug = profile.company_slug || 'superdeporte';
-            userData.company_name = profile.company_name || 'SUPERDEPORTE S.A.';
+            userData.company_name = (profile.company_name || 'SUPERDEPORTE S.A.').replace('SUPERDEPORT S.A.', 'SUPERDEPORTE S.A.');
             userData.perfil = profile.perfil || 'ADMIN';
         }
 
