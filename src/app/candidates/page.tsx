@@ -7,6 +7,248 @@ import * as XLSX from 'xlsx'
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
 
+// Componente visual del Gráfico Lineal DISC en SVG
+const DiscLineChart = ({ D, I, S, C }: { D: number; I: number; S: number; C: number }) => {
+  const points = [D, I, S, C];
+  const width = 450;
+  const height = 280;
+  const paddingLeft = 45;
+  const paddingRight = 25;
+  const paddingTop = 35;
+  const paddingBottom = 35;
+
+  const chartWidth = width - paddingLeft - paddingRight;
+  const chartHeight = height - paddingTop - paddingBottom;
+
+  const xCoords = [
+    paddingLeft + 0 * (chartWidth / 3),
+    paddingLeft + 1 * (chartWidth / 3),
+    paddingLeft + 2 * (chartWidth / 3),
+    paddingLeft + 3 * (chartWidth / 3)
+  ];
+
+  const getY = (val: number) => {
+    return paddingTop + chartHeight - (val / 100) * chartHeight;
+  };
+
+  const pathD = `M ${xCoords[0]} ${getY(D)} L ${xCoords[1]} ${getY(I)} L ${xCoords[2]} ${getY(S)} L ${xCoords[3]} ${getY(C)}`;
+
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', background: '#ffffff', padding: '16px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)', width: '100%' }}>
+      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible', fontFamily: 'inherit' }}>
+        {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((tick) => {
+          const isMain = tick === 0 || tick === 50 || tick === 100;
+          return (
+            <g key={tick}>
+              <line 
+                x1={paddingLeft} 
+                y1={getY(tick)} 
+                x2={width - paddingRight} 
+                y2={getY(tick)} 
+                stroke={isMain ? '#cbd5e1' : '#f1f5f9'} 
+                strokeWidth={isMain ? '1.5' : '1'}
+                strokeDasharray={isMain ? '0' : '3 3'}
+              />
+              {isMain && (
+                <text x={paddingLeft - 12} y={getY(tick) + 4} textAnchor="end" fontSize="10" fontWeight="700" fill="#64748b">
+                  {tick}
+                </text>
+              )}
+            </g>
+          );
+        })}
+
+        <rect 
+          x={paddingLeft} 
+          y={getY(60)} 
+          width={chartWidth} 
+          height={getY(40) - getY(60)} 
+          fill="rgba(226, 232, 240, 0.4)" 
+          pointerEvents="none" 
+        />
+        <text x={width - paddingRight - 8} y={getY(50) + 4} textAnchor="end" fontSize="9" fontWeight="800" fill="#94a3b8" letterSpacing="0.5px">
+          INTENSIDAD MEDIA
+        </text>
+
+        {xCoords.map((x, i) => (
+          <line key={i} x1={x} y1={paddingTop} x2={x} y2={paddingTop + chartHeight} stroke="#e2e8f0" strokeWidth="1.5" />
+        ))}
+
+        <path 
+          d={pathD} 
+          fill="none" 
+          stroke="url(#disc-grad)" 
+          strokeWidth="4" 
+          strokeLinecap="round" 
+          strokeLinejoin="round"
+          style={{ filter: 'drop-shadow(0px 3px 6px rgba(59, 130, 246, 0.35))' }}
+        />
+
+        <defs>
+          <linearGradient id="disc-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="33%" stopColor="#f59e0b" />
+            <stop offset="66%" stopColor="#10b981" />
+            <stop offset="100%" stopColor="#3b82f6" />
+          </linearGradient>
+        </defs>
+
+        {points.map((val, i) => {
+          const labels = ['D', 'I', 'S', 'C'];
+          const colors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6'];
+          return (
+            <g key={i}>
+              <circle 
+                cx={xCoords[i]} 
+                cy={getY(val)} 
+                r="7" 
+                fill={colors[i]} 
+                stroke="#ffffff" 
+                strokeWidth="2.5" 
+                style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.2))' }}
+              />
+              <text x={xCoords[i]} y={getY(val) - 12} textAnchor="middle" fontSize="11" fontWeight="800" fill="#1e293b">
+                {val}%
+              </text>
+              <text x={xCoords[i]} y={paddingTop + chartHeight + 20} textAnchor="middle" fontSize="14" fontWeight="900" fill={colors[i]}>
+                {labels[i]}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+};
+
+// Componente visual del flujo cognitivo
+const CognitiveFlowRow = ({ letter, name, desc, score }: { letter: string; name: string; desc: string; score: number }) => {
+  const isLow = score <= 33;
+  const isMid = score > 33 && score <= 66;
+
+  const renderStickFigure = () => {
+    if (isLow) {
+      return (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#ef4444' }}>
+          <circle cx="12" cy="5" r="2" />
+          <path d="M12 7v8M12 15l-3 5M12 15l3 5M9 10h6" />
+        </svg>
+      );
+    } else if (isMid) {
+      return (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#f59e0b' }}>
+          <circle cx="13" cy="4" r="2" />
+          <path d="M13 6v6l-2 3-2 3M13 8l3 3M11 12l2 3 3-1" />
+        </svg>
+      );
+    } else {
+      return (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#10b981' }}>
+          <circle cx="15" cy="4" r="2" />
+          <path d="m18 10-4-1-3 3M11 9v4l-3 4-2-1M13 13l3 3h3M9 13l2-3" />
+        </svg>
+      );
+    }
+  };
+
+  const getLabel = () => {
+    if (isLow) return 'Procrastina';
+    if (isMid) return '+/-';
+    return 'Fluye';
+  };
+
+  const getLabelColor = () => {
+    if (isLow) return '#ef4444';
+    if (isMid) return '#d97706';
+    return '#059669';
+  };
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '130px 1fr 60px', gap: '16px', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid #f1f5f9' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ 
+          width: '32px', 
+          height: '32px', 
+          borderRadius: '50%', 
+          background: '#eff6ff', 
+          color: '#2563eb', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          fontWeight: 800, 
+          fontSize: '14px',
+          border: '1.5px solid #dbeafe',
+          flexShrink: 0
+        }}>
+          {letter}
+        </div>
+        <div>
+          <h4 style={{ margin: 0, fontSize: '12px', fontWeight: 800, color: '#1e293b' }}>{name}</h4>
+          <span style={{ fontSize: '9px', color: '#94a3b8', display: 'block', fontWeight: 500, lineHeight: 1.2 }}>{desc}</span>
+        </div>
+      </div>
+
+      <div style={{ position: 'relative', height: '36px', display: 'flex', alignItems: 'center' }}>
+        <div style={{ width: '100%', height: '10px', borderRadius: '9999px', background: '#f1f5f9', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+          <div style={{ borderRight: '1px solid rgba(226, 232, 240, 0.5)', background: score > 0 ? (score > 33 ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.3)') : 'transparent' }} />
+          <div style={{ borderRight: '1px solid rgba(226, 232, 240, 0.5)', background: score > 33 ? (score > 66 ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.3)') : 'transparent' }} />
+          <div style={{ background: score > 66 ? 'rgba(59, 130, 246, 0.3)' : 'transparent' }} />
+        </div>
+
+        <div style={{ 
+          position: 'absolute', 
+          left: 0, 
+          height: '10px', 
+          width: `${score}%`, 
+          background: 'linear-gradient(90deg, #3b82f6 0%, #6366f1 100%)', 
+          borderRadius: '9999px 0 0 9999px',
+          pointerEvents: 'none' 
+        }} />
+
+        <div style={{ position: 'absolute', bottom: '-4px', left: 0, width: '100%', display: 'flex', justifyContent: 'space-between', padding: '0 4px', fontSize: '9px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <span>Procrastina</span>
+          <span>+/-</span>
+          <span>Fluye</span>
+        </div>
+
+        <div style={{ 
+          position: 'absolute', 
+          left: `calc(${score}% - 12px)`, 
+          top: '-1px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center',
+          transition: 'left 0.5s ease-out',
+          zIndex: 10
+        }}>
+          <div style={{ 
+            background: 'white', 
+            borderRadius: '50%', 
+            padding: '2px', 
+            boxShadow: '0 4px 10px rgba(0,0,0,0.15)', 
+            border: `1.5px solid ${isLow ? '#ef4444' : isMid ? '#f59e0b' : '#10b981'}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '26px',
+            height: '26px'
+          }}>
+            {renderStickFigure()}
+          </div>
+          <span style={{ fontSize: '8px', fontWeight: 900, color: getLabelColor(), background: 'white', padding: '1px 4px', borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginTop: '2px', border: '1px solid #f1f5f9', whiteSpace: 'nowrap' }}>
+            {getLabel()}
+          </span>
+        </div>
+      </div>
+
+      <div style={{ textAlign: 'right', fontWeight: 900, fontSize: '16px', color: '#1e293b' }}>
+        {score}
+        <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700 }}>/100</span>
+      </div>
+    </div>
+  );
+};
+
 export default function CandidatesAdmin() {
   const { user, loading: authLoading, logout } = useAuth()
   const router = useRouter()
@@ -71,12 +313,14 @@ export default function CandidatesAdmin() {
   const [qrModalUrl, setQrModalUrl] = useState<string | null>(null)
   const [loadingRecommendation, setLoadingRecommendation] = useState(false)
   const [aiRecommendation, setAiRecommendation] = useState<any | null>(null)
+  const [activeResultsTab, setActiveResultsTab] = useState<'resumen' | 'disc' | 'cognicion' | 'preguntas'>('resumen')
 
   useEffect(() => {
     if (!viewingPsychometric) {
       setAiRecommendation(null)
       return
     }
+    setActiveResultsTab('resumen')
 
     const rec = viewingPsychometric.test?.kudert_disc?.ai_recommendation
     if (rec) {
@@ -1466,6 +1710,7 @@ export default function CandidatesAdmin() {
                           const sections = psychTest.sections_status || {};
                           const totalSecs = Object.keys(sections).length || 7;
                           const completedSecs = Object.values(sections).filter(s => s === 'COMPLETADO').length;
+                          const compatibility = psychTest.kudert_disc?.ai_recommendation?.compatibility;
 
                           return (
                             <td>
@@ -1483,6 +1728,22 @@ export default function CandidatesAdmin() {
                                 >
                                   {isCompleted ? '✅ COMPLETADO' : `⏳ EN PROCESO (${completedSecs}/${totalSecs})`}
                                 </span>
+                                {isCompleted && compatibility && (
+                                  <span 
+                                    className="pipeline-badge" 
+                                    style={{ 
+                                      background: compatibility === 'Alta' ? '#d1fae5' : compatibility === 'Media' ? '#fef3c7' : '#fee2e2', 
+                                      color: compatibility === 'Alta' ? '#065f46' : compatibility === 'Media' ? '#92400e' : '#991b1b', 
+                                      border: '1px solid currentColor',
+                                      textAlign: 'center',
+                                      fontSize: '10px',
+                                      fontWeight: 800,
+                                      display: 'block'
+                                    }}
+                                  >
+                                    🤖 IA: {compatibility}
+                                  </span>
+                                )}
                                 <div style={{ display: 'flex', gap: '4px' }}>
                                   {isCompleted ? (
                                     <button 
@@ -1897,160 +2158,300 @@ export default function CandidatesAdmin() {
           {viewingPsychometric && (
             <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
               <div style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '95%', maxWidth: '750px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', color: '#0f172a' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #f1f5f9', paddingBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #f1f5f9', paddingBottom: '16px' }}>
                   <div>
-                    <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 800 }}>Resultados Psicométricos</h2>
-                    <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '13px' }}>Candidato: <strong>{viewingPsychometric.candidate?.sender_name}</strong> · Cargo: {viewingPsychometric.candidate?.position}</p>
-                  </div>
-                  <button onClick={() => setViewingPsychometric(null)} className="track-btn" style={{ padding: '6px' }}><X /></button>
-                </div>
-
-                <h3 style={{ fontSize: '15px', color: '#1e293b', fontWeight: 700, marginBottom: '12px' }}>Aptitudes Técnicas</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '28px' }}>
-                  {[
-                    { name: 'Raz. Verbal', score: viewingPsychometric.test.verbal_score, color: '#3b82f6' },
-                    { name: 'Raz. Espacial', score: viewingPsychometric.test.espacial_score, color: '#10b981' },
-                    { name: 'Raz. Lógico', score: viewingPsychometric.test.logico_score, color: '#f59e0b' },
-                    { name: 'Raz. Numérico', score: viewingPsychometric.test.numerico_score, color: '#ec4899' },
-                    { name: 'Raz. Abstracto', score: viewingPsychometric.test.abstracto_score, color: '#8b5cf6' },
-                    { name: 'Ética y Cumpl.', score: viewingPsychometric.test.ethics_score, color: '#06b6d4' }
-                  ].map((item, idx) => (
-                    <div key={idx} style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-                      <p style={{ margin: '0 0 6px', fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>{item.name}</p>
-                      <span style={{ fontSize: '28px', fontWeight: 900, color: item.color }}>{item.score}</span>
-                      <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>/100</span>
-                    </div>
-                  ))}
-                </div>
-
-                <h3 style={{ fontSize: '15px', color: '#1e293b', fontWeight: 700, marginBottom: '12px' }}>Perfil de Comportamiento Kudert (DISC)</h3>
-                <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-                  <div style={{ display: 'grid', gap: '16px' }}>
-                    {[
-                      { 
-                        dim: 'D', 
-                        name: 'Decisión (Dominancia)', 
-                        desc: 'Mide cómo responde el candidato a los problemas y retos. Valores altos indican proactividad, liderazgo y orientación a resultados.',
-                        val: viewingPsychometric.test.kudert_disc?.D || 0, 
-                        color: 'linear-gradient(90deg, #f97316, #ef4444)' 
-                      },
-                      { 
-                        dim: 'I', 
-                        name: 'Interacción (Influencia)', 
-                        desc: 'Mide cómo influye el candidato en otras personas. Valores altos indican sociabilidad, persuasión y optimismo.',
-                        val: viewingPsychometric.test.kudert_disc?.I || 0, 
-                        color: 'linear-gradient(90deg, #f59e0b, #fbbf24)' 
-                      },
-                      { 
-                        dim: 'S', 
-                        name: 'Serenidad (Estabilidad)', 
-                        desc: 'Mide cómo responde a los cambios de ritmo y presiones. Valores altos indican paciencia, constancia y espíritu colaborativo.',
-                        val: viewingPsychometric.test.kudert_disc?.S || 0, 
-                        color: 'linear-gradient(90deg, #10b981, #22c55e)' 
-                      },
-                      { 
-                        dim: 'C', 
-                        name: 'Cumplimiento (Normas)', 
-                        desc: 'Mide cómo responde a las reglas y procedimientos establecidos. Valores altos indican precisión, análisis y disciplina.',
-                        val: viewingPsychometric.test.kudert_disc?.C || 0, 
-                        color: 'linear-gradient(90deg, #3b82f6, #06b6d4)' 
-                      }
-                    ].map((discItem, idx) => (
-                      <div key={idx}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                          <span style={{ fontWeight: 800, color: '#1e293b', fontSize: '14px' }}>
-                            <span style={{ 
-                              background: discItem.dim === 'D' ? '#ef4444' : discItem.dim === 'I' ? '#f59e0b' : discItem.dim === 'S' ? '#10b981' : '#3b82f6', 
-                              color: 'white', 
-                              padding: '2px 6px', 
-                              borderRadius: '4px', 
-                              marginRight: '8px', 
-                              fontSize: '11px' 
-                            }}>{discItem.dim}</span>
-                            {discItem.name}
-                          </span>
-                          <strong style={{ fontSize: '15px', color: '#1e293b' }}>{discItem.val}%</strong>
-                        </div>
-                        <div style={{ background: '#e2e8f0', height: '10px', borderRadius: '5px', overflow: 'hidden', marginBottom: '6px' }}>
-                          <div style={{ width: `${discItem.val}%`, height: '100%', background: discItem.color, borderRadius: '5px' }} />
-                        </div>
-                        <p style={{ margin: 0, fontSize: '11px', color: '#64748b', lineHeight: '1.4' }}>{discItem.desc}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* --- SECCIÓN RECOMENDACIÓN CON IA --- */}
-                <h3 style={{ fontSize: '15px', color: '#1e293b', fontWeight: 700, marginTop: '28px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>🤖 Recomendación de Selección con IA</span>
-                </h3>
-
-                {loadingRecommendation ? (
-                  <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                    <div className="animate-spin" style={{ width: '24px', height: '24px', border: '3px solid #3b82f6', borderTopColor: 'transparent', borderRadius: '50%' }} />
-                    <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '500' }}>Generando recomendación y análisis psicométrico...</span>
-                  </div>
-                ) : aiRecommendation ? (
-                  <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-                    {/* Nivel de Compatibilidad */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#475569' }}>Compatibilidad General:</span>
-                      <span style={{ 
-                        background: aiRecommendation.compatibility === 'Alta' ? '#dcfce7' : aiRecommendation.compatibility === 'Media' ? '#fef9c3' : '#fef2f2',
-                        color: aiRecommendation.compatibility === 'Alta' ? '#166534' : aiRecommendation.compatibility === 'Media' ? '#854d0e' : '#991b1b',
-                        border: '1px solid currentColor',
-                        padding: '3px 10px',
-                        borderRadius: '12px',
-                        fontSize: '12px',
-                        fontWeight: 800
-                      }}>
-                        {aiRecommendation.compatibility}
-                      </span>
-                    </div>
-
-                    {/* Resumen */}
-                    <p style={{ margin: '0 0 16px', fontSize: '13px', color: '#334155', lineHeight: '1.6' }}>
-                      {aiRecommendation.summary}
+                    <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 900, background: 'linear-gradient(90deg, #1e3a8a, #3b82f6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Evaluación Psicométrica e IA</h2>
+                    <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '13.5px' }}>
+                      Candidato: <strong style={{ color: '#1e293b' }}>{viewingPsychometric.candidate?.sender_name}</strong> · Cargo Postulado: <strong style={{ color: '#1e293b' }}>{viewingPsychometric.candidate?.position}</strong>
                     </p>
+                  </div>
+                  <button onClick={() => setViewingPsychometric(null)} className="track-btn" style={{ padding: '8px', borderRadius: '50%', background: '#f1f5f9', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} /></button>
+                </div>
 
-                    {/* Fortalezas y Riesgos en dos columnas */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '16px' }}>
-                      <div style={{ background: 'white', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                        <h4 style={{ margin: '0 0 8px', fontSize: '12px', color: '#166534', textTransform: 'uppercase', fontWeight: 800 }}>🌟 Fortalezas del Perfil</h4>
-                        <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '12px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          {aiRecommendation.strengths?.map((s: string, i: number) => (
-                            <li key={i}>{s}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div style={{ background: 'white', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                        <h4 style={{ margin: '0 0 8px', fontSize: '12px', color: '#b91c1c', textTransform: 'uppercase', fontWeight: 800 }}>⚠️ Áreas de Atención</h4>
-                        <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '12px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          {aiRecommendation.risks?.map((r: string, i: number) => (
-                            <li key={i}>{r}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
+                {(() => {
+                  const verbal = viewingPsychometric.test.verbal_score || 0;
+                  const espacial = viewingPsychometric.test.espacial_score || 0;
+                  const logico = viewingPsychometric.test.logico_score || 0;
+                  const numerico = viewingPsychometric.test.numerico_score || 0;
+                  const abstracto = viewingPsychometric.test.abstracto_score || 0;
+                  const avgAptitude = Math.round((verbal + espacial + logico + numerico + abstracto) / 5);
 
-                    {/* Preguntas de Entrevista */}
-                    <div style={{ background: 'white', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                      <h4 style={{ margin: '0 0 8px', fontSize: '12px', color: '#1e3a8a', textTransform: 'uppercase', fontWeight: 800 }}>💬 Preguntas de Entrevista Sugeridas</h4>
-                      <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '12px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        {aiRecommendation.interview_questions?.map((q: string, i: number) => (
-                          <li key={i} style={{ fontStyle: 'italic' }}>"{q}"</li>
+                  const compatibility = aiRecommendation?.compatibility || '—';
+                  const compatColor = compatibility === 'Alta' ? '#10b981' : compatibility === 'Media' ? '#f59e0b' : compatibility === 'Baja' ? '#ef4444' : '#64748b';
+                  const compatBg = compatibility === 'Alta' ? 'rgba(16, 185, 129, 0.08)' : compatibility === 'Media' ? 'rgba(245, 158, 11, 0.08)' : compatibility === 'Baja' ? 'rgba(239, 68, 68, 0.08)' : '#f8fafc';
+
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                      {/* Ficha Ejecutiva de Compatibilidad y Promedio */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '8px' }}>
+                        {/* Tarjeta de Compatibilidad */}
+                        <div style={{ 
+                          background: compatBg, 
+                          border: `1.5px solid ${compatColor}80`, 
+                          borderRadius: '20px', 
+                          padding: '20px', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '16px',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+                        }}>
+                          <div style={{ 
+                            width: '56px', 
+                            height: '56px', 
+                            borderRadius: '50%', 
+                            background: compatColor, 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            boxShadow: `0 8px 16px ${compatColor}30`,
+                            color: 'white',
+                            fontWeight: 900,
+                            fontSize: '24px',
+                            flexShrink: 0
+                          }}>
+                            {compatibility === 'Alta' ? '🥇' : compatibility === 'Media' ? '🥈' : compatibility === 'Baja' ? '🥉' : '❓'}
+                          </div>
+                          <div>
+                            <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Compatibilidad del Cargo</span>
+                            <h3 style={{ margin: '2px 0 0', fontSize: '20px', fontWeight: 900, color: '#1e293b' }}>
+                              IA: {loadingRecommendation ? (
+                                <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 'normal' }}>⏳ Generando...</span>
+                              ) : (
+                                <span style={{ color: compatColor }}>{compatibility}</span>
+                              )}
+                            </h3>
+                          </div>
+                        </div>
+
+                        {/* Tarjeta de Promedio Aptitudes */}
+                        <div style={{ 
+                          background: '#f8fafc', 
+                          border: '1.5px solid #e2e8f0', 
+                          borderRadius: '20px', 
+                          padding: '20px', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '16px',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+                        }}>
+                          <div style={{ 
+                            width: '56px', 
+                            height: '56px', 
+                            borderRadius: '50%', 
+                            background: 'linear-gradient(135deg, #3b82f6, #6366f1)', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            boxShadow: '0 8px 16px rgba(59, 130, 246, 0.25)',
+                            color: 'white',
+                            fontWeight: 900,
+                            fontSize: '18px',
+                            flexShrink: 0
+                          }}>
+                            {avgAptitude}%
+                          </div>
+                          <div>
+                            <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Promedio Aptitudes Técnicas</span>
+                            <h3 style={{ margin: '2px 0 0', fontSize: '20px', fontWeight: 900, color: '#1e293b' }}>
+                              Cognición: <span style={{ color: '#2563eb' }}>{avgAptitude >= 75 ? 'Excelente' : avgAptitude >= 50 ? 'Adecuado' : 'Bajo'}</span>
+                            </h3>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Resumen Ejecutivo Corto de IA */}
+                      {loadingRecommendation ? (
+                        <div style={{ background: '#f8fafc', padding: '16px 20px', borderRadius: '16px', border: '1px solid #e2e8f0', borderLeft: '5px solid #3b82f6', marginBottom: '8px' }}>
+                          <span style={{ fontSize: '13px', color: '#64748b' }}>Analizando respuestas con IA...</span>
+                        </div>
+                      ) : aiRecommendation?.summary ? (
+                        <div style={{ background: '#f8fafc', padding: '16px 20px', borderRadius: '16px', border: '1px solid #e2e8f0', borderLeft: '5px solid #3b82f6', marginBottom: '8px' }}>
+                          <h4 style={{ margin: '0 0 6px', fontSize: '12px', color: '#1e3a8a', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.5px' }}>Resumen de Adecuación al Puesto</h4>
+                          <p style={{ margin: 0, fontSize: '13px', color: '#334155', lineHeight: '1.6', fontStyle: 'italic' }}>
+                            "{aiRecommendation.summary}"
+                          </p>
+                        </div>
+                      ) : null}
+
+                      {/* Navigation tabs inside Modal */}
+                      <div style={{ 
+                        display: 'flex', 
+                        borderBottom: '2px solid #e2e8f0', 
+                        marginBottom: '16px', 
+                        gap: '6px',
+                        overflowX: 'auto',
+                        paddingBottom: '2px'
+                      }}>
+                        {[
+                          { id: 'resumen', label: '📊 Informe IA', icon: '🤖' },
+                          { id: 'disc', label: '🧠 Conducta (DISC)', icon: '📈' },
+                          { id: 'cognicion', label: '⚡ Cognición (Aptitudes)', icon: '👣' },
+                          { id: 'preguntas', label: '💬 Guía de Entrevista', icon: '❓' }
+                        ].map(t => (
+                          <button
+                            key={t.id}
+                            onClick={() => setActiveResultsTab(t.id as any)}
+                            style={{
+                              padding: '10px 16px',
+                              background: 'none',
+                              border: 'none',
+                              fontSize: '13.5px',
+                              fontWeight: 800,
+                              color: activeResultsTab === t.id ? '#2563eb' : '#64748b',
+                              cursor: 'pointer',
+                              borderBottom: `3px solid ${activeResultsTab === t.id ? '#2563eb' : 'transparent'}`,
+                              transition: 'all 0.2s',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            <span>{t.icon}</span> {t.label}
+                          </button>
                         ))}
-                      </ul>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-                    <span style={{ fontSize: '13px', color: '#64748b' }}>No se pudo cargar la recomendación de la IA.</span>
-                  </div>
-                )}
+                      </div>
 
-                <div style={{ marginTop: '28px', display: 'flex', justifyContent: 'flex-end' }}>
-                  <button onClick={() => setViewingPsychometric(null)} className="track-btn" style={{ background: '#0f172a', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px' }}>Cerrar Reporte</button>
+                      {/* TAB CONTENT: RESUMEN IA */}
+                      {activeResultsTab === 'resumen' && (
+                        <div style={{ display: 'grid', gap: '16px' }}>
+                          {/* Fortalezas y Riesgos en dos columnas */}
+                          {loadingRecommendation ? (
+                            <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                              <div className="animate-spin" style={{ width: '24px', height: '24px', border: '3px solid #3b82f6', borderTopColor: 'transparent', borderRadius: '50%' }} />
+                              <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '500' }}>Generando recomendación y análisis psicométrico...</span>
+                            </div>
+                          ) : aiRecommendation ? (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+                              <div style={{ background: '#f0fdf4', padding: '20px', borderRadius: '16px', border: '1px solid #bbf7d0', boxShadow: '0 4px 6px rgba(0,0,0,0.01)' }}>
+                                <h4 style={{ margin: '0 0 12px', fontSize: '13px', color: '#166534', textTransform: 'uppercase', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px', borderBottom: '1px solid #bbf7d0', paddingBottom: '6px' }}>
+                                  <span>🌟</span> Fortalezas del Candidato
+                                </h4>
+                                <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '12.5px', color: '#1e3f20', display: 'flex', flexDirection: 'column', gap: '8px', lineHeight: '1.5' }}>
+                                  {aiRecommendation.strengths?.map((s: string, i: number) => (
+                                    <li key={i}>{s}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                              <div style={{ background: '#fef2f2', padding: '20px', borderRadius: '16px', border: '1px solid #fecaca', boxShadow: '0 4px 6px rgba(0,0,0,0.01)' }}>
+                                <h4 style={{ margin: '0 0 12px', fontSize: '13px', color: '#991b1b', textTransform: 'uppercase', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px', borderBottom: '1px solid #fecaca', paddingBottom: '6px' }}>
+                                  <span>⚠️</span> Áreas de Atención
+                                </h4>
+                                <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '12.5px', color: '#7f1d1d', display: 'flex', flexDirection: 'column', gap: '8px', lineHeight: '1.5' }}>
+                                  {aiRecommendation.risks?.map((r: string, i: number) => (
+                                    <li key={i}>{r}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                          ) : (
+                            <div style={{ background: '#f8fafc', padding: '32px', borderRadius: '16px', border: '1px dashed #cbd5e1', textAlign: 'center' }}>
+                              <span style={{ fontSize: '13.5px', color: '#64748b' }}>No se pudo cargar la recomendación de la IA.</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* TAB CONTENT: DISC */}
+                      {activeResultsTab === 'disc' && (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', alignItems: 'center' }}>
+                          <DiscLineChart 
+                            D={viewingPsychometric.test.kudert_disc?.D || 0} 
+                            I={viewingPsychometric.test.kudert_disc?.I || 0} 
+                            S={viewingPsychometric.test.kudert_disc?.S || 0} 
+                            C={viewingPsychometric.test.kudert_disc?.C || 0} 
+                          />
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Resumen de Dimensiones DISC</span>
+                            {[
+                              { label: 'D', name: 'Decisión', val: viewingPsychometric.test.kudert_disc?.D || 0, desc: 'Liderazgo, orientación a resultados y empuje ante retos.', color: '#ef4444' },
+                              { label: 'I', name: 'Interacción', val: viewingPsychometric.test.kudert_disc?.I || 0, desc: 'Comunicación, sociabilidad y capacidad de persuasión.', color: '#f59e0b' },
+                              { label: 'S', name: 'Serenidad', val: viewingPsychometric.test.kudert_disc?.S || 0, desc: 'Paciencia, trabajo en equipo y resistencia a la presión.', color: '#10b981' },
+                              { label: 'C', name: 'Cumplimiento', val: viewingPsychometric.test.kudert_disc?.C || 0, desc: 'Análisis, disciplina y apego a normas y calidad.', color: '#3b82f6' }
+                            ].map((item, idx) => (
+                              <div key={idx} style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                <span style={{ width: '22px', height: '22px', borderRadius: '4px', background: item.color, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '11px', flexShrink: 0 }}>
+                                  {item.label}
+                                </span>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <strong style={{ fontSize: '12px', color: '#1e293b' }}>{item.name}</strong>
+                                    <span style={{ fontSize: '12px', fontWeight: 800, color: item.color }}>{item.val}%</span>
+                                  </div>
+                                  <p style={{ margin: '2px 0 0', fontSize: '10px', color: '#64748b', lineHeight: 1.2 }}>{item.desc}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* TAB CONTENT: COGNICION */}
+                      {activeResultsTab === 'cognicion' && (
+                        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '16px 24px' }}>
+                          <span style={{ fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>Velocidad y Flujo de Procesamiento</span>
+                          <CognitiveFlowRow letter="V" name="Razonamiento Verbal" desc="Comprensión léxica e identificación de sinónimos" score={viewingPsychometric.test.verbal_score || 0} />
+                          <CognitiveFlowRow letter="E" name="Razonamiento Espacial" desc="Visualización y rotación mental de figuras" score={viewingPsychometric.test.espacial_score || 0} />
+                          <CognitiveFlowRow letter="L" name="Razonamiento Lógico" desc="Descubrir patrones de secuencias y reglas lógicas" score={viewingPsychometric.test.logico_score || 0} />
+                          <CognitiveFlowRow letter="N" name="Razonamiento Numérico" desc="Agilidad en operaciones matemáticas y resolución de problemas" score={viewingPsychometric.test.numerico_score || 0} />
+                          <CognitiveFlowRow letter="A" name="Razonamiento Abstracto" desc="Deducir y continuar secuencias de figuras complejas" score={viewingPsychometric.test.abstracto_score || 0} />
+                          
+                          <div style={{ marginTop: '16px', display: 'flex', gap: '8px', alignItems: 'center', background: '#eff6ff', padding: '12px', borderRadius: '12px', border: '1px solid #dbeafe' }}>
+                            <span style={{ fontSize: '14px' }}>🛡️</span>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <strong style={{ fontSize: '12px', color: '#1e40af' }}>Ética y Cumplimiento de Normas</strong>
+                                <span style={{ fontSize: '13px', fontWeight: 900, color: '#1d4ed8' }}>{viewingPsychometric.test.ethics_score || 0}/100</span>
+                              </div>
+                              <p style={{ margin: '2px 0 0', fontSize: '10px', color: '#1e3a8a', lineHeight: 1.2 }}>Estudio de dilemas éticos y apego a políticas corporativas.</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* TAB CONTENT: PREGUNTAS ENTRIVISTA */}
+                      {activeResultsTab === 'preguntas' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          <span style={{ fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Guía de Entrevista Recomendada</span>
+                          {loadingRecommendation ? (
+                            <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                              <div className="animate-spin" style={{ width: '24px', height: '24px', border: '3px solid #3b82f6', borderTopColor: 'transparent', borderRadius: '50%' }} />
+                              <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '500' }}>Generando preguntas de entrevista...</span>
+                            </div>
+                          ) : aiRecommendation?.interview_questions && aiRecommendation.interview_questions.length > 0 ? (
+                            aiRecommendation.interview_questions.map((q: string, i: number) => (
+                              <div key={i} style={{ 
+                                display: 'flex', 
+                                gap: '12px', 
+                                background: '#eff6ff', 
+                                border: '1px solid #dbeafe', 
+                                padding: '16px', 
+                                borderRadius: '16px',
+                                borderLeft: '4px solid #3b82f6',
+                                boxShadow: '0 2px 4px rgba(59,130,246,0.02)'
+                              }}>
+                                <span style={{ fontSize: '20px', color: '#3b82f6', alignSelf: 'flex-start', flexShrink: 0 }}>💬</span>
+                                <div>
+                                  <p style={{ margin: 0, fontSize: '13px', color: '#1e40af', fontWeight: 700 }}>Pregunta sugerida {i + 1}</p>
+                                  <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#334155', fontStyle: 'italic', fontWeight: 500, lineHeight: 1.5 }}>
+                                    "{q}"
+                                  </p>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div style={{ background: '#f8fafc', padding: '32px', borderRadius: '16px', border: '1px dashed #cbd5e1', textAlign: 'center' }}>
+                              <span style={{ fontSize: '13px', color: '#64748b' }}>Las preguntas de entrevista se sugieren en base a la evaluación psicométrica de la IA.</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                <div style={{ marginTop: '28px', borderTop: '1px solid #f1f5f9', paddingTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+                  <button onClick={() => setViewingPsychometric(null)} className="track-btn" style={{ background: '#0f172a', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 800 }}>Cerrar Reporte</button>
                 </div>
               </div>
             </div>
