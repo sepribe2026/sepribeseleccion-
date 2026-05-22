@@ -313,7 +313,7 @@ export default function CandidatesAdmin() {
   const [qrModalUrl, setQrModalUrl] = useState<string | null>(null)
   const [loadingRecommendation, setLoadingRecommendation] = useState(false)
   const [aiRecommendation, setAiRecommendation] = useState<any | null>(null)
-  const [activeResultsTab, setActiveResultsTab] = useState<'resumen' | 'disc' | 'cognicion' | 'preguntas'>('resumen')
+  const [activeResultsTab, setActiveResultsTab] = useState<'disc' | 'cognicion' | 'preguntas'>('disc')
 
   // === CONFIGURACIÓN DE POSTULACIONES POR EMPRESA ===
   const [companySettings, setCompanySettings] = useState<Record<string, boolean>>({
@@ -358,7 +358,7 @@ export default function CandidatesAdmin() {
       setAiRecommendation(null)
       return
     }
-    setActiveResultsTab('resumen')
+    setActiveResultsTab('disc')
 
     const rec = viewingPsychometric.test?.kudert_disc?.ai_recommendation
     if (rec) {
@@ -2227,7 +2227,7 @@ export default function CandidatesAdmin() {
               <div style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '95%', maxWidth: '750px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', color: '#0f172a' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #f1f5f9', paddingBottom: '16px' }}>
                   <div>
-                    <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 900, background: 'linear-gradient(90deg, #1e3a8a, #3b82f6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Evaluación Psicométrica e IA</h2>
+                    <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 900, background: 'linear-gradient(90deg, #1e3a8a, #3b82f6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Evaluación Psicométrica</h2>
                     <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '13.5px' }}>
                       Candidato: <strong style={{ color: '#1e293b' }}>{viewingPsychometric.candidate?.sender_name}</strong> · Cargo Postulado: <strong style={{ color: '#1e293b' }}>{viewingPsychometric.candidate?.position}</strong>
                     </p>
@@ -2243,53 +2243,10 @@ export default function CandidatesAdmin() {
                   const abstracto = viewingPsychometric.test.abstracto_score || 0;
                   const avgAptitude = Math.round((verbal + espacial + logico + numerico + abstracto) / 5);
 
-                  const compatibility = aiRecommendation?.compatibility || '—';
-                  const compatColor = compatibility === 'Alta' ? '#10b981' : compatibility === 'Media' ? '#f59e0b' : compatibility === 'Baja' ? '#ef4444' : '#64748b';
-                  const compatBg = compatibility === 'Alta' ? 'rgba(16, 185, 129, 0.08)' : compatibility === 'Media' ? 'rgba(245, 158, 11, 0.08)' : compatibility === 'Baja' ? 'rgba(239, 68, 68, 0.08)' : '#f8fafc';
-
                   return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                      {/* Ficha Ejecutiva de Compatibilidad y Promedio */}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '8px' }}>
-                        {/* Tarjeta de Compatibilidad */}
-                        <div style={{ 
-                          background: compatBg, 
-                          border: `1.5px solid ${compatColor}80`, 
-                          borderRadius: '20px', 
-                          padding: '20px', 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '16px',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
-                        }}>
-                          <div style={{ 
-                            width: '56px', 
-                            height: '56px', 
-                            borderRadius: '50%', 
-                            background: compatColor, 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'center',
-                            boxShadow: `0 8px 16px ${compatColor}30`,
-                            color: 'white',
-                            fontWeight: 900,
-                            fontSize: '24px',
-                            flexShrink: 0
-                          }}>
-                            {compatibility === 'Alta' ? '🥇' : compatibility === 'Media' ? '🥈' : compatibility === 'Baja' ? '🥉' : '❓'}
-                          </div>
-                          <div>
-                            <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Compatibilidad del Cargo</span>
-                            <h3 style={{ margin: '2px 0 0', fontSize: '20px', fontWeight: 900, color: '#1e293b' }}>
-                              IA: {loadingRecommendation ? (
-                                <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 'normal' }}>⏳ Generando...</span>
-                              ) : (
-                                <span style={{ color: compatColor }}>{compatibility}</span>
-                              )}
-                            </h3>
-                          </div>
-                        </div>
-
+                      {/* Promedio Aptitudes */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '8px' }}>
                         {/* Tarjeta de Promedio Aptitudes */}
                         <div style={{ 
                           background: '#f8fafc', 
@@ -2326,20 +2283,6 @@ export default function CandidatesAdmin() {
                         </div>
                       </div>
 
-                      {/* Resumen Ejecutivo Corto de IA */}
-                      {loadingRecommendation ? (
-                        <div style={{ background: '#f8fafc', padding: '16px 20px', borderRadius: '16px', border: '1px solid #e2e8f0', borderLeft: '5px solid #3b82f6', marginBottom: '8px' }}>
-                          <span style={{ fontSize: '13px', color: '#64748b' }}>Analizando respuestas con IA...</span>
-                        </div>
-                      ) : aiRecommendation?.summary ? (
-                        <div style={{ background: '#f8fafc', padding: '16px 20px', borderRadius: '16px', border: '1px solid #e2e8f0', borderLeft: '5px solid #3b82f6', marginBottom: '8px' }}>
-                          <h4 style={{ margin: '0 0 6px', fontSize: '12px', color: '#1e3a8a', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.5px' }}>Resumen de Adecuación al Puesto</h4>
-                          <p style={{ margin: 0, fontSize: '13px', color: '#334155', lineHeight: '1.6', fontStyle: 'italic' }}>
-                            "{aiRecommendation.summary}"
-                          </p>
-                        </div>
-                      ) : null}
-
                       {/* Navigation tabs inside Modal */}
                       <div style={{ 
                         display: 'flex', 
@@ -2350,7 +2293,6 @@ export default function CandidatesAdmin() {
                         paddingBottom: '2px'
                       }}>
                         {[
-                          { id: 'resumen', label: '📊 Informe IA', icon: '🤖' },
                           { id: 'disc', label: '🧠 Conducta (DISC)', icon: '📈' },
                           { id: 'cognicion', label: '⚡ Cognición (Aptitudes)', icon: '👣' },
                           { id: 'preguntas', label: '💬 Guía de Entrevista', icon: '❓' }
@@ -2379,45 +2321,7 @@ export default function CandidatesAdmin() {
                         ))}
                       </div>
 
-                      {/* TAB CONTENT: RESUMEN IA */}
-                      {activeResultsTab === 'resumen' && (
-                        <div style={{ display: 'grid', gap: '16px' }}>
-                          {/* Fortalezas y Riesgos en dos columnas */}
-                          {loadingRecommendation ? (
-                            <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                              <div className="animate-spin" style={{ width: '24px', height: '24px', border: '3px solid #3b82f6', borderTopColor: 'transparent', borderRadius: '50%' }} />
-                              <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '500' }}>Generando recomendación y análisis psicométrico...</span>
-                            </div>
-                          ) : aiRecommendation ? (
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
-                              <div style={{ background: '#f0fdf4', padding: '20px', borderRadius: '16px', border: '1px solid #bbf7d0', boxShadow: '0 4px 6px rgba(0,0,0,0.01)' }}>
-                                <h4 style={{ margin: '0 0 12px', fontSize: '13px', color: '#166534', textTransform: 'uppercase', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px', borderBottom: '1px solid #bbf7d0', paddingBottom: '6px' }}>
-                                  <span>🌟</span> Fortalezas del Candidato
-                                </h4>
-                                <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '12.5px', color: '#1e3f20', display: 'flex', flexDirection: 'column', gap: '8px', lineHeight: '1.5' }}>
-                                  {aiRecommendation.strengths?.map((s: string, i: number) => (
-                                    <li key={i}>{s}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                              <div style={{ background: '#fef2f2', padding: '20px', borderRadius: '16px', border: '1px solid #fecaca', boxShadow: '0 4px 6px rgba(0,0,0,0.01)' }}>
-                                <h4 style={{ margin: '0 0 12px', fontSize: '13px', color: '#991b1b', textTransform: 'uppercase', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px', borderBottom: '1px solid #fecaca', paddingBottom: '6px' }}>
-                                  <span>⚠️</span> Áreas de Atención
-                                </h4>
-                                <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '12.5px', color: '#7f1d1d', display: 'flex', flexDirection: 'column', gap: '8px', lineHeight: '1.5' }}>
-                                  {aiRecommendation.risks?.map((r: string, i: number) => (
-                                    <li key={i}>{r}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            </div>
-                          ) : (
-                            <div style={{ background: '#f8fafc', padding: '32px', borderRadius: '16px', border: '1px dashed #cbd5e1', textAlign: 'center' }}>
-                              <span style={{ fontSize: '13.5px', color: '#64748b' }}>No se pudo cargar la recomendación de la IA.</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
+
 
                       {/* TAB CONTENT: DISC */}
                       {activeResultsTab === 'disc' && (
@@ -2508,7 +2412,7 @@ export default function CandidatesAdmin() {
                             ))
                           ) : (
                             <div style={{ background: '#f8fafc', padding: '32px', borderRadius: '16px', border: '1px dashed #cbd5e1', textAlign: 'center' }}>
-                              <span style={{ fontSize: '13px', color: '#64748b' }}>Las preguntas de entrevista se sugieren en base a la evaluación psicométrica de la IA.</span>
+                              <span style={{ fontSize: '13px', color: '#64748b' }}>Las preguntas de entrevista se sugieren en base a la evaluación psicométrica.</span>
                             </div>
                           )}
                         </div>

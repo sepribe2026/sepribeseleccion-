@@ -22,15 +22,21 @@ ALTER TABLE company_settings ENABLE ROW LEVEL SECURITY;
 -- 4. Eliminar políticas previas si existen (evita duplicados)
 DROP POLICY IF EXISTS "Permitir lectura pública de configuración" ON company_settings;
 DROP POLICY IF EXISTS "Permitir actualización a autenticados" ON company_settings;
+DROP POLICY IF EXISTS "Permitir todo a autenticados" ON company_settings;
+DROP POLICY IF EXISTS "Permitir actualización pública de configuración" ON company_settings;
+DROP POLICY IF EXISTS "Permitir inserción pública de configuración" ON company_settings;
 
--- 5. Crear políticas de acceso
--- Lectura pública para cualquier usuario que visite el portal de postulaciones
+-- 5. Crear políticas de acceso público
+-- (El frontend se comunica de forma anónima con Supabase al no usar Supabase Auth de forma nativa)
 CREATE POLICY "Permitir lectura pública de configuración" 
   ON company_settings FOR SELECT 
   USING (TRUE);
 
--- Modificación solo para usuarios autenticados (reclutadores y administradores)
-CREATE POLICY "Permitir actualización a autenticados" 
+CREATE POLICY "Permitir inserción pública de configuración" 
+  ON company_settings FOR INSERT 
+  WITH CHECK (TRUE);
+
+CREATE POLICY "Permitir actualización pública de configuración" 
   ON company_settings FOR UPDATE 
-  TO authenticated 
-  USING (TRUE);
+  USING (TRUE)
+  WITH CHECK (TRUE);
