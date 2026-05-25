@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
-import { CheckCircle2, FileText, User, Download, FileSpreadsheet, Trash2, Mail, RefreshCw, Brain, Settings, MapPin, Briefcase, Trophy, Save, X, UploadCloud, Clock, LogOut } from 'lucide-react'
+import { CheckCircle2, FileText, User, Download, FileSpreadsheet, Trash2, Mail, RefreshCw, Brain, Settings, MapPin, Briefcase, Trophy, Save, X, UploadCloud, Clock, LogOut, TrendingUp, Users, Activity, Award, MessageSquare, Send } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
@@ -404,6 +404,128 @@ export default function CandidatesAdmin() {
   const [inboxExp, setInboxExp] = useState('')
   const [openAiKey, setOpenAiKey] = useState('')
 
+  // === ESTADOS COPILOTO IA ===
+  const [showCopilot, setShowCopilot] = useState(false);
+  const [copilotMessages, setCopilotMessages] = useState<any[]>([
+    { role: 'assistant', content: '¡Hola! Soy tu Copiloto de IA para selección de personal. Puedo ayudarte a buscar candidatos, comparar perfiles, analizar resultados psicométricos y responder preguntas sobre tu base de datos de postulantes. ¿En qué te puedo ayudar hoy?' }
+  ]);
+  const [copilotInput, setCopilotInput] = useState('');
+  const [copilotLoading, setCopilotLoading] = useState(false);
+
+  // === CÁLCULO DE ESTADÍSTICAS AVANZADAS ===
+  const stats = useMemo(() => {
+    const total = resumes.length;
+    if (total === 0) return null;
+
+    // 1. Cargos más postulados
+    const positionsMap: Record<string, number> = {};
+    // 2. Medios de postulación
+    const heardFromMap: Record<string, number> = {
+      LinkedIn: 0,
+      Facebook: 0,
+      Telegram: 0,
+      Referidos: 0,
+      Otros: 0
+    };
+    // 3. Sectores
+    const sectorsMap: Record<string, number> = {
+      Norte: 0,
+      Centro: 0,
+      Sur: 0,
+      Cumbayá: 0,
+      'Valle de los Chillos': 0,
+      'Via la Costa': 0,
+      Samborondon: 0
+    };
+    // 4. Estudios
+    const educationMap: Record<string, number> = {
+      Bachiller: 0,
+      'Instrucción técnica completa': 0,
+      'Instrucción técnica incompleta': 0,
+      'Universidad Completa': 0,
+      'Universidad Incompleta': 0
+    };
+    // 5. Deportes
+    let likesSportsCount = 0;
+    let totalSportsAnswered = 0;
+
+    // 6. Edades
+    let totalAge = 0;
+    let ageCount = 0;
+    const ageRanges = {
+      '18-25': 0,
+      '26-35': 0,
+      '36-45': 0,
+      '46+': 0
+    };
+
+    resumes.forEach(r => {
+      // Posiciones
+      if (r.position) {
+        positionsMap[r.position] = (positionsMap[r.position] || 0) + 1;
+      }
+
+      // Medios
+      if (r.heard_from && r.heard_from in heardFromMap) {
+        heardFromMap[r.heard_from]++;
+      } else if (r.heard_from) {
+        heardFromMap['Otros']++;
+      }
+
+      // Sectores
+      if (r.sector && r.sector in sectorsMap) {
+        sectorsMap[r.sector]++;
+      }
+
+      // Estudios
+      if (r.education_level && r.education_level in educationMap) {
+        educationMap[r.education_level]++;
+      }
+
+      // Deportes
+      if (r.likes_sports) {
+        totalSportsAnswered++;
+        if (r.likes_sports === 'Si') {
+          likesSportsCount++;
+        }
+      }
+
+      // Edades
+      if (r.age) {
+        const parsedAge = parseInt(r.age);
+        if (!isNaN(parsedAge)) {
+          totalAge += parsedAge;
+          ageCount++;
+          if (parsedAge <= 25) ageRanges['18-25']++;
+          else if (parsedAge <= 35) ageRanges['26-35']++;
+          else if (parsedAge <= 45) ageRanges['36-45']++;
+          else ageRanges['46+']++;
+        }
+      }
+    });
+
+    const averageAge = ageCount > 0 ? Math.round(totalAge / ageCount) : 0;
+    const likesSportsPct = totalSportsAnswered > 0 ? Math.round((likesSportsCount / totalSportsAnswered) * 100) : 0;
+
+    const topPositions = Object.entries(positionsMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(entry => ({ name: entry[0], count: entry[1] }));
+
+    return {
+      total,
+      heardFromMap,
+      sectorsMap,
+      educationMap,
+      likesSportsPct,
+      likesSportsCount,
+      likesSportsNo: totalSportsAnswered - likesSportsCount,
+      averageAge,
+      ageRanges,
+      topPositions
+    };
+  }, [resumes]);
+
   useEffect(() => {
     setIsMounted(true)
     if (!authLoading && !user) {
@@ -800,6 +922,40 @@ export default function CandidatesAdmin() {
       setAnalyzingId(null)
     }
   }
+
+  const handleSendCopilotMessage = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!copilotInput.trim() || copilotLoading) return;
+
+    const userMessage = { role: 'user', content: copilotInput };
+    setCopilotMessages(prev => [...prev, userMessage]);
+    setCopilotInput('');
+    setCopilotLoading(true);
+
+    try {
+      const res = await fetch('/api/copilot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMessage.content,
+          chatHistory: copilotMessages.slice(1), // Exclude initial greeting to keep context clean
+          apiKey: openAiKey,
+          company_slug: user?.company_slug
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setCopilotMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
+      } else {
+        setCopilotMessages(prev => [...prev, { role: 'assistant', content: `⚠️ Error: ${data.error || 'No se pudo obtener respuesta de la IA.'}` }]);
+      }
+    } catch (err: any) {
+      setCopilotMessages(prev => [...prev, { role: 'assistant', content: `❌ Error de conexión: ${err.message}` }]);
+    } finally {
+      setCopilotLoading(false);
+    }
+  };
 
   const handleApproveOnboarding = async (id: string) => {
     if (!confirm('¿Deseas aprobar este expediente?')) return;
@@ -1655,68 +1811,163 @@ export default function CandidatesAdmin() {
 
         {/* --- ESTADÍSTICAS --- */}
         {activeTab === 'estadisticas' && (
-          <div style={{ padding: '20px' }}>
-            <h2 style={{ marginBottom: '24px', fontSize: '24px', fontWeight: 800, color: '#002f6c' }}>Panel de Estadísticas</h2>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
-              
-              {/* SECCIÓN PIPELINE */}
-              <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
-                <h3 style={{ marginTop: 0, borderBottom: '2px solid #f1f5f9', paddingBottom: '12px', color: '#1e293b' }}>Resumen / Pipeline</h3>
-                <div style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: '#64748b' }}>📅 Entrevistas Agendadas</span>
-                    <strong style={{ fontSize: '18px', color: '#2563eb' }}>{pipelineData.filter(p => p.status === 'ENTREVISTA_PROGRAMADA').length}</strong>
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: '#002f6c', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <TrendingUp size={24} /> Dashboard de Estadísticas Avanzadas
+            </h2>
+
+            {!stats ? (
+              <div style={{ background: 'white', padding: '48px', borderRadius: '16px', textAlign: 'center', color: '#94a3b8', border: '1px solid #e2e8f0' }}>
+                No hay suficientes datos cargados para generar estadísticas.
+              </div>
+            ) : (
+              <>
+                {/* KPI Cards Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+                  <div style={{ background: 'white', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ background: '#eff6ff', color: '#2563eb', padding: '12px', borderRadius: '12px' }}><Users size={24} /></div>
+                    <div>
+                      <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Total Postulantes</span>
+                      <h3 style={{ margin: '4px 0 0', fontSize: '24px', fontWeight: 900, color: '#1e293b' }}>{stats.total}</h3>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: '#64748b' }}>✅ Entrevistas Aprobadas</span>
-                    <strong style={{ fontSize: '18px', color: '#10b981' }}>{pipelineData.filter(p => p.status === 'ENTREVISTA_APROBADA').length}</strong>
+
+                  <div style={{ background: 'white', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ background: '#fdf2f8', color: '#db2777', padding: '12px', borderRadius: '12px' }}><User size={24} /></div>
+                    <div>
+                      <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Edad Promedio</span>
+                      <h3 style={{ margin: '4px 0 0', fontSize: '24px', fontWeight: 900, color: '#1e293b' }}>{stats.averageAge} años</h3>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: '#64748b' }}>❌ Entrevistas Rechazadas</span>
-                    <strong style={{ fontSize: '18px', color: '#ef4444' }}>{pipelineData.filter(p => p.status === 'ENTREVISTA_RECHAZADA').length}</strong>
+
+                  <div style={{ background: 'white', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ background: '#f0fdf4', color: '#16a34a', padding: '12px', borderRadius: '12px' }}><Activity size={24} /></div>
+                    <div>
+                      <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Afinidad Deporte</span>
+                      <h3 style={{ margin: '4px 0 0', fontSize: '24px', fontWeight: 900, color: '#1e293b' }}>{stats.likesSportsPct}% Sí</h3>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: '#64748b' }}>✉️ Contactados (Mail/WA)</span>
-                    <strong style={{ fontSize: '18px', color: '#8b5cf6' }}>{pipelineData.filter(p => p.status !== 'PENDIENTE').length}</strong>
+
+                  <div style={{ background: 'white', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ background: '#f7fee7', color: '#4d7c0f', padding: '12px', borderRadius: '12px' }}><Award size={24} /></div>
+                    <div>
+                      <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Cargo Top</span>
+                      <h3 style={{ margin: '4px 0 0', fontSize: '15px', fontWeight: 800, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '160px' }}>
+                        {stats.topPositions[0]?.name || 'N/A'}
+                      </h3>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* SECCIÓN ONBOARDING */}
-              <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
-                <h3 style={{ marginTop: 0, borderBottom: '2px solid #f1f5f9', paddingBottom: '12px', color: '#1e293b' }}>Proceso Onboarding</h3>
-                <div style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: '#64748b' }}>📝 Onboarding Completados</span>
-                    <strong style={{ fontSize: '18px', color: '#7c3aed' }}>{candidates.filter(c => c.status === 'LLENADO').length}</strong>
+                {/* Charts Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
+                  
+                  {/* 1. Medios de Adquisición */}
+                  <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
+                    <h3 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 800, color: '#1e293b' }}>Medios de Adquisición</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {Object.entries(stats.heardFromMap).map(([key, val]) => {
+                        const pct = stats.total > 0 ? Math.round((val / stats.total) * 100) : 0;
+                        return (
+                          <div key={key}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#475569', marginBottom: '4px' }}>
+                              <span>{key}</span>
+                              <strong>{val} ({pct}%)</strong>
+                            </div>
+                            <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '999px', overflow: 'hidden' }}>
+                              <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #3b82f6, #6366f1)', borderRadius: '999px', transition: 'width 0.6s ease' }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: '#64748b' }}>⚠️ Rechazados / En Revisión</span>
-                    <strong style={{ fontSize: '18px', color: '#f59e0b' }}>{candidates.filter(c => c.observaciones || (c.datos_personales && c.datos_personales.observation_fallback)).length}</strong>
+
+                  {/* 2. Distribución de Sectores */}
+                  <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
+                    <h3 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 800, color: '#1e293b' }}>Distribución por Sectores</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {Object.entries(stats.sectorsMap).map(([key, val]) => {
+                        const pct = stats.total > 0 ? Math.round((val / stats.total) * 100) : 0;
+                        return (
+                          <div key={key}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#475569', marginBottom: '4px' }}>
+                              <span>{key}</span>
+                              <strong>{val} ({pct}%)</strong>
+                            </div>
+                            <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '999px', overflow: 'hidden' }}>
+                              <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #ec4899, #f43f5e)', borderRadius: '999px', transition: 'width 0.6s ease' }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: '#64748b' }}>🏦 Data de Nómina (Simulada)</span>
-                    <strong style={{ fontSize: '18px', color: '#06b6d4' }}>0</strong>
+
+                  {/* 3. Niveles de Educación */}
+                  <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
+                    <h3 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 800, color: '#1e293b' }}>Nivel de Educación</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {Object.entries(stats.educationMap).map(([key, val]) => {
+                        const pct = stats.total > 0 ? Math.round((val / stats.total) * 100) : 0;
+                        return (
+                          <div key={key}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#475569', marginBottom: '4px' }}>
+                              <span>{key}</span>
+                              <strong>{val} ({pct}%)</strong>
+                            </div>
+                            <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '999px', overflow: 'hidden' }}>
+                              <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #10b981, #059669)', borderRadius: '999px', transition: 'width 0.6s ease' }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: '#64748b' }}>🚀 Sincronizados Oracle</span>
-                    <strong style={{ fontSize: '18px', color: '#002f6c' }}>{candidates.filter(c => c.status === 'SYNCED').length}</strong>
+
+                  {/* 4. Rangos de Edad */}
+                  <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
+                    <h3 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 800, color: '#1e293b' }}>Distribución por Rangos de Edad</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {Object.entries(stats.ageRanges).map(([key, val]) => {
+                        const pct = stats.total > 0 ? Math.round((val / stats.total) * 100) : 0;
+                        return (
+                          <div key={key}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#475569', marginBottom: '4px' }}>
+                              <span>{key} años</span>
+                              <strong>{val} ({pct}%)</strong>
+                            </div>
+                            <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '999px', overflow: 'hidden' }}>
+                              <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #8b5cf6, #d946ef)', borderRadius: '999px', transition: 'width 0.6s ease' }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-            </div>
-
-            <div style={{ marginTop: '32px', background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px dashed #cbd5e1' }}>
-              <h4 style={{ margin: '0 0 8px', color: '#475569' }}>Total Candidatos en el Sistema</h4>
-              <p style={{ margin: 0, fontSize: '32px', fontWeight: 900, color: '#0f172a' }}>
-                {new Set([
-                  ...resumes.filter(r => r.created_by_cedula === user?.cedula).map(r => r.sender_email?.toLowerCase()).filter(Boolean),
-                  ...candidates.map(c => c.email?.toLowerCase()).filter(Boolean)
-                ]).size}
-              </p>
-            </div>
+                {/* Top Positions Section */}
+                <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
+                  <h3 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 800, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    🏆 Cargos Más Solicitados
+                  </h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                    {stats.topPositions.map((pos, idx) => (
+                      <div key={pos.name} style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <span style={{ fontSize: '11px', fontWeight: 900, color: idx === 0 ? '#b45309' : idx === 1 ? '#475569' : '#7c2d12', background: idx === 0 ? '#fef3c7' : idx === 1 ? '#f1f5f9' : '#ffedd5', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
+                            Top {idx + 1}
+                          </span>
+                          <h4 style={{ margin: '8px 0 0', fontSize: '14px', fontWeight: 800, color: '#1e293b' }}>{pos.name}</h4>
+                        </div>
+                        <span style={{ fontSize: '20px', fontWeight: 900, color: '#475569' }}>{pos.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -2474,6 +2725,155 @@ export default function CandidatesAdmin() {
 
         </div>
       </div>
+
+      {/* Floating AI Copilot Widget */}
+      {user && (
+        <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', fontFamily: 'inherit' }}>
+          
+          {/* Chat Window */}
+          {showCopilot && (
+            <div style={{ 
+              width: '380px', 
+              height: '500px', 
+              background: 'white', 
+              borderRadius: '20px', 
+              boxShadow: '0 12px 24px -4px rgba(0, 0, 0, 0.15), 0 4px 12px -2px rgba(0, 0, 0, 0.1)', 
+              border: '1px solid #e2e8f0', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              overflow: 'hidden',
+              marginBottom: '16px'
+            }}>
+              
+              {/* Header */}
+              <div style={{ 
+                background: 'linear-gradient(135deg, #002f6c, #004b93)', 
+                color: 'white', 
+                padding: '16px 20px', 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ background: 'rgba(255,255,255,0.2)', padding: '6px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Brain size={18} color="white" />
+                  </div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '14.5px', fontWeight: 800 }}>Copiloto IA</h4>
+                    <span style={{ fontSize: '10.5px', color: '#93c5fd', fontWeight: 600 }}>Asistente de Selección</span>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowCopilot(false)} 
+                  style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Messages Container */}
+              <div style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', background: '#f8fafc' }}>
+                {copilotMessages.map((msg, idx) => {
+                  const isUser = msg.role === 'user';
+                  return (
+                    <div 
+                      key={idx} 
+                      style={{ 
+                        alignSelf: isUser ? 'flex-end' : 'flex-start',
+                        maxWidth: '85%',
+                        background: isUser ? '#002f6c' : 'white',
+                        color: isUser ? 'white' : '#1e293b',
+                        padding: '12px 16px',
+                        borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                        fontSize: '12.5px',
+                        lineHeight: '1.5',
+                        boxShadow: isUser ? 'none' : '0 2px 4px rgba(0,0,0,0.02)',
+                        border: isUser ? 'none' : '1px solid #e2e8f0',
+                        whiteSpace: 'pre-line'
+                      }}
+                    >
+                      {msg.content}
+                    </div>
+                  );
+                })}
+                {copilotLoading && (
+                  <div style={{ alignSelf: 'flex-start', background: 'white', padding: '12px 16px', borderRadius: '16px 16px 16px 4px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <span style={{ width: '6px', height: '6px', background: '#94a3b8', borderRadius: '50%' }} />
+                      <span style={{ width: '6px', height: '6px', background: '#94a3b8', borderRadius: '50%' }} />
+                      <span style={{ width: '6px', height: '6px', background: '#94a3b8', borderRadius: '50%' }} />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Input Form */}
+              <form 
+                onSubmit={handleSendCopilotMessage}
+                style={{ padding: '12px 16px', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '8px', background: 'white', alignItems: 'center' }}
+              >
+                <input 
+                  type="text" 
+                  value={copilotInput}
+                  onChange={e => setCopilotInput(e.target.value)}
+                  placeholder="Pregúntame sobre tus candidatos..."
+                  disabled={copilotLoading}
+                  style={{ 
+                    flex: 1, 
+                    border: '1px solid #cbd5e1', 
+                    borderRadius: '999px', 
+                    padding: '8px 16px', 
+                    fontSize: '13px', 
+                    outline: 'none'
+                  }}
+                />
+                <button 
+                  type="submit" 
+                  disabled={!copilotInput.trim() || copilotLoading}
+                  style={{ 
+                    background: '#002f6c', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '50%', 
+                    width: '36px', 
+                    height: '36px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    cursor: 'pointer',
+                    opacity: (!copilotInput.trim() || copilotLoading) ? 0.5 : 1
+                  }}
+                >
+                  <Send size={16} />
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* Floating Trigger Button */}
+          <button 
+            onClick={() => setShowCopilot(!showCopilot)}
+            style={{ 
+              width: '56px', 
+              height: '56px', 
+              borderRadius: '50%', 
+              background: 'linear-gradient(135deg, #002f6c, #004b93)', 
+              color: 'white', 
+              border: 'none', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              cursor: 'pointer', 
+              boxShadow: '0 8px 16px rgba(0, 47, 108, 0.3)',
+              transition: 'transform 0.2s ease-in-out',
+              transform: showCopilot ? 'rotate(90deg)' : 'none'
+            }}
+          >
+            {showCopilot ? <X size={24} /> : <MessageSquare size={24} />}
+          </button>
+        </div>
+      )}
     </>
   )
 }
