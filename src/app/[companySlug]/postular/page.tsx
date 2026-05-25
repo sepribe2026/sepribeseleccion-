@@ -60,7 +60,18 @@ export default function ApplyPage() {
     logro: '',
     herramientas: '',
     consentimiento: false,
-    noAceptoConsentimiento: false
+    noAceptoConsentimiento: false,
+    birth_date: '',
+    civil_status: '',
+    home_address: '',
+    sector: '',
+    education_level: '',
+    education_institution: '',
+    education_title: '',
+    heard_from: '',
+    likes_sports: '',
+    sports_practiced: '',
+    work_culture_motivation: ''
   })
 
   useEffect(() => {
@@ -141,6 +152,23 @@ export default function ApplyPage() {
       setFormData(prev => ({ ...prev, consentimiento: true, noAceptoConsentimiento: false }))
     } else if (name === 'noAceptoConsentimiento' && val) {
       setFormData(prev => ({ ...prev, consentimiento: false, noAceptoConsentimiento: true }))
+    } else if (name === 'birth_date') {
+      const birthDate = new Date(value);
+      let calculatedAge = '';
+      if (!isNaN(birthDate.getTime())) {
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        calculatedAge = age >= 0 ? age.toString() : '';
+      }
+      setFormData(prev => ({ 
+        ...prev, 
+        birth_date: value,
+        edad: calculatedAge
+      }))
     } else {
       setFormData(prev => ({ ...prev, [name]: val }))
     }
@@ -150,9 +178,9 @@ export default function ApplyPage() {
     const selectedId = e.target.value;
     const job = jobPositions.find(j => j.id === selectedId);
     if (job) {
-      setFormData(prev => ({ ...prev, cargo: job.cargo, ciudad: job.ciudad }));
+      setFormData(prev => ({ ...prev, cargo: job.cargo, city: job.ciudad || prev.ciudad, ciudad: job.ciudad || prev.ciudad }));
     } else {
-      setFormData(prev => ({ ...prev, cargo: '', ciudad: '' }));
+      setFormData(prev => ({ ...prev, cargo: '', city: '', ciudad: '' }));
     }
   }
 
@@ -218,7 +246,18 @@ export default function ApplyPage() {
         main_achievement: formData.logro,
         key_tools: formData.herramientas,
         ai_summary: `CED: ${formData.cedula} | TEL: ${formData.celular} | LOGRO: ${formData.logro} | HERRAMIENTAS: ${formData.herramientas} | CONSENTIMIENTO LOPDP: ACEPTADO`,
-        company_slug: companySlug
+        company_slug: companySlug,
+        birth_date: formData.birth_date || null,
+        civil_status: formData.civil_status || null,
+        home_address: formData.home_address || null,
+        sector: formData.sector || null,
+        education_level: formData.education_level || null,
+        education_institution: formData.education_institution || null,
+        education_title: formData.education_title || null,
+        heard_from: formData.heard_from || null,
+        likes_sports: formData.likes_sports || null,
+        sports_practiced: formData.sports_practiced || null,
+        work_culture_motivation: formData.work_culture_motivation || null
       }])
 
       if (dbError) throw dbError
@@ -319,17 +358,84 @@ export default function ApplyPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Correo Electrónico</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Correo Electrónico *</label>
                 <div style={{ position: 'relative' }}>
                   <Mail size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                   <input type="email" name="email" required placeholder="tu@email.com" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value.toLowerCase()})} style={{ width: '100%', padding: '12px 12px 12px 42px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} />
                 </div>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Celular / WhatsApp</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Celular / WhatsApp *</label>
                 <div style={{ position: 'relative' }}>
                   <Clock size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                   <input type="text" name="celular" required placeholder="Ej: 0987654321" value={formData.celular} onChange={handleChange} style={{ width: '100%', padding: '12px 12px 12px 42px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} />
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: '20px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Fecha de Nacimiento *</label>
+                <div style={{ position: 'relative' }}>
+                  <input type="date" name="birth_date" required value={formData.birth_date} onChange={handleChange} style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', background: 'white' }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Edad</label>
+                <div style={{ position: 'relative' }}>
+                  <User size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                  <input type="number" name="edad" readOnly placeholder="Autocalculada" value={formData.edad} style={{ width: '100%', padding: '12px 12px 12px 42px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', backgroundColor: '#f1f5f9', cursor: 'not-allowed' }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Estado Civil *</label>
+                <div style={{ position: 'relative' }}>
+                  <select 
+                    name="civil_status"
+                    required 
+                    value={formData.civil_status}
+                    onChange={handleChange}
+                    style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', appearance: 'none', background: 'white' }}
+                  >
+                    <option value="">Seleccionar...</option>
+                    <option value="Soltero/a">Soltero/a</option>
+                    <option value="Casado/a">Casado/a</option>
+                    <option value="Unión Libre legalizada">Unión Libre legalizada</option>
+                    <option value="Divorciado/a">Divorciado/a</option>
+                    <option value="Viudo/a">Viudo/a</option>
+                  </select>
+                  <ChevronDown size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '20px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Dirección domiciliaria *</label>
+                <div style={{ position: 'relative' }}>
+                  <input type="text" name="home_address" required placeholder="Detallar Calle principal, numeración y calle transversal" value={formData.home_address} onChange={handleChange} style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Sector *</label>
+                <div style={{ position: 'relative' }}>
+                  <select 
+                    name="sector"
+                    required 
+                    value={formData.sector}
+                    onChange={handleChange}
+                    style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', appearance: 'none', background: 'white' }}
+                  >
+                    <option value="">Seleccionar...</option>
+                    <option value="Norte">Norte</option>
+                    <option value="Centro">Centro</option>
+                    <option value="Sur">Sur</option>
+                    <option value="Cumbayá">Cumbayá</option>
+                    <option value="Valle de los Chillos">Valle de los Chillos</option>
+                    <option value="Via la Costa">Via la Costa</option>
+                    <option value="Samborondon">Samborondon</option>
+                  </select>
+                  <ChevronDown size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
                 </div>
               </div>
             </div>
@@ -370,33 +476,135 @@ export default function ApplyPage() {
               />
             </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Herramientas o idiomas clave</label>
-              <input 
-                type="text" 
-                name="herramientas" 
-                required 
-                placeholder="Ej: Nivel C2 de inglés, manejo de PowerBI" 
-                value={formData.herramientas} 
-                onChange={handleChange} 
-                style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} 
-              />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2.5fr', gap: '20px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Años de experiencia</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Años de experiencia *</label>
                 <div style={{ position: 'relative' }}>
                   <Clock size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                   <input type="number" name="experiencia" required min="0" max="15" placeholder="Máx: 15" value={formData.experiencia} onChange={handleChange} style={{ width: '100%', padding: '12px 12px 12px 42px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} />
                 </div>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Edad</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Herramientas o idiomas clave *</label>
+                <input 
+                  type="text" 
+                  name="herramientas" 
+                  required 
+                  placeholder="Ej: Nivel C2 de inglés, manejo de PowerBI" 
+                  value={formData.herramientas} 
+                  onChange={handleChange} 
+                  style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} 
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr 1fr', gap: '20px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Estudios *</label>
                 <div style={{ position: 'relative' }}>
-                  <User size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                  <input type="number" name="edad" required min="18" placeholder="Mín: 18" value={formData.edad} onChange={handleChange} style={{ width: '100%', padding: '12px 12px 12px 42px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} />
+                  <select 
+                    name="education_level"
+                    required 
+                    value={formData.education_level}
+                    onChange={handleChange}
+                    style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', appearance: 'none', background: 'white' }}
+                  >
+                    <option value="">Seleccionar...</option>
+                    <option value="Bachiller">Bachiller</option>
+                    <option value="Instrucción técnica completa">Instrucción técnica completa</option>
+                    <option value="Instrucción técnica incompleta">Instrucción técnica incompleta</option>
+                    <option value="Universidad Completa">Universidad Completa</option>
+                    <option value="Universidad Incompleta">Universidad Incompleta</option>
+                  </select>
+                  <ChevronDown size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
                 </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Institución Educativa/Universidad *</label>
+                <div style={{ position: 'relative' }}>
+                  <input type="text" name="education_institution" required placeholder="Colegio, instituto o universidad" value={formData.education_institution} onChange={handleChange} style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Título Obtenido</label>
+                <div style={{ position: 'relative' }}>
+                  <input type="text" name="education_title" placeholder="Ej: Bachiller, Ingeniero, etc." value={formData.education_title} onChange={handleChange} style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} />
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '20px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>¿Te gusta el deporte? *</label>
+                <div style={{ position: 'relative' }}>
+                  <select 
+                    name="likes_sports"
+                    required 
+                    value={formData.likes_sports}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        likes_sports: val,
+                        sports_practiced: val === 'No' ? 'Ninguno' : prev.sports_practiced === 'Ninguno' ? '' : prev.sports_practiced
+                      }));
+                    }}
+                    style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', appearance: 'none', background: 'white' }}
+                  >
+                    <option value="">Seleccionar...</option>
+                    <option value="Si">Sí</option>
+                    <option value="No">No</option>
+                  </select>
+                  <ChevronDown size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>¿Qué tipo de deporte prácticas? {formData.likes_sports === 'Si' ? '*' : ''}</label>
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    type="text" 
+                    name="sports_practiced" 
+                    required={formData.likes_sports === 'Si'} 
+                    disabled={formData.likes_sports === 'No'} 
+                    placeholder={formData.likes_sports === 'No' ? 'No aplica' : 'Ej: Fútbol, natación, etc.'} 
+                    value={formData.sports_practiced} 
+                    onChange={handleChange} 
+                    style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', backgroundColor: formData.likes_sports === 'No' ? '#f1f5f9' : 'white' }} 
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>¿Qué tipo de cultura laboral te motiva y te hace sentir más productivo? *</label>
+              <textarea 
+                name="work_culture_motivation" 
+                required 
+                placeholder="Cuéntanos qué ambiente laboral prefieres para dar lo mejor de ti" 
+                value={formData.work_culture_motivation} 
+                onChange={handleChange} 
+                style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', minHeight: '80px', fontFamily: 'inherit' }} 
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>¿En qué medio conociste sobre esta postulación? *</label>
+              <div style={{ position: 'relative' }}>
+                <select 
+                  name="heard_from"
+                  required 
+                  value={formData.heard_from}
+                  onChange={handleChange}
+                  style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', appearance: 'none', background: 'white' }}
+                >
+                  <option value="">Seleccionar...</option>
+                  <option value="LinkedIn">LinkedIn</option>
+                  <option value="Facebook">Facebook</option>
+                  <option value="Telegram">Telegram</option>
+                  <option value="Referidos">Referidos</option>
+                  <option value="Otros">Otros</option>
+                </select>
+                <ChevronDown size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
               </div>
             </div>
 

@@ -1445,8 +1445,52 @@ export default function CandidatesAdmin() {
                                   {r.skills && r.skills.split(',').map((s: string, i: number) => i < 3 && <span key={i} className="ai-tag" style={{ background: '#f0fdf4', color: '#166534' }}>{s.trim()}</span>)}
                                 </div>
                                 {r.ai_summary && (
-                                  <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '6px', fontSize: '12px', fontStyle: 'italic', color: '#475569', borderLeft: '3px solid #cbd5e1' }}>
+                                  <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '6px', fontSize: '12px', fontStyle: 'italic', color: '#475569', borderLeft: '3px solid #cbd5e1', marginBottom: '8px' }}>
                                     "{r.ai_summary}"
+                                  </div>
+                                )}
+
+                                {/* Datos adicionales de postulación web */}
+                                {(r.birth_date || r.civil_status || r.home_address || r.education_level || r.likes_sports || r.heard_from) && (
+                                  <div style={{ 
+                                    display: 'grid', 
+                                    gridTemplateColumns: '1fr 1fr', 
+                                    gap: '10px', 
+                                    marginTop: '8px', 
+                                    padding: '12px', 
+                                    background: '#f8fafc', 
+                                    borderRadius: '10px', 
+                                    border: '1px solid #e2e8f0',
+                                    fontSize: '12px',
+                                    color: '#334155'
+                                  }}>
+                                    <div style={{ gridColumn: '1 / -1', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px', marginBottom: '2px', fontWeight: '800', color: '#002f6c', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                      📝 Datos Adicionales Formulario
+                                    </div>
+                                    {r.birth_date && (
+                                      <p style={{ margin: 0 }}><strong>F. Nacimiento:</strong> {new Date(r.birth_date + 'T12:00:00').toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                                    )}
+                                    {r.civil_status && (
+                                      <p style={{ margin: 0 }}><strong>Estado Civil:</strong> {r.civil_status}</p>
+                                    )}
+                                    {r.sector && (
+                                      <p style={{ margin: 0 }}><strong>Sector:</strong> {r.sector}</p>
+                                    )}
+                                    {r.heard_from && (
+                                      <p style={{ margin: 0 }}><strong>Medio de Contacto:</strong> {r.heard_from}</p>
+                                    )}
+                                    {r.home_address && (
+                                      <p style={{ margin: 0, gridColumn: '1 / -1' }}><strong>Dirección:</strong> {r.home_address}</p>
+                                    )}
+                                    {r.education_level && (
+                                      <p style={{ margin: 0, gridColumn: '1 / -1' }}><strong>Estudios:</strong> {r.education_level} {r.education_institution ? `en ${r.education_institution}` : ''} {r.education_title ? ` - Título: ${r.education_title}` : ''}</p>
+                                    )}
+                                    {r.likes_sports && (
+                                      <p style={{ margin: 0, gridColumn: '1 / -1' }}><strong>¿Le gusta el deporte?:</strong> {r.likes_sports === 'Si' ? `Sí, practica: ${r.sports_practiced || '—'}` : 'No'}</p>
+                                    )}
+                                    {r.work_culture_motivation && (
+                                      <p style={{ margin: 0, gridColumn: '1 / -1' }}><strong>Motivación Laboral:</strong> {r.work_culture_motivation}</p>
+                                    )}
                                   </div>
                                 )}
                                 {/* Botón de IA extra por si quieren profundizar aunque ya tengan datos básicos */}
