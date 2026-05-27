@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
             <div style="background: #f8fafc; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; margin: 24px 0;">
               <p style="margin: 0 0 12px; font-size: 15px;">📅 <strong>Fecha:</strong> ${formattedDate}</p>
               <p style="margin: 0 0 12px; font-size: 15px;">⏰ <strong>Hora:</strong> ${time}</p>
-              <p style="margin: 0; font-size: 15px;">📍 <strong>Lugar:</strong> Av Galo Plaza Lasso 13205 de los Cerezos.</p>
+              <p style="margin: 0; font-size: 15px;">📍 <strong>Lugar:</strong> Galo Plaza Lasso 13205 y de los Cerezos.</p>
             </div>
             
             <p>Por favor, confirma tu asistencia respondiendo a este correo. Te esperamos puntualmente.</p>

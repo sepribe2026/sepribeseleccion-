@@ -21,7 +21,7 @@ interface ActiveCandidate {
 export default function SupervisorPortal() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [supervisor, setSupervisor] = useState<{ id: string; name: string; email: string } | null>(null)
+  const [supervisor, setSupervisor] = useState<{ id: string; name: string; email: string; created_by_user?: string } | null>(null)
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   
@@ -127,19 +127,35 @@ export default function SupervisorPortal() {
     // Consulta inicial del candidato activo
     const checkActiveCandidate = async () => {
       try {
-        // Obtenemos el settings que contiene la relación al candidato activo
-        const { data: settings, error: settingsError } = await supabase
-          .from('company_settings')
-          .select('active_evaluating_candidate_id')
-          .single()
+        let candidateId = null
 
-        if (settingsError || !settings || !settings.active_evaluating_candidate_id) {
+        if (supervisor.created_by_user) {
+          const { data: recActive } = await supabase
+            .from('recruiter_active_candidate')
+            .select('active_candidate_id')
+            .eq('recruiter_user', supervisor.created_by_user)
+            .maybeSingle()
+          if (recActive && recActive.active_candidate_id) {
+            candidateId = recActive.active_candidate_id
+          }
+        }
+
+        if (!candidateId) {
+          const { data: latestActiveList } = await supabase
+            .from('recruiter_active_candidate')
+            .select('active_candidate_id')
+            .order('updated_at', { ascending: false })
+            .limit(1)
+          if (latestActiveList && latestActiveList[0] && latestActiveList[0].active_candidate_id) {
+            candidateId = latestActiveList[0].active_candidate_id
+          }
+        }
+
+        if (!candidateId) {
           setActiveCandidate(null)
           setEvaluationSubmitted(false)
           return
         }
-
-        const candidateId = settings.active_evaluating_candidate_id
 
         // Obtener detalles del candidato formativo y su hoja de vida asociada
         const { data: candidate, error: candidateError } = await supabase
@@ -157,25 +173,6 @@ export default function SupervisorPortal() {
 
         if (candidateError || !candidate) {
           setActiveCandidate(null)
-          return
-        }
-
-        // Verificar si este supervisor está asignado a evaluar a este candidato
-        const { data: assignment, error: assignmentError } = await supabase
-          .from('formative_assignments')
-          .select('id')
-          .eq('candidate_id', candidateId)
-          .eq('supervisor_id', supervisor.id)
-          .single()
-
-        if (assignmentError || !assignment) {
-          setAssigned(false)
-          setActiveCandidate({
-            id: candidateId,
-            resume_id: candidate.resume_id,
-            candidate_name: (candidate as any).email_resumes?.sender_name || 'Candidato',
-            candidate_cargo: (candidate as any).email_resumes?.position || 'Cargo'
-          })
           return
         }
 

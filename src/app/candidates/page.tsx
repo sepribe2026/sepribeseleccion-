@@ -302,7 +302,7 @@ export default function CandidatesAdmin() {
   const [interviewModal, setInterviewModal] = useState<{ id: string; name: string; resumeId: string; cargo: string } | null>(null)
   const [interviewDate, setInterviewDate] = useState('')
   const [interviewTime, setInterviewTime] = useState('09:00')
-  const [interviewNotes, setInterviewNotes] = useState('Cita en las Av Galo Plaza Lasso 13205 de los Cerezos.')
+  const [interviewNotes, setInterviewNotes] = useState('Cita en Galo Plaza Lasso 13205 y de los Cerezos.')
 
   // === PIPELINE GLOBAL ===
   const [pipelineData, setPipelineData] = useState<any[]>([])
@@ -342,7 +342,6 @@ export default function CandidatesAdmin() {
   const [massCitationTime, setMassCitationTime] = useState('09:00')
   const [sendingMassCitation, setSendingMassCitation] = useState(false)
   
-  const [showSupervisorModal, setShowSupervisorModal] = useState<any | null>(null) // Candidate for supervisor assignment
   const [supervisorName, setSupervisorName] = useState('')
   const [supervisorEmail, setSupervisorEmail] = useState('')
   const [savingSupervisor, setSavingSupervisor] = useState(false)
@@ -356,26 +355,44 @@ export default function CandidatesAdmin() {
   const fetchFormativeData = async () => {
     if (!user) return
     try {
-      const { data: cands } = await supabase.from('formative_candidates').select('*, email_resumes(*)').order('created_at', { ascending: false })
-      const { data: sups } = await supabase.from('formative_supervisors').select('*').order('name', { ascending: true })
-      const { data: assigns } = await supabase.from('formative_assignments').select('*')
+      const { data: cands } = await supabase
+        .from('formative_candidates')
+        .select('*, email_resumes(*)')
+        .eq('created_by_user', user.cedula)
+        .order('created_at', { ascending: false })
+
+      const { data: sups } = await supabase
+        .from('formative_supervisors')
+        .select('*')
+        .eq('created_by_user', user.cedula)
+        .order('name', { ascending: true })
+
       const { data: evals } = await supabase.from('formative_evaluations').select('*')
       const { data: opts } = await supabase.from('formative_options').select('*').order('category', { ascending: true })
       
-      const { data: settings } = await supabase.from('company_settings').select('active_evaluating_candidate_id').single()
+      const { data: activeRec } = await supabase
+        .from('recruiter_active_candidate')
+        .select('active_candidate_id')
+        .eq('recruiter_user', user.cedula)
+        .maybeSingle()
       
       if (cands) setFormativeCandidates(cands)
       if (sups) setFormativeSupervisors(sups)
-      if (assigns) setFormativeAssignments(assigns)
+      setFormativeAssignments([])
       if (evals) setFormativeEvaluations(evals)
       if (opts) setFormativeOptions(opts)
-      if (settings) setActiveEvaluatingCandidateId(settings.active_evaluating_candidate_id)
+      if (activeRec) {
+        setActiveEvaluatingCandidateId(activeRec.active_candidate_id)
+      } else {
+        setActiveEvaluatingCandidateId(null)
+      }
     } catch (e) {
       console.error('Error fetching formative data:', e)
     }
   }
 
   const handleToggleFormative = async (p: any) => {
+    if (!user) return
     const isSelected = formativeCandidates.some(c => c.resume_id === p.resume_id)
     try {
       if (isSelected) {
@@ -387,7 +404,8 @@ export default function CandidatesAdmin() {
         }
       } else {
         const { data, error } = await supabase.from('formative_candidates').insert({
-          resume_id: p.resume_id
+          resume_id: p.resume_id,
+          created_by_user: user.cedula
         }).select().single()
         if (error) throw error
         if (data) {
@@ -456,12 +474,14 @@ export default function CandidatesAdmin() {
   }
 
   const handleCreateSupervisor = async () => {
+    if (!user) return
     if (!supervisorName.trim() || !supervisorEmail.trim()) return
     setSavingSupervisor(true)
     try {
       const { error } = await supabase.from('formative_supervisors').insert({
         name: supervisorName.trim(),
-        email: supervisorEmail.trim().toLowerCase()
+        email: supervisorEmail.trim().toLowerCase(),
+        created_by_user: user.cedula
       })
       if (error) throw error
       setSupervisorName('')
@@ -485,35 +505,16 @@ export default function CandidatesAdmin() {
     }
   }
 
-  const handleToggleAssignment = async (candidateId: string, supervisorId: string) => {
-    const isAssigned = formativeAssignments.some(a => a.candidate_id === candidateId && a.supervisor_id === supervisorId)
-    try {
-      if (isAssigned) {
-        const assign = formativeAssignments.find(a => a.candidate_id === candidateId && a.supervisor_id === supervisorId)
-        if (assign) {
-          const { error } = await supabase.from('formative_assignments').delete().eq('id', assign.id)
-          if (error) throw error
-        }
-      } else {
-        const { error } = await supabase.from('formative_assignments').insert({
-          candidate_id: candidateId,
-          supervisor_id: supervisorId
-        })
-        if (error) throw error
-      }
-      await fetchFormativeData()
-    } catch (e: any) {
-      alert('Error al actualizar asignación: ' + e.message)
-    }
-  }
-
   const handleSetActiveEvaluatingCandidate = async (candidateId: string | null) => {
     if (!user) return
     try {
       const { error } = await supabase
-        .from('company_settings')
-        .update({ active_evaluating_candidate_id: candidateId })
-        .eq('company_slug', user.company_slug)
+        .from('recruiter_active_candidate')
+        .upsert({
+          recruiter_user: user.cedula,
+          active_candidate_id: candidateId,
+          updated_at: new Date().toISOString()
+        })
       if (error) throw error
       setActiveEvaluatingCandidateId(candidateId)
       alert(candidateId ? '🎯 Evaluación en vivo iniciada para este candidato.' : '🛑 Evaluación en vivo detenida.')
@@ -1461,64 +1462,7 @@ export default function CandidatesAdmin() {
         </div>
       )}
 
-      {showSupervisorModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '90%', maxWidth: '460px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>👥 Asignar Supervisores</h3>
-                <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#64748b' }}>{showSupervisorModal.email_resumes?.sender_name}</p>
-              </div>
-              <button onClick={() => setShowSupervisorModal(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X /></button>
-            </div>
 
-            <div style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px', padding: '4px' }}>
-              {formativeSupervisors.length === 0 ? (
-                <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8', fontStyle: 'italic', textAlign: 'center', padding: '16px' }}>
-                  No hay supervisores registrados. Por favor regístralos primero en la pestaña Formativas.
-                </p>
-              ) : (
-                formativeSupervisors.map(s => {
-                  const isAssigned = formativeAssignments.some(a => a.candidate_id === showSupervisorModal.id && a.supervisor_id === s.id);
-                  return (
-                    <label 
-                      key={s.id} 
-                      style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '12px', 
-                        background: '#f8fafc', 
-                        padding: '12px 16px', 
-                        borderRadius: '12px', 
-                        border: '1px solid #e2e8f0', 
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                      }}
-                      onMouseOver={e => e.currentTarget.style.borderColor = '#cbd5e1'}
-                      onMouseOut={e => e.currentTarget.style.borderColor = '#e2e8f0'}
-                    >
-                      <input 
-                        type="checkbox" 
-                        checked={isAssigned}
-                        onChange={() => handleToggleAssignment(showSupervisorModal.id, s.id)}
-                        style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#2563eb' }}
-                      />
-                      <div>
-                        <p style={{ margin: 0, fontSize: '13.5px', fontWeight: 'bold', color: '#1e293b' }}>{s.name}</p>
-                        <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>{s.email}</p>
-                      </div>
-                    </label>
-                  );
-                })
-              )}
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button onClick={() => setShowSupervisorModal(null)} className="ranking-btn-primary" style={{ width: 'auto', padding: '10px 24px' }}>Cerrar</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {showOptionsModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
@@ -2695,7 +2639,7 @@ export default function CandidatesAdmin() {
                               <a 
                                 href={p.status === 'PENDIENTE' ? '#' : `https://wa.me/${p.candidate.sender_phone.replace(/\D/g, '').replace(/^0/, '593')}?text=${encodeURIComponent(
                                   p.status === 'ENTREVISTA_PROGRAMADA' 
-                                  ? `Hola ${p.candidate?.sender_name || 'candidat@'}, nos complace informarte que has pasado la primera etapa de nuestro proceso de selección para Superdeporte S.A. Para la siguiente fase, deberás asistir a una entrevista presencial y/o virtual.\n\nTe enviamos los detalles para que puedas asistir:\n📅Fecha: ${p.interview_date ? new Date(p.interview_date.split(' ')[0] + 'T12:00:00').toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long' }) : '—'}\n⏰Hora: ${p.interview_date?.split(' ')[1] || '09:00'}\n📍Lugar: Av Galo Plaza Lasso 13205 de los Cerezos.`
+                                  ? `Hola ${p.candidate?.sender_name || 'candidat@'}, nos complace informarte que has pasado la primera etapa de nuestro proceso de selección para Superdeporte S.A. Para la siguiente fase, deberás asistir a una entrevista presencial y/o virtual.\n\nTe enviamos los detalles para que puedas asistir:\n📅Fecha: ${p.interview_date ? new Date(p.interview_date.split(' ')[0] + 'T12:00:00').toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long' }) : '—'}\n⏰Hora: ${p.interview_date?.split(' ')[1] || '09:00'}\n📍Lugar: Galo Plaza Lasso 13205 y de los Cerezos.`
                                   : `Hola ${p.candidate?.sender_name || 'candidat@'}, te saludamos de RRHH de Superdeporte S.A. Estamos revisando tu perfil para el cargo de ${p.cargo} y nos gustaría agendar una entrevista.`
                                 )}`} 
                                 onClick={(e) => (p.status === 'PENDIENTE' || p.status === 'ENTREVISTA_APROBADA' || p.status === 'RECHAZADO') && e.preventDefault()}
@@ -3092,7 +3036,6 @@ export default function CandidatesAdmin() {
                         <th>Candidato</th>
                         <th>Cargo</th>
                         <th>Cita Programada</th>
-                        <th>Supervisores</th>
                         <th>Calificaciones Recibidas</th>
                         <th style={{ textAlign: 'right' }}>Evaluación en Vivo</th>
                       </tr>
@@ -3100,17 +3043,13 @@ export default function CandidatesAdmin() {
                     <tbody>
                       {formativeCandidates.length === 0 ? (
                         <tr>
-                          <td colSpan={6} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                          <td colSpan={5} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
                             No hay candidatos en formativas. Selecciona candidatos desde la pestaña <strong>Resumen</strong> marcando su checkbox.
                           </td>
                         </tr>
                       ) : (
                         formativeCandidates.map(c => {
                           const isCurrentlyActive = activeEvaluatingCandidateId === c.id;
-                          
-                          // Obtener asignaciones para este candidato
-                          const candidateAssigns = formativeAssignments.filter(a => a.candidate_id === c.id);
-                          const assignedSups = formativeSupervisors.filter(s => candidateAssigns.some(a => a.supervisor_id === s.id));
                           
                           // Obtener calificaciones para este candidato
                           const candidateEvals = formativeEvaluations.filter(e => e.candidate_id === c.id);
@@ -3133,21 +3072,6 @@ export default function CandidatesAdmin() {
                                 ) : (
                                   <span style={{ fontSize: '11px', color: '#94a3b8', fontStyle: 'italic' }}>Sin programar</span>
                                 )}
-                              </td>
-                              <td>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
-                                  {assignedSups.map(s => (
-                                    <span key={s.id} style={{ fontSize: '10.5px', background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
-                                      {s.name}
-                                    </span>
-                                  ))}
-                                  <button 
-                                    onClick={() => setShowSupervisorModal(c)}
-                                    style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', padding: '2px' }}
-                                  >
-                                    {assignedSups.length > 0 ? '✏️ Asignar' : '+ Asignar'}
-                                  </button>
-                                </div>
                               </td>
                               <td>
                                 {candidateEvals.length === 0 ? (

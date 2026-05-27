@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
               <p style="margin: 0 0 8px; color: #1e293b; font-weight: bold;">📅 Detalles de tu Cita:</p>
               <p style="margin: 4px 0; color: #475569;"><strong>Fecha:</strong> ${formattedDate}</p>
               <p style="margin: 4px 0; color: #475569;"><strong>Hora:</strong> ${time}</p>
-              <p style="margin: 4px 0; color: #475569;"><strong>Dirección:</strong> Av. de los Cerezos y Av. Eloy Alfaro, Edificio Selección, Planta Alta.</p>
+              <p style="margin: 4px 0; color: #475569;"><strong>Dirección:</strong> Galo Plaza Lasso 13205 y de los Cerezos.</p>
             </div>
             
             <p>Por favor, confirma tu asistencia respondiendo a este correo electrónico o presentándote puntualmente en la fecha y hora indicadas con tu documento de identidad.</p>

@@ -2,34 +2,28 @@
 -- MÓDULO DE EVALUACIONES FORMATIVAS Y SUPERVISORES
 -- =======================================================
 
--- 1. Tabla de Supervisores
+-- 1. Tabla de Supervisores (ligados a un reclutador por created_by_user)
 CREATE TABLE IF NOT EXISTS formative_supervisors (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now()
+  email VARCHAR(255) NOT NULL,
+  created_by_user VARCHAR(255),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  CONSTRAINT formative_supervisors_email_created_by_user_key UNIQUE (email, created_by_user)
 );
 
--- 2. Tabla de Candidatos Seleccionados para Formativas
+-- 2. Tabla de Candidatos Seleccionados para Formativas (ligados a un reclutador)
 CREATE TABLE IF NOT EXISTS formative_candidates (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   resume_id UUID UNIQUE REFERENCES email_resumes(id) ON DELETE CASCADE,
   interview_date DATE,
   interview_time TIME,
   email_sent BOOLEAN DEFAULT FALSE,
+  created_by_user VARCHAR(255),
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 3. Tabla de Asignaciones (Supervisores asignados a Candidatos)
-CREATE TABLE IF NOT EXISTS formative_assignments (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  candidate_id UUID REFERENCES formative_candidates(id) ON DELETE CASCADE,
-  supervisor_id UUID REFERENCES formative_supervisors(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(candidate_id, supervisor_id)
-);
-
--- 4. Opciones de Evaluación Predefinidas (Configurables)
+-- 3. Opciones de Evaluación Predefinidas (Configurables)
 CREATE TABLE IF NOT EXISTS formative_options (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   label VARCHAR(500) NOT NULL,
@@ -38,7 +32,7 @@ CREATE TABLE IF NOT EXISTS formative_options (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 5. Evaluaciones de Supervisores
+-- 4. Evaluaciones de Supervisores
 CREATE TABLE IF NOT EXISTS formative_evaluations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   candidate_id UUID REFERENCES formative_candidates(id) ON DELETE CASCADE,
@@ -49,17 +43,21 @@ CREATE TABLE IF NOT EXISTS formative_evaluations (
   UNIQUE(candidate_id, supervisor_id)
 );
 
--- 6. Agregar columna de Candidato Activo en company_settings
-ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS active_evaluating_candidate_id UUID REFERENCES formative_candidates(id) ON DELETE SET NULL;
+-- 5. Tabla para el control de candidato activo por reclutador
+CREATE TABLE IF NOT EXISTS recruiter_active_candidate (
+  recruiter_user VARCHAR(255) PRIMARY KEY,
+  active_candidate_id UUID REFERENCES formative_candidates(id) ON DELETE SET NULL,
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
 
--- 7. Habilitar RLS en todas las nuevas tablas
+-- 6. Habilitar RLS en todas las nuevas tablas
 ALTER TABLE formative_supervisors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE formative_candidates ENABLE ROW LEVEL SECURITY;
-ALTER TABLE formative_assignments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE formative_options ENABLE ROW LEVEL SECURITY;
 ALTER TABLE formative_evaluations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE recruiter_active_candidate ENABLE ROW LEVEL SECURITY;
 
--- 8. Crear políticas de acceso público (Para simplificar la conexión en frontend sin auth nativo)
+-- 7. Crear políticas de acceso público
 DROP POLICY IF EXISTS "Permitir select público supervisores" ON formative_supervisors;
 DROP POLICY IF EXISTS "Permitir insert público supervisores" ON formative_supervisors;
 DROP POLICY IF EXISTS "Permitir update público supervisores" ON formative_supervisors;
@@ -79,14 +77,6 @@ CREATE POLICY "Permitir select público candidatos formativas" ON formative_cand
 CREATE POLICY "Permitir insert público candidatos formativas" ON formative_candidates FOR INSERT WITH CHECK (true);
 CREATE POLICY "Permitir update público candidatos formativas" ON formative_candidates FOR UPDATE USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir delete público candidatos formativas" ON formative_candidates FOR DELETE USING (true);
-
-DROP POLICY IF EXISTS "Permitir select público asignaciones" ON formative_assignments;
-DROP POLICY IF EXISTS "Permitir insert público asignaciones" ON formative_assignments;
-DROP POLICY IF EXISTS "Permitir delete público asignaciones" ON formative_assignments;
-
-CREATE POLICY "Permitir select público asignaciones" ON formative_assignments FOR SELECT USING (true);
-CREATE POLICY "Permitir insert público asignaciones" ON formative_assignments FOR INSERT WITH CHECK (true);
-CREATE POLICY "Permitir delete público asignaciones" ON formative_assignments FOR DELETE USING (true);
 
 DROP POLICY IF EXISTS "Permitir select público opciones" ON formative_options;
 DROP POLICY IF EXISTS "Permitir insert público opciones" ON formative_options;
@@ -108,7 +98,12 @@ CREATE POLICY "Permitir insert público evaluaciones" ON formative_evaluations F
 CREATE POLICY "Permitir update público evaluaciones" ON formative_evaluations FOR UPDATE USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir delete público evaluaciones" ON formative_evaluations FOR DELETE USING (true);
 
--- 9. Insertar las opciones iniciales requeridas por el usuario
+DROP POLICY IF EXISTS "Permitir select público recruiter_active_candidate" ON recruiter_active_candidate;
+DROP POLICY IF EXISTS "Permitir insert/update/delete público recruiter_active_candidate" ON recruiter_active_candidate;
+CREATE POLICY "Permitir select público recruiter_active_candidate" ON recruiter_active_candidate FOR SELECT USING (true);
+CREATE POLICY "Permitir insert/update/delete público recruiter_active_candidate" ON recruiter_active_candidate FOR ALL USING (true);
+
+-- 8. Insertar las opciones iniciales requeridas por el usuario
 INSERT INTO formative_options (label, weight, category) VALUES
   ('NO ME GUSTA SU IMAGEN UN POCO GORDITA/IMPULSADORA', -10, 'Imagen y Actitud'),
   ('ME ENCANTA COMO SE DESENVUELVE Y PARTICIPA MUCHO BOXEO', 20, 'Imagen y Actitud'),
