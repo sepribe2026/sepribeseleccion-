@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     - Razonamiento Abstracto: ${abstracto}/100
     - Ética y Cumplimiento: ${ethics}/100
     
-    PERFIL CONDUCTUAL DISC/KUDERT:
+    PERFIL CONDUCTUAL DISC:
     - Decisión/Dominancia (D): ${D}%
     - Interacción/Influencia (I): ${I}%
     - Serenidad/Estabilidad (S): ${S}%

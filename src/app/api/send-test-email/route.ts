@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
               <li style="margin-bottom: 6px;"><strong>Numérico:</strong> Resolución de problemas matemáticos básicos (5 Minutos).</li>
               <li style="margin-bottom: 6px;"><strong>Abstracto:</strong> Razonamiento de matrices y patrones (20 Minutos).</li>
               <li style="margin-bottom: 6px;"><strong>Ética:</strong> Decisiones éticas y de cumplimiento (Sin Límite).</li>
-              <li style="margin-bottom: 0;"><strong>Kudert (DISC):</strong> Perfil de comportamiento y emociones (Sin Límite).</li>
+              <li style="margin-bottom: 0;"><strong>DISC:</strong> Perfil de comportamiento y emociones (Sin Límite).</li>
             </ul>
           </div>
           

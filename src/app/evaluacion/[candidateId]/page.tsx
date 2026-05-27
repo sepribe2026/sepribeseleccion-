@@ -53,7 +53,7 @@ const SECTION_DETAILS: Record<string, { title: string; desc: string; time: numbe
     rules: 'Lee atentamente cada uno de los dilemas éticos presentados en el ambiente de trabajo. Selecciona el curso de acción que consideres más íntegro, responsable y apegado a las políticas corporativas. No hay límite de tiempo.'
   },
   kudert: {
-    title: 'Perfil de Comportamiento (Kudert/DISC)',
+    title: 'Perfil de Comportamiento (DISC)',
     desc: 'Diagnóstico de tendencias conductuales, emocionales y estilo de trabajo preferido.',
     time: 0, // Sin límite
     rules: 'Para cada afirmación, indica qué tan identificado te sientes utilizando la escala del 1 al 5 (1: Totalmente en desacuerdo, 5: Totalmente de acuerdo). Responde con honestidad y de acuerdo a tu forma natural de ser en el trabajo.'
@@ -482,7 +482,7 @@ export default function CandidatePsychometricPortal() {
                     </div>
                   )}
 
-                  {/* Renderizar escala Likert para Kudert (DISC) */}
+                  {/* Renderizar escala Likert para DISC */}
                   {q.type === 'kudert' && (
                     <div style={{ marginTop: '20px' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
