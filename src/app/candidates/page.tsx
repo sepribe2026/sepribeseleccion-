@@ -819,6 +819,15 @@ export default function CandidatesAdmin() {
     }
   }, [user])
 
+  // Polling para mantener actualizadas las calificaciones formativas en tiempo real
+  useEffect(() => {
+    if (!user) return
+    const interval = setInterval(() => {
+      fetchFormativeData()
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [user])
+
   const fetchPipeline = async () => {
     if (!user) return
     setPipelineLoading(true)
@@ -2519,7 +2528,24 @@ export default function CandidatesAdmin() {
                           })()}
                         </td>
                         <td>
-                          <p style={{ fontWeight: 700, margin: 0, color: '#1e293b' }}>{p.candidate?.sender_name || 'Candidato'}</p>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <p style={{ fontWeight: 700, margin: 0, color: '#1e293b' }}>{p.candidate?.sender_name || 'Candidato'}</p>
+                            {(() => {
+                              const formativeCand = formativeCandidates.find(c => c.resume_id === p.resume_id);
+                              if (formativeCand) {
+                                const candidateEvals = formativeEvaluations.filter(e => e.candidate_id === formativeCand.id);
+                                if (candidateEvals.length > 0) {
+                                  const totalScore = candidateEvals.reduce((sum, e) => sum + e.score, 0);
+                                  return (
+                                    <span style={{ fontSize: '10px', background: '#e0f2fe', color: '#0369a1', border: '1px solid #bae6fd', padding: '2px 6px', borderRadius: '6px', fontWeight: 'bold' }} title="Puntaje de Evaluaciones Formativas">
+                                      🎯 {totalScore} pts
+                                    </span>
+                                  );
+                                }
+                              }
+                              return null;
+                            })()}
+                          </div>
                           <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>{p.candidate?.sender_email || '—'}</p>
                         </td>
                         <td style={{ fontWeight: 600, color: '#475569' }}>{p.cargo}</td>

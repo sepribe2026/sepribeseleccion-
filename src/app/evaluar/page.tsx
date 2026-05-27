@@ -16,6 +16,11 @@ interface ActiveCandidate {
   resume_id: string
   candidate_name: string
   candidate_cargo: string
+  city?: string
+  age?: number | string
+  gender?: string
+  education?: string
+  ai_summary?: string
 }
 
 export default function SupervisorPortal() {
@@ -27,6 +32,7 @@ export default function SupervisorPortal() {
   
   // Real-time states
   const [activeCandidate, setActiveCandidate] = useState<ActiveCandidate | null>(null)
+  const [pendingCandidates, setPendingCandidates] = useState<any[]>([])
   const [options, setOptions] = useState<PredefinedOption[]>([])
   const [selectedOptions, setSelectedOptions] = useState<string[]>([])
   const [submittingEvaluation, setSubmittingEvaluation] = useState(false)
@@ -151,6 +157,39 @@ export default function SupervisorPortal() {
           }
         }
 
+        // Cargar cola de candidatos pendientes del reclutador
+        if (supervisor.created_by_user) {
+          const { data: allCands } = await supabase
+            .from('formative_candidates')
+            .select(`
+              id,
+              resume_id,
+              email_resumes (
+                sender_name,
+                position
+              )
+            `)
+            .eq('created_by_user', supervisor.created_by_user)
+            .order('created_at', { ascending: true })
+
+          if (allCands) {
+            const { data: myEvals } = await supabase
+              .from('formative_evaluations')
+              .select('candidate_id')
+              .eq('supervisor_id', supervisor.id)
+
+            const evaluatedIds = new Set(myEvals?.map(e => e.candidate_id) || [])
+            
+            const queue = allCands.map((c: any) => ({
+              id: c.id,
+              name: c.email_resumes?.sender_name || 'Candidato',
+              position: c.email_resumes?.position || 'Cargo',
+              isEvaluated: evaluatedIds.has(c.id)
+            }))
+            setPendingCandidates(queue)
+          }
+        }
+
         if (!candidateId) {
           setActiveCandidate(null)
           setEvaluationSubmitted(false)
@@ -165,7 +204,14 @@ export default function SupervisorPortal() {
             resume_id,
             email_resumes (
               sender_name,
-              position
+              position,
+              city,
+              age,
+              gender,
+              education_level,
+              education_title,
+              education_institution,
+              ai_summary
             )
           `)
           .eq('id', candidateId)
@@ -192,11 +238,24 @@ export default function SupervisorPortal() {
           setEvaluationSubmitted(false)
         }
 
+        const resumeData = (candidate as any).email_resumes
+        let eduStr = ''
+        if (resumeData?.education_level) {
+          eduStr += resumeData.education_level
+          if (resumeData.education_title) eduStr += ` (${resumeData.education_title})`
+          if (resumeData.education_institution) eduStr += ` en ${resumeData.education_institution}`
+        }
+
         setActiveCandidate({
           id: candidateId,
           resume_id: candidate.resume_id,
-          candidate_name: (candidate as any).email_resumes?.sender_name || 'Candidato',
-          candidate_cargo: (candidate as any).email_resumes?.position || 'Cargo'
+          candidate_name: resumeData?.sender_name || 'Candidato',
+          candidate_cargo: resumeData?.position || 'Cargo',
+          city: resumeData?.city || 'No especificada',
+          age: resumeData?.age || 'No especificada',
+          gender: resumeData?.gender || 'No especificado',
+          education: eduStr || 'No especificados',
+          ai_summary: resumeData?.ai_summary || ''
         })
       } catch (err) {
         console.error('Error checking active candidate:', err)
@@ -387,10 +446,36 @@ export default function SupervisorPortal() {
             <div style={{ background: 'rgba(30, 41, 59, 0.7)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
               
               {/* FICHA CANDIDATO */}
-              <div style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.05)', padding: '16px', borderRadius: '16px' }}>
-                <span style={{ fontSize: '10px', fontWeight: 800, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Evaluando Candidato</span>
-                <h2 style={{ fontSize: '18px', fontWeight: 800, margin: '4px 0 2px' }}>{activeCandidate.candidate_name}</h2>
-                <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>{activeCandidate.candidate_cargo}</p>
+              <div style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.05)', padding: '18px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <span style={{ fontSize: '10px', fontWeight: 800, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Evaluando Candidato</span>
+                  <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '4px 0 2px', color: '#f8fafc' }}>{activeCandidate.candidate_name}</h2>
+                  <p style={{ color: '#60a5fa', fontSize: '13.5px', fontWeight: 600, margin: 0 }}>{activeCandidate.candidate_cargo}</p>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '10px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                  <div>
+                    <span style={{ color: '#64748b', display: 'block', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>Ciudad</span>
+                    <span style={{ color: '#cbd5e1', fontWeight: '500' }}>{activeCandidate.city}</span>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748b', display: 'block', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>Edad / Género</span>
+                    <span style={{ color: '#cbd5e1', fontWeight: '500' }}>
+                      {activeCandidate.age ? `${activeCandidate.age} años` : '—'} / {activeCandidate.gender || '—'}
+                    </span>
+                  </div>
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <span style={{ color: '#64748b', display: 'block', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>Estudios</span>
+                    <span style={{ color: '#cbd5e1', fontWeight: '500' }}>{activeCandidate.education}</span>
+                  </div>
+                </div>
+
+                {activeCandidate.ai_summary && (
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
+                    <span style={{ color: '#64748b', display: 'block', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '4px' }}>Resumen de Perfil (IA)</span>
+                    <p style={{ color: '#94a3b8', fontSize: '12.5px', margin: 0, lineHeight: 1.4, fontStyle: 'italic' }}>"{activeCandidate.ai_summary}"</p>
+                  </div>
+                )}
               </div>
 
               {/* OPCIONES DE EVALUACIÓN POR CATEGORÍA */}
@@ -483,6 +568,44 @@ export default function SupervisorPortal() {
                 )}
               </button>
 
+            </div>
+          )}
+
+          {/* COLA DE CANDIDATOS / ESTADO DE PROGRESO */}
+          {supervisor && pendingCandidates.length > 0 && (
+            <div style={{ background: 'rgba(30, 41, 59, 0.5)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '20px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <h4 style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Cola de Candidatos ({pendingCandidates.filter(c => !c.isEvaluated).length} Pendientes)
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {pendingCandidates.map((c, idx) => {
+                  const isActive = activeCandidate?.id === c.id;
+                  return (
+                    <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: isActive ? 'rgba(59, 130, 246, 0.1)' : 'rgba(15, 23, 42, 0.3)', border: isActive ? '1px solid #3b82f6' : '1px solid rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: '12px' }}>
+                      <div style={{ flex: 1, minWidth: 0, marginRight: '8px' }}>
+                        <span style={{ fontSize: '13.5px', fontWeight: 'bold', color: isActive ? '#f8fafc' : '#cbd5e1', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {idx + 1}. {c.name}
+                        </span>
+                        <span style={{ display: 'block', fontSize: '11px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.position}</span>
+                      </div>
+                      
+                      {isActive ? (
+                        <span style={{ fontSize: '10px', background: '#3b82f6', color: 'white', padding: '4px 8px', borderRadius: '6px', fontWeight: 'bold', flexShrink: 0 }}>
+                          Evaluando Ahora
+                        </span>
+                      ) : c.isEvaluated ? (
+                        <span style={{ fontSize: '10px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '4px 8px', borderRadius: '6px', fontWeight: 'bold', flexShrink: 0 }}>
+                          ✅ Evaluado
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: '10px', background: 'rgba(234, 179, 8, 0.1)', color: '#eab308', border: '1px solid rgba(234, 179, 8, 0.2)', padding: '4px 8px', borderRadius: '6px', fontWeight: 'bold', flexShrink: 0 }}>
+                          ⏳ Pendiente
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
