@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
-import { CheckCircle2, FileText, User, Download, FileSpreadsheet, Trash2, Mail, RefreshCw, Brain, Settings, MapPin, Briefcase, Trophy, Save, X, UploadCloud, Clock, LogOut, TrendingUp, Users, Activity, Award, MessageSquare, Send } from 'lucide-react'
+import { CheckCircle2, FileText, User, Download, FileSpreadsheet, Trash2, Mail, RefreshCw, Brain, Settings, MapPin, Briefcase, Trophy, Save, X, UploadCloud, Clock, LogOut, TrendingUp, Users, Activity, Award, MessageSquare, Send, Star } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
@@ -262,7 +262,7 @@ export default function CandidatesAdmin() {
   const [errorMsg, setErrorMsg] = useState('')
 
   // Selección de Pestañas
-  const [activeTab, setActiveTab] = useState<'onboarding' | 'seleccion' | 'ranking' | 'pipeline' | 'estadisticas' | 'nomina'>('seleccion')
+  const [activeTab, setActiveTab] = useState<'onboarding' | 'seleccion' | 'ranking' | 'pipeline' | 'estadisticas' | 'nomina' | 'formativas'>('seleccion')
   const [showCalendarModal, setShowCalendarModal] = useState(false)
   const [viewingOnboarding, setViewingOnboarding] = useState<any | null>(null)
   const [rejectionModal, setRejectionModal] = useState<{ id: string; email: string; name: string } | null>(null)
@@ -328,6 +328,230 @@ export default function CandidatesAdmin() {
     equinox: true
   })
 
+  // === MÓDULO DE FORMATIVAS ===
+  const [formativeCandidates, setFormativeCandidates] = useState<any[]>([])
+  const [formativeSupervisors, setFormativeSupervisors] = useState<any[]>([])
+  const [formativeAssignments, setFormativeAssignments] = useState<any[]>([])
+  const [formativeEvaluations, setFormativeEvaluations] = useState<any[]>([])
+  const [formativeOptions, setFormativeOptions] = useState<any[]>([])
+  const [activeEvaluatingCandidateId, setActiveEvaluatingCandidateId] = useState<string | null>(null)
+  
+  // Modals / Inputs
+  const [showMassCitationModal, setShowMassCitationModal] = useState(false)
+  const [massCitationDate, setMassCitationDate] = useState('')
+  const [massCitationTime, setMassCitationTime] = useState('09:00')
+  const [sendingMassCitation, setSendingMassCitation] = useState(false)
+  
+  const [showSupervisorModal, setShowSupervisorModal] = useState<any | null>(null) // Candidate for supervisor assignment
+  const [supervisorName, setSupervisorName] = useState('')
+  const [supervisorEmail, setSupervisorEmail] = useState('')
+  const [savingSupervisor, setSavingSupervisor] = useState(false)
+  
+  const [showOptionsModal, setShowOptionsModal] = useState(false)
+  const [newOptionLabel, setNewOptionLabel] = useState('')
+  const [newOptionWeight, setNewOptionWeight] = useState(10)
+  const [newOptionCategory, setNewOptionCategory] = useState('Imagen y Actitud')
+  const [savingOption, setSavingOption] = useState(false)
+
+  const fetchFormativeData = async () => {
+    if (!user) return
+    try {
+      const { data: cands } = await supabase.from('formative_candidates').select('*, email_resumes(*)').order('created_at', { ascending: false })
+      const { data: sups } = await supabase.from('formative_supervisors').select('*').order('name', { ascending: true })
+      const { data: assigns } = await supabase.from('formative_assignments').select('*')
+      const { data: evals } = await supabase.from('formative_evaluations').select('*')
+      const { data: opts } = await supabase.from('formative_options').select('*').order('category', { ascending: true })
+      
+      const { data: settings } = await supabase.from('company_settings').select('active_evaluating_candidate_id').single()
+      
+      if (cands) setFormativeCandidates(cands)
+      if (sups) setFormativeSupervisors(sups)
+      if (assigns) setFormativeAssignments(assigns)
+      if (evals) setFormativeEvaluations(evals)
+      if (opts) setFormativeOptions(opts)
+      if (settings) setActiveEvaluatingCandidateId(settings.active_evaluating_candidate_id)
+    } catch (e) {
+      console.error('Error fetching formative data:', e)
+    }
+  }
+
+  const handleToggleFormative = async (p: any) => {
+    const isSelected = formativeCandidates.some(c => c.resume_id === p.resume_id)
+    try {
+      if (isSelected) {
+        const candToRemove = formativeCandidates.find(c => c.resume_id === p.resume_id)
+        if (candToRemove) {
+          const { error } = await supabase.from('formative_candidates').delete().eq('id', candToRemove.id)
+          if (error) throw error
+          setFormativeCandidates(prev => prev.filter(c => c.id !== candToRemove.id))
+        }
+      } else {
+        const { data, error } = await supabase.from('formative_candidates').insert({
+          resume_id: p.resume_id
+        }).select().single()
+        if (error) throw error
+        if (data) {
+          await fetchFormativeData()
+        }
+      }
+    } catch (e: any) {
+      alert('Error al actualizar candidato formativo: ' + e.message)
+    }
+  }
+
+  const handleSendMassCitation = async () => {
+    if (formativeCandidates.length === 0) {
+      alert('No hay candidatos en formativas para citar.')
+      return
+    }
+    if (!massCitationDate || !massCitationTime) {
+      alert('Por favor selecciona fecha y hora.')
+      return
+    }
+    
+    setSendingMassCitation(true)
+    try {
+      const candidatesPayload = formativeCandidates.map(c => ({
+        email: c.email_resumes?.sender_email,
+        name: c.email_resumes?.sender_name,
+        cargo: c.email_resumes?.position || 'Candidato'
+      })).filter(c => c.email)
+
+      const res = await fetch('/api/send-mass-citation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          candidates: candidatesPayload,
+          date: massCitationDate,
+          time: massCitationTime,
+          companySlug: user?.company_slug
+        })
+      })
+
+      const data = await res.json()
+      if (res.ok) {
+        const formativeIds = formativeCandidates.map(c => c.id)
+        const { error } = await supabase
+          .from('formative_candidates')
+          .update({
+            interview_date: massCitationDate,
+            interview_time: massCitationTime,
+            email_sent: true
+          })
+          .in('id', formativeIds)
+
+        if (error) throw error
+
+        alert(`✅ Cita grupal programada con éxito. Se enviaron ${data.count} correos masivos.`)
+        await fetchFormativeData()
+        setShowMassCitationModal(false)
+      } else {
+        alert('❌ Error al enviar correos masivos: ' + (data.error || 'Desconocido'))
+      }
+    } catch (e: any) {
+      alert('❌ Error al enviar citación masiva: ' + e.message)
+    } finally {
+      setSendingMassCitation(false)
+    }
+  }
+
+  const handleCreateSupervisor = async () => {
+    if (!supervisorName.trim() || !supervisorEmail.trim()) return
+    setSavingSupervisor(true)
+    try {
+      const { error } = await supabase.from('formative_supervisors').insert({
+        name: supervisorName.trim(),
+        email: supervisorEmail.trim().toLowerCase()
+      })
+      if (error) throw error
+      setSupervisorName('')
+      setSupervisorEmail('')
+      await fetchFormativeData()
+    } catch (e: any) {
+      alert('Error al registrar supervisor: ' + e.message)
+    } finally {
+      setSavingSupervisor(false)
+    }
+  }
+
+  const handleDeleteSupervisor = async (id: string) => {
+    if (!confirm('¿Deseas eliminar este supervisor?')) return
+    try {
+      const { error } = await supabase.from('formative_supervisors').delete().eq('id', id)
+      if (error) throw error
+      await fetchFormativeData()
+    } catch (e: any) {
+      alert('Error al eliminar supervisor: ' + e.message)
+    }
+  }
+
+  const handleToggleAssignment = async (candidateId: string, supervisorId: string) => {
+    const isAssigned = formativeAssignments.some(a => a.candidate_id === candidateId && a.supervisor_id === supervisorId)
+    try {
+      if (isAssigned) {
+        const assign = formativeAssignments.find(a => a.candidate_id === candidateId && a.supervisor_id === supervisorId)
+        if (assign) {
+          const { error } = await supabase.from('formative_assignments').delete().eq('id', assign.id)
+          if (error) throw error
+        }
+      } else {
+        const { error } = await supabase.from('formative_assignments').insert({
+          candidate_id: candidateId,
+          supervisor_id: supervisorId
+        })
+        if (error) throw error
+      }
+      await fetchFormativeData()
+    } catch (e: any) {
+      alert('Error al actualizar asignación: ' + e.message)
+    }
+  }
+
+  const handleSetActiveEvaluatingCandidate = async (candidateId: string | null) => {
+    if (!user) return
+    try {
+      const { error } = await supabase
+        .from('company_settings')
+        .update({ active_evaluating_candidate_id: candidateId })
+        .eq('company_slug', user.company_slug)
+      if (error) throw error
+      setActiveEvaluatingCandidateId(candidateId)
+      alert(candidateId ? '🎯 Evaluación en vivo iniciada para este candidato.' : '🛑 Evaluación en vivo detenida.')
+    } catch (e: any) {
+      alert('Error al activar candidato: ' + e.message)
+    }
+  }
+
+  const handleCreateOption = async () => {
+    if (!newOptionLabel.trim()) return
+    setSavingOption(true)
+    try {
+      const { error } = await supabase.from('formative_options').insert({
+        label: newOptionLabel.trim(),
+        weight: newOptionWeight,
+        category: newOptionCategory
+      })
+      if (error) throw error
+      setNewOptionLabel('')
+      await fetchFormativeData()
+    } catch (e: any) {
+      alert('Error al crear criterio: ' + e.message)
+    } finally {
+      setSavingOption(false)
+    }
+  }
+
+  const handleDeleteOption = async (id: string) => {
+    if (!confirm('¿Deseas eliminar este criterio?')) return
+    try {
+      const { error } = await supabase.from('formative_options').delete().eq('id', id)
+      if (error) throw error
+      await fetchFormativeData()
+    } catch (e: any) {
+      alert('Error al eliminar criterio: ' + e.message)
+    }
+  }
+
   const fetchCompanySettings = async () => {
     try {
       const { data, error } = await supabase.from('company_settings').select('*')
@@ -366,9 +590,16 @@ export default function CandidatesAdmin() {
     }
     setActiveResultsTab('disc')
 
-    const rec = viewingPsychometric.test?.kudert_disc?.ai_recommendation
-    if (rec) {
-      setAiRecommendation(rec)
+    const rawRec = viewingPsychometric.test?.kudert_disc?.ai_recommendation
+    if (rawRec) {
+      const normalized = {
+        compatibility: rawRec.compatibility || rawRec.compatibilidad || 'Media',
+        summary: rawRec.summary || rawRec.resumen || rawRec.resumen_ejecutivo || '',
+        strengths: rawRec.strengths || rawRec.fortalezas || [],
+        risks: rawRec.risks || rawRec.riesgos || [],
+        interview_questions: rawRec.interview_questions || rawRec.interviewQuestions || rawRec.preguntas_entrevista || rawRec.preguntas || []
+      }
+      setAiRecommendation(normalized)
     } else {
       const fetchRecommendation = async () => {
         setLoadingRecommendation(true)
@@ -384,21 +615,45 @@ export default function CandidatesAdmin() {
           })
           const data = await res.json()
           if (data.success && data.recommendation) {
-            setAiRecommendation(data.recommendation)
+            const normalized = {
+              compatibility: data.recommendation.compatibility || data.recommendation.compatibilidad || 'Media',
+              summary: data.recommendation.summary || data.recommendation.resumen || data.recommendation.resumen_ejecutivo || '',
+              strengths: data.recommendation.strengths || data.recommendation.fortalezas || [],
+              risks: data.recommendation.risks || data.recommendation.riesgos || [],
+              interview_questions: data.recommendation.interview_questions || data.recommendation.interviewQuestions || data.recommendation.preguntas_entrevista || data.recommendation.preguntas || []
+            }
+            setAiRecommendation(normalized)
+
+            // Actualizar el estado del modal actual para reflejar la recomendación
+            setViewingPsychometric((prev: any) => {
+              if (!prev || prev.test.id !== viewingPsychometric.test.id) return prev
+              return {
+                ...prev,
+                test: {
+                  ...prev.test,
+                  kudert_disc: {
+                    ...prev.test.kudert_disc,
+                    ai_recommendation: normalized
+                  }
+                }
+              }
+            })
+
             // Actualizar la lista en memoria
             setPsychometricTests(prev => prev.map(t => t.id === viewingPsychometric.test.id ? {
               ...t,
               kudert_disc: {
                 ...t.kudert_disc,
-                ai_recommendation: data.recommendation
+                ai_recommendation: normalized
               }
             } : t))
           } else {
             console.error('Error al generar recomendación:', data.error)
             alert('No se pudo generar la guía de entrevista: ' + (data.error || 'Error desconocido'))
           }
-        } catch (e) {
+        } catch (e: any) {
           console.error('Error al cargar recomendación:', e)
+          alert('Error de conexión o de servidor al generar la guía: ' + (e.message || 'Error desconocido'))
         } finally {
           setLoadingRecommendation(false)
         }
@@ -559,6 +814,7 @@ export default function CandidatesAdmin() {
       fetchJobPositions()
       fetchPipeline()
       fetchCompanySettings()
+      fetchFormativeData()
     }
   }, [user])
 
@@ -1170,6 +1426,184 @@ export default function CandidatesAdmin() {
       `}</style>
 
       {/* MODALES */}
+      {showMassCitationModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '90%', maxWidth: '420px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>📅 Programar Cita Grupal</h3>
+              <button onClick={() => setShowMassCitationModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X /></button>
+            </div>
+            <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px' }}>
+              Se enviará un correo masivo de invitación a todos los candidatos seleccionados con la misma fecha y hora.
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+              <div>
+                <label className="ranking-label">Fecha</label>
+                <input type="date" className="ranking-input" value={massCitationDate} onChange={e => setMassCitationDate(e.target.value)} style={{ marginBottom: 0 }} />
+              </div>
+              <div>
+                <label className="ranking-label">Hora</label>
+                <input type="time" className="ranking-input" value={massCitationTime} onChange={e => setMassCitationTime(e.target.value)} style={{ marginBottom: 0 }} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowMassCitationModal(false)} className="track-btn">Cancelar</button>
+              <button 
+                className="ranking-btn-primary" 
+                style={{ width: 'auto' }} 
+                onClick={handleSendMassCitation}
+                disabled={sendingMassCitation || !massCitationDate}
+              >
+                {sendingMassCitation ? 'Enviando...' : 'Confirmar y Enviar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSupervisorModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '90%', maxWidth: '460px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>👥 Asignar Supervisores</h3>
+                <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#64748b' }}>{showSupervisorModal.email_resumes?.sender_name}</p>
+              </div>
+              <button onClick={() => setShowSupervisorModal(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X /></button>
+            </div>
+
+            <div style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px', padding: '4px' }}>
+              {formativeSupervisors.length === 0 ? (
+                <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8', fontStyle: 'italic', textAlign: 'center', padding: '16px' }}>
+                  No hay supervisores registrados. Por favor regístralos primero en la pestaña Formativas.
+                </p>
+              ) : (
+                formativeSupervisors.map(s => {
+                  const isAssigned = formativeAssignments.some(a => a.candidate_id === showSupervisorModal.id && a.supervisor_id === s.id);
+                  return (
+                    <label 
+                      key={s.id} 
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '12px', 
+                        background: '#f8fafc', 
+                        padding: '12px 16px', 
+                        borderRadius: '12px', 
+                        border: '1px solid #e2e8f0', 
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseOver={e => e.currentTarget.style.borderColor = '#cbd5e1'}
+                      onMouseOut={e => e.currentTarget.style.borderColor = '#e2e8f0'}
+                    >
+                      <input 
+                        type="checkbox" 
+                        checked={isAssigned}
+                        onChange={() => handleToggleAssignment(showSupervisorModal.id, s.id)}
+                        style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#2563eb' }}
+                      />
+                      <div>
+                        <p style={{ margin: 0, fontSize: '13.5px', fontWeight: 'bold', color: '#1e293b' }}>{s.name}</p>
+                        <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>{s.email}</p>
+                      </div>
+                    </label>
+                  );
+                })
+              )}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowSupervisorModal(null)} className="ranking-btn-primary" style={{ width: 'auto', padding: '10px 24px' }}>Cerrar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showOptionsModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '90%', maxWidth: '600px', maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>⚙️ Configurar Criterios y Pesos</h3>
+              <button onClick={() => setShowOptionsModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X /></button>
+            </div>
+
+            {/* Crear nuevo criterio */}
+            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
+              <h4 style={{ margin: '0 0 12px', fontSize: '13px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>+ Agregar Criterio</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <label className="ranking-label">Texto del Comentario / Opción</label>
+                  <input 
+                    type="text" 
+                    value={newOptionLabel}
+                    onChange={e => setNewOptionLabel(e.target.value)}
+                    placeholder="Ej: ME ENCANTA COMO SE DESENVUELVE..."
+                    className="ranking-input"
+                    style={{ marginBottom: 0 }}
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label className="ranking-label">Peso / Puntaje</label>
+                    <input 
+                      type="number" 
+                      value={newOptionWeight}
+                      onChange={e => setNewOptionWeight(parseInt(e.target.value) || 0)}
+                      className="ranking-input"
+                      style={{ marginBottom: 0 }}
+                    />
+                  </div>
+                  <div>
+                    <label className="ranking-label">Categoría</label>
+                    <select 
+                      value={newOptionCategory}
+                      onChange={e => setNewOptionCategory(e.target.value)}
+                      className="ranking-select"
+                      style={{ marginBottom: 0, height: '43px' }}
+                    >
+                      <option value="Imagen y Actitud">Imagen y Actitud</option>
+                      <option value="Desenvolvimiento">Desenvolvimiento</option>
+                      <option value="Experiencia">Experiencia</option>
+                      <option value="Otros">Otros</option>
+                    </select>
+                  </div>
+                </div>
+                <button 
+                  onClick={handleCreateOption}
+                  disabled={savingOption || !newOptionLabel.trim()}
+                  className="ranking-btn-primary"
+                  style={{ padding: '10px', fontSize: '13px', borderRadius: '8px' }}
+                >
+                  {savingOption ? 'Guardando...' : 'Guardar Criterio'}
+                </button>
+              </div>
+            </div>
+
+            {/* Listado de criterios existentes */}
+            <h4 style={{ margin: '0 0 12px', fontSize: '13px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Criterios Registrados</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {formativeOptions.map(opt => (
+                <div key={opt.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', padding: '10px 14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ flex: 1, paddingRight: '12px' }}>
+                    <p style={{ margin: 0, fontSize: '13px', fontWeight: 'bold', color: '#1e293b' }}>{opt.label}</p>
+                    <span style={{ fontSize: '11px', color: '#64748b', marginTop: '2px', display: 'inline-block' }}>
+                      {opt.category} • Peso: <strong style={{ color: opt.weight >= 0 ? '#166534' : '#991b1b' }}>{opt.weight >= 0 ? `+${opt.weight}` : opt.weight}</strong>
+                    </span>
+                  </div>
+                  <button 
+                    onClick={() => handleDeleteOption(opt.id)}
+                    style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {showJobMaintenance && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ background: 'white', padding: '32px', borderRadius: '16px', width: '500px' }}>
@@ -1381,6 +1815,7 @@ export default function CandidatesAdmin() {
               <button className={`tab-btn ${activeTab === 'ranking' ? 'active' : ''}`} onClick={() => setActiveTab('ranking')}>🏆 Ranking IA</button>
               <button className={`tab-btn ${activeTab === 'pipeline' ? 'active' : ''}`} onClick={() => { setActiveTab('pipeline'); fetchPipeline() }}>📑 Resumen</button>
               <button className={`tab-btn ${activeTab === 'onboarding' ? 'active' : ''}`} onClick={() => setActiveTab('onboarding')}>🚀 Onboarding</button>
+              <button className={`tab-btn ${activeTab === 'formativas' ? 'active' : ''}`} onClick={() => { setActiveTab('formativas'); fetchFormativeData() }}>🎯 Formativas</button>
               <button className={`tab-btn ${activeTab === 'estadisticas' ? 'active' : ''}`} onClick={() => setActiveTab('estadisticas')}>📈 Estadísticas</button>
             </>
           )}
@@ -2089,10 +2524,11 @@ export default function CandidatesAdmin() {
               </button>
             </div>
 
-            <div className="table-container">
+             <div className="table-container">
               <table>
                 <thead>
                   <tr>
+                    <th style={{ width: '80px', textAlign: 'center' }}>Formativas</th>
                     <th>Candidato</th>
                     <th>Cargo</th>
                     <th>Psicométrico</th>
@@ -2105,7 +2541,7 @@ export default function CandidatesAdmin() {
                 <tbody>
                   {pipelineData.length === 0 ? (
                     <tr>
-                      <td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+                      <td colSpan={8} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
                         No hay candidatos en el resumen actualmente.
                       </td>
                     </tr>
@@ -2115,6 +2551,29 @@ export default function CandidatesAdmin() {
                       .filter(p => !pipelineCargoFilter || p.cargo.toLowerCase().includes(pipelineCargoFilter.toLowerCase()))
                       .map(p => (
                       <tr key={p.id}>
+                        <td style={{ textAlign: 'center' }}>
+                          {(() => {
+                            const psychTest = psychometricTests.find(t => t.resume_id === p.resume_id);
+                            const isCompleted = psychTest && psychTest.status === 'COMPLETADO';
+                            const isSelected = formativeCandidates.some(c => c.resume_id === p.resume_id);
+                            return (
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                disabled={!isCompleted}
+                                onChange={() => handleToggleFormative(p)}
+                                title={isCompleted ? "Seleccionar para Formativas" : "Debe completar la prueba psicométrica primero"}
+                                style={{
+                                  width: '18px',
+                                  height: '18px',
+                                  cursor: isCompleted ? 'pointer' : 'not-allowed',
+                                  opacity: isCompleted ? 1 : 0.4,
+                                  accentColor: '#2563eb'
+                                }}
+                              />
+                            );
+                          })()}
+                        </td>
                         <td>
                           <p style={{ fontWeight: 700, margin: 0, color: '#1e293b' }}>{p.candidate?.sender_name || 'Candidato'}</p>
                           <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>{p.candidate?.sender_email || '—'}</p>
@@ -2581,6 +3040,246 @@ export default function CandidatesAdmin() {
           </div>
         )}
 
+        {/* --- FORMATIVAS --- */}
+        {activeTab === 'formativas' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            
+            {/* Cabecera del Módulo */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Star style={{ color: '#f59e0b', fill: '#f59e0b' }} size={24} /> Módulo de Evaluaciones Formativas
+                </h2>
+                <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '14px' }}>
+                  Administra las entrevistas grupales formativas, asigna supervisores y ejecuta evaluaciones dinámicas en tiempo real.
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button 
+                  onClick={() => setShowMassCitationModal(true)} 
+                  className="ranking-btn-primary" 
+                  style={{ width: 'auto', background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', padding: '10px 20px', borderRadius: '10px', fontSize: '13px' }}
+                >
+                  📅 Citar Grupo ({formativeCandidates.length})
+                </button>
+                <button 
+                  onClick={() => setShowOptionsModal(true)} 
+                  className="track-btn" 
+                  style={{ fontSize: '13px', padding: '10px 20px', borderRadius: '10px' }}
+                >
+                  ⚙️ Criterios y Pesos
+                </button>
+              </div>
+            </div>
+
+            {/* Layout en Rejilla */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '24px', alignItems: 'flex-start' }}>
+              
+              {/* Sección Izquierda: Candidatos Formativos */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                
+                <div className="table-container">
+                  <div style={{ padding: '18px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#1e293b' }}>Postulantes en Formativas</h3>
+                    <span style={{ fontSize: '12px', background: '#eff6ff', color: '#1e40af', padding: '4px 8px', borderRadius: '6px', fontWeight: 'bold' }}>
+                      {formativeCandidates.length} seleccionados
+                    </span>
+                  </div>
+                  
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Candidato</th>
+                        <th>Cargo</th>
+                        <th>Cita Programada</th>
+                        <th>Supervisores</th>
+                        <th>Calificaciones Recibidas</th>
+                        <th style={{ textAlign: 'right' }}>Evaluación en Vivo</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {formativeCandidates.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                            No hay candidatos en formativas. Selecciona candidatos desde la pestaña <strong>Resumen</strong> marcando su checkbox.
+                          </td>
+                        </tr>
+                      ) : (
+                        formativeCandidates.map(c => {
+                          const isCurrentlyActive = activeEvaluatingCandidateId === c.id;
+                          
+                          // Obtener asignaciones para este candidato
+                          const candidateAssigns = formativeAssignments.filter(a => a.candidate_id === c.id);
+                          const assignedSups = formativeSupervisors.filter(s => candidateAssigns.some(a => a.supervisor_id === s.id));
+                          
+                          // Obtener calificaciones para este candidato
+                          const candidateEvals = formativeEvaluations.filter(e => e.candidate_id === c.id);
+
+                          return (
+                            <tr key={c.id} style={{ background: isCurrentlyActive ? 'rgba(59, 130, 246, 0.03)' : 'inherit' }}>
+                              <td>
+                                <p style={{ fontWeight: 700, margin: 0, color: '#1e293b' }}>{c.email_resumes?.sender_name || 'Candidato'}</p>
+                                <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>{c.email_resumes?.sender_email || '—'}</p>
+                              </td>
+                              <td style={{ fontWeight: 600, color: '#475569' }}>{c.email_resumes?.position || '—'}</td>
+                              <td>
+                                {c.interview_date ? (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                    <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#0f172a' }}>
+                                      {new Date(c.interview_date + 'T00:00:00').toLocaleDateString('es-EC', { day: 'numeric', month: 'short' })}
+                                    </span>
+                                    <span style={{ fontSize: '11px', color: '#64748b' }}>{c.interview_time || '—'}</span>
+                                  </div>
+                                ) : (
+                                  <span style={{ fontSize: '11px', color: '#94a3b8', fontStyle: 'italic' }}>Sin programar</span>
+                                )}
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+                                  {assignedSups.map(s => (
+                                    <span key={s.id} style={{ fontSize: '10.5px', background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                                      {s.name}
+                                    </span>
+                                  ))}
+                                  <button 
+                                    onClick={() => setShowSupervisorModal(c)}
+                                    style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', padding: '2px' }}
+                                  >
+                                    {assignedSups.length > 0 ? '✏️ Asignar' : '+ Asignar'}
+                                  </button>
+                                </div>
+                              </td>
+                              <td>
+                                {candidateEvals.length === 0 ? (
+                                  <span style={{ fontSize: '11px', color: '#94a3b8', fontStyle: 'italic' }}>Pendiente</span>
+                                ) : (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    {candidateEvals.map(e => {
+                                      const sup = formativeSupervisors.find(s => s.id === e.supervisor_id);
+                                      return (
+                                        <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', fontSize: '11.5px', background: '#f8fafc', padding: '4px 8px', borderRadius: '6px', border: '1px solid #f1f5f9' }}>
+                                          <span style={{ color: '#475569', fontWeight: 600 }}>{sup?.name || 'Supervisor'}</span>
+                                          <span style={{ color: e.score >= 0 ? '#166534' : '#991b1b', fontWeight: 800 }}>
+                                            {e.score >= 0 ? `+${e.score}` : e.score} pts
+                                          </span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </td>
+                              <td style={{ textAlign: 'right' }}>
+                                {isCurrentlyActive ? (
+                                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                                    <button 
+                                      onClick={() => handleSetActiveEvaluatingCandidate(null)}
+                                      className="track-btn" 
+                                      style={{ borderColor: '#ef4444', color: '#ef4444', background: 'rgba(239, 68, 68, 0.05)', fontSize: '12px', padding: '6px 12px', borderRadius: '8px' }}
+                                    >
+                                      🛑 Detener
+                                    </button>
+                                    <span style={{ fontSize: '10px', color: '#ef4444', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                      <span className="animate-pulse" style={{ width: '6px', height: '6px', background: '#ef4444', borderRadius: '50%' }}></span>
+                                      Evaluando en vivo
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <button 
+                                    onClick={() => handleSetActiveEvaluatingCandidate(c.id)}
+                                    className="ranking-btn-primary"
+                                    style={{ width: 'auto', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', fontSize: '12px', padding: '6px 12px', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(139, 92, 246, 0.2)' }}
+                                  >
+                                    🎯 Evaluar
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+              </div>
+
+              {/* Sección Derecha: Supervisores */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                
+                {/* Registrar Supervisor */}
+                <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                  <h3 style={{ margin: '0 0 16px', fontSize: '14px', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    + Registrar Supervisor
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div>
+                      <label className="ranking-label">Nombre del Supervisor</label>
+                      <input 
+                        type="text" 
+                        value={supervisorName}
+                        onChange={e => setSupervisorName(e.target.value)}
+                        placeholder="Ej: Juan Pérez"
+                        className="ranking-input"
+                        style={{ marginBottom: 0 }}
+                      />
+                    </div>
+                    <div>
+                      <label className="ranking-label">Correo Electrónico</label>
+                      <input 
+                        type="email" 
+                        value={supervisorEmail}
+                        onChange={e => setSupervisorEmail(e.target.value)}
+                        placeholder="Ej: supervisor@empresa.com"
+                        className="ranking-input"
+                        style={{ marginBottom: 0 }}
+                      />
+                    </div>
+                    <button 
+                      onClick={handleCreateSupervisor}
+                      disabled={savingSupervisor || !supervisorName.trim() || !supervisorEmail.trim()}
+                      className="ranking-btn-primary"
+                      style={{ padding: '10px', fontSize: '13px', borderRadius: '8px' }}
+                    >
+                      {savingSupervisor ? 'Registrando...' : 'Registrar'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Listado de Supervisores */}
+                <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                  <h3 style={{ margin: '0 0 16px', fontSize: '14px', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Supervisores Activos
+                  </h3>
+                  {formativeSupervisors.length === 0 ? (
+                    <p style={{ margin: 0, fontSize: '12.5px', color: '#94a3b8', fontStyle: 'italic' }}>No hay supervisores registrados.</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {formativeSupervisors.map(s => (
+                        <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', padding: '10px 14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                          <div>
+                            <p style={{ margin: 0, fontSize: '13px', fontWeight: 'bold', color: '#1e293b' }}>{s.name}</p>
+                            <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>{s.email}</p>
+                          </div>
+                          <button 
+                            onClick={() => handleDeleteSupervisor(s.id)}
+                            style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
+                            title="Eliminar Supervisor"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        )}
+
           {/* Modales de Evaluación Psicométrica */}
           {qrModalUrl && (
             <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
@@ -2771,32 +3470,36 @@ export default function CandidatesAdmin() {
                               <div className="animate-spin" style={{ width: '24px', height: '24px', border: '3px solid #3b82f6', borderTopColor: 'transparent', borderRadius: '50%' }} />
                               <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '500' }}>Generando preguntas de entrevista...</span>
                             </div>
-                          ) : aiRecommendation?.interview_questions && aiRecommendation.interview_questions.length > 0 ? (
-                            aiRecommendation.interview_questions.map((q: string, i: number) => (
-                              <div key={i} style={{ 
-                                display: 'flex', 
-                                gap: '12px', 
-                                background: '#eff6ff', 
-                                border: '1px solid #dbeafe', 
-                                padding: '16px', 
-                                borderRadius: '16px',
-                                borderLeft: '4px solid #3b82f6',
-                                boxShadow: '0 2px 4px rgba(59,130,246,0.02)'
-                              }}>
-                                <span style={{ fontSize: '20px', color: '#3b82f6', alignSelf: 'flex-start', flexShrink: 0 }}>💬</span>
-                                <div>
-                                  <p style={{ margin: 0, fontSize: '13px', color: '#1e40af', fontWeight: 700 }}>Pregunta sugerida {i + 1}</p>
-                                  <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#334155', fontStyle: 'italic', fontWeight: 500, lineHeight: 1.5 }}>
-                                    "{q}"
-                                  </p>
+                          ) : (() => {
+                            const questions = aiRecommendation?.interview_questions || aiRecommendation?.interviewQuestions || aiRecommendation?.preguntas_entrevista || aiRecommendation?.preguntas || [];
+                            if (questions.length > 0) {
+                              return questions.map((q: string, i: number) => (
+                                <div key={i} style={{ 
+                                  display: 'flex', 
+                                  gap: '12px', 
+                                  background: '#eff6ff', 
+                                  border: '1px solid #dbeafe', 
+                                  padding: '16px', 
+                                  borderRadius: '16px',
+                                  borderLeft: '4px solid #3b82f6',
+                                  boxShadow: '0 2px 4px rgba(59,130,246,0.02)'
+                                }}>
+                                  <span style={{ fontSize: '20px', color: '#3b82f6', alignSelf: 'flex-start', flexShrink: 0 }}>💬</span>
+                                  <div>
+                                    <p style={{ margin: 0, fontSize: '13px', color: '#1e40af', fontWeight: 700 }}>Pregunta sugerida {i + 1}</p>
+                                    <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#334155', fontStyle: 'italic', fontWeight: 500, lineHeight: 1.5 }}>
+                                      "{q}"
+                                    </p>
+                                  </div>
                                 </div>
+                              ));
+                            }
+                            return (
+                              <div style={{ background: '#f8fafc', padding: '32px', borderRadius: '16px', border: '1px dashed #cbd5e1', textAlign: 'center' }}>
+                                <span style={{ fontSize: '13px', color: '#64748b' }}>Las preguntas de entrevista se sugieren en base a la evaluación psicométrica.</span>
                               </div>
-                            ))
-                          ) : (
-                            <div style={{ background: '#f8fafc', padding: '32px', borderRadius: '16px', border: '1px dashed #cbd5e1', textAlign: 'center' }}>
-                              <span style={{ fontSize: '13px', color: '#64748b' }}>Las preguntas de entrevista se sugieren en base a la evaluación psicométrica.</span>
-                            </div>
-                          )}
+                            );
+                          })()}
                         </div>
                       )}
                     </div>

@@ -82,13 +82,31 @@ export async function POST(req: NextRequest) {
       response_format: { type: 'json_object' }
     });
 
-    const aiContent = response.choices[0].message.content || '{}';
-    const recommendation = JSON.parse(aiContent);
+    let aiContent = response.choices[0].message.content || '{}';
+    
+    // Limpiar bloques de código markdown si existen
+    if (aiContent.includes('```')) {
+      aiContent = aiContent.replace(/```json/g, '').replace(/```/g, '').trim();
+    }
+    
+    const parsedRecommendation = JSON.parse(aiContent);
+
+    // Normalizar claves para evitar variaciones de OpenAI
+    const normalizedRecommendation = {
+      compatibility: parsedRecommendation.compatibility || parsedRecommendation.compatibilidad || 'Media',
+      summary: parsedRecommendation.summary || parsedRecommendation.resumen || parsedRecommendation.resumen_ejecutivo || '',
+      strengths: parsedRecommendation.strengths || parsedRecommendation.fortalezas || [],
+      risks: parsedRecommendation.risks || parsedRecommendation.riesgos || [],
+      interview_questions: parsedRecommendation.interview_questions || 
+                           parsedRecommendation.interviewQuestions || 
+                           parsedRecommendation.preguntas_entrevista || 
+                           parsedRecommendation.preguntas || []
+    };
 
     // 4. Guardar la recomendación dentro del campo kudert_disc
     const updatedDisc = {
       ...discData,
-      ai_recommendation: recommendation
+      ai_recommendation: normalizedRecommendation
     };
 
     const { error: updateError } = await supabase
@@ -100,7 +118,7 @@ export async function POST(req: NextRequest) {
       console.error('Error al guardar recomendación:', updateError);
     }
 
-    return NextResponse.json({ success: true, recommendation });
+    return NextResponse.json({ success: true, recommendation: normalizedRecommendation });
 
   } catch (error: any) {
     console.error('Error en /api/psychometric/recommend:', error);

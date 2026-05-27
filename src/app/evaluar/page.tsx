@@ -1,0 +1,457 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
+import { CheckCircle2, User, RefreshCw, Star, MessageSquare, AlertCircle, LogOut } from 'lucide-react'
+
+interface PredefinedOption {
+  id: string
+  label: string
+  weight: number
+  category: string
+}
+
+interface ActiveCandidate {
+  id: string
+  resume_id: string
+  candidate_name: string
+  candidate_cargo: string
+}
+
+export default function SupervisorPortal() {
+  const [email, setEmail] = useState('')
+  const [supervisor, setSupervisor] = useState<{ id: string; name: string; email: string } | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+  
+  // Real-time states
+  const [activeCandidate, setActiveCandidate] = useState<ActiveCandidate | null>(null)
+  const [options, setOptions] = useState<PredefinedOption[]>([])
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([])
+  const [submittingEvaluation, setSubmittingEvaluation] = useState(false)
+  const [evaluationSubmitted, setEvaluationSubmitted] = useState(false)
+  const [checkingActive, setCheckingActive] = useState(true)
+  const [assigned, setAssigned] = useState<boolean>(true) // default true to avoid flicker
+
+  // 1. Cargar sesión guardada en localStorage
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('supervisor_email')
+    if (savedEmail) {
+      setEmail(savedEmail)
+      handleLogin(savedEmail)
+    } else {
+      setCheckingActive(false)
+    }
+  }, [])
+
+  // 2. Cargar opciones predefinidas de la base
+  const fetchOptions = async () => {
+    const { data, error } = await supabase
+      .from('formative_options')
+      .select('*')
+      .order('category', { ascending: true })
+    if (!error && data) {
+      setOptions(data)
+    }
+  }
+
+  // 3. Inicio de sesión / Verificación del supervisor
+  const handleLogin = async (loginEmail?: string) => {
+    const targetEmail = loginEmail || email
+    if (!targetEmail.trim()) return
+
+    setLoading(true)
+    setErrorMessage('')
+    try {
+      const { data, error } = await supabase
+        .from('formative_supervisors')
+        .select('*')
+        .eq('email', targetEmail.trim().toLowerCase())
+        .single()
+
+      if (error || !data) {
+        setErrorMessage('Este correo no está registrado como supervisor. Solicite registro al reclutador.')
+        setSupervisor(null)
+      } else {
+        setSupervisor(data)
+        localStorage.setItem('supervisor_email', targetEmail.trim().toLowerCase())
+        fetchOptions()
+      }
+    } catch (e: any) {
+      setErrorMessage('Error al verificar supervisor: ' + e.message)
+    } finally {
+      setLoading(false)
+      setCheckingActive(false)
+    }
+  }
+
+  // 4. Salir / LogOut
+  const handleLogout = () => {
+    localStorage.removeItem('supervisor_email')
+    setSupervisor(null)
+    setActiveCandidate(null)
+    setEvaluationSubmitted(false)
+  }
+
+  // 5. Escuchar cambios de candidato activo
+  useEffect(() => {
+    if (!supervisor) return
+
+    // Consulta inicial del candidato activo
+    const checkActiveCandidate = async () => {
+      try {
+        // Obtenemos el settings que contiene la relación al candidato activo
+        const { data: settings, error: settingsError } = await supabase
+          .from('company_settings')
+          .select('active_evaluating_candidate_id')
+          .single()
+
+        if (settingsError || !settings || !settings.active_evaluating_candidate_id) {
+          setActiveCandidate(null)
+          setEvaluationSubmitted(false)
+          return
+        }
+
+        const candidateId = settings.active_evaluating_candidate_id
+
+        // Obtener detalles del candidato formativo y su hoja de vida asociada
+        const { data: candidate, error: candidateError } = await supabase
+          .from('formative_candidates')
+          .select(`
+            id,
+            resume_id,
+            email_resumes (
+              sender_name,
+              position
+            )
+          `)
+          .eq('id', candidateId)
+          .single()
+
+        if (candidateError || !candidate) {
+          setActiveCandidate(null)
+          return
+        }
+
+        // Verificar si este supervisor está asignado a evaluar a este candidato
+        const { data: assignment, error: assignmentError } = await supabase
+          .from('formative_assignments')
+          .select('id')
+          .eq('candidate_id', candidateId)
+          .eq('supervisor_id', supervisor.id)
+          .single()
+
+        if (assignmentError || !assignment) {
+          setAssigned(false)
+          setActiveCandidate({
+            id: candidateId,
+            resume_id: candidate.resume_id,
+            candidate_name: (candidate as any).email_resumes?.sender_name || 'Candidato',
+            candidate_cargo: (candidate as any).email_resumes?.position || 'Cargo'
+          })
+          return
+        }
+
+        setAssigned(true)
+
+        // Verificar si ya se envió evaluación para este candidato por este supervisor
+        const { data: evaluation } = await supabase
+          .from('formative_evaluations')
+          .select('id')
+          .eq('candidate_id', candidateId)
+          .eq('supervisor_id', supervisor.id)
+          .single()
+
+        if (evaluation) {
+          setEvaluationSubmitted(true)
+        } else {
+          setEvaluationSubmitted(false)
+        }
+
+        setActiveCandidate({
+          id: candidateId,
+          resume_id: candidate.resume_id,
+          candidate_name: (candidate as any).email_resumes?.sender_name || 'Candidato',
+          candidate_cargo: (candidate as any).email_resumes?.position || 'Cargo'
+        })
+      } catch (err) {
+        console.error('Error checking active candidate:', err)
+      }
+    }
+
+    checkActiveCandidate()
+
+    // Configurar polling cada 3 segundos para actualización en vivo sencilla y garantizada
+    const interval = setInterval(checkActiveCandidate, 3000)
+    return () => clearInterval(interval)
+  }, [supervisor])
+
+  // 6. Manejar la selección/deselección de opciones
+  const handleToggleOption = (optionId: string) => {
+    setSelectedOptions(prev => 
+      prev.includes(optionId)
+        ? prev.filter(id => id !== optionId)
+        : [...prev, optionId]
+    )
+  }
+
+  // 7. Enviar la evaluación
+  const handleSubmitEvaluation = async () => {
+    if (!supervisor || !activeCandidate) return
+    if (selectedOptions.length === 0) {
+      alert('Por favor selecciona al menos un comentario/evaluación.')
+      return
+    }
+
+    setSubmittingEvaluation(true)
+    try {
+      // Calcular puntaje total sumando los pesos de las opciones seleccionadas
+      const selectedOptsDetails = options.filter(opt => selectedOptions.includes(opt.id))
+      const totalScore = selectedOptsDetails.reduce((sum, opt) => sum + opt.weight, 0)
+
+      const { error } = await supabase
+        .from('formative_evaluations')
+        .upsert({
+          candidate_id: activeCandidate.id,
+          supervisor_id: supervisor.id,
+          score: totalScore,
+          selected_options: selectedOptions
+        }, { onConflict: 'candidate_id,supervisor_id' })
+
+      if (error) throw error
+
+      setEvaluationSubmitted(true)
+      setSelectedOptions([])
+    } catch (e: any) {
+      alert('Error al guardar la evaluación: ' + e.message)
+    } finally {
+      setSubmittingEvaluation(false)
+    }
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', fontFamily: "'Inter', sans-serif", padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+      
+      {/* HEADER BAR */}
+      <div style={{ width: '100%', maxWidth: '480px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Star style={{ color: '#3b82f6', fill: '#3b82f6' }} size={24} />
+          <h1 style={{ fontSize: '18px', fontWeight: 800, margin: 0, letterSpacing: '-0.02em', background: 'linear-gradient(90deg, #60a5fa, #3b82f6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Evaluaciones Formativas</h1>
+        </div>
+        {supervisor && (
+          <button 
+            onClick={handleLogout} 
+            style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+          >
+            <LogOut size={13} />
+            Salir
+          </button>
+        )}
+      </div>
+
+      {checkingActive ? (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '32px' }}>
+          <RefreshCw className="animate-spin" style={{ color: '#3b82f6' }} size={32} />
+          <p style={{ color: '#94a3b8', fontSize: '14px' }}>Iniciando...</p>
+        </div>
+      ) : !supervisor ? (
+        
+        /* PANTALLA DE INGRESO */
+        <div style={{ width: '100%', maxWidth: '480px', background: 'rgba(30, 41, 59, 0.7)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '32px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px' }}>Acceso Supervisor</h2>
+            <p style={{ color: '#94a3b8', fontSize: '13.5px', margin: 0 }}>Ingresa tu correo para comenzar a evaluar candidatos en tiempo real.</p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Correo Electrónico</label>
+              <input 
+                type="email" 
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="ejemplo@empresa.com"
+                style={{ width: '100%', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', color: '#f8fafc', fontSize: '14px', outline: 'none' }}
+              />
+            </div>
+
+            {errorMessage && (
+              <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '12px', borderRadius: '12px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <AlertCircle style={{ color: '#ef4444', flexShrink: 0 }} size={16} />
+                <p style={{ margin: 0, fontSize: '12.5px', color: '#fca5a5', lineHeight: 1.4 }}>{errorMessage}</p>
+              </div>
+            )}
+
+            <button 
+              onClick={() => handleLogin()}
+              disabled={loading || !email.trim()}
+              style={{ width: '100%', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '12px', padding: '14px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', opacity: (loading || !email.trim()) ? 0.6 : 1, transition: 'all 0.2s' }}
+            >
+              {loading ? 'Verificando...' : 'Comenzar'}
+            </button>
+          </div>
+        </div>
+
+      ) : (
+
+        /* PANTALLA PRINCIPAL DE EVALUACIÓN */
+        <div style={{ width: '100%', maxWidth: '480px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          
+          {/* PERFIL SUPERVISOR */}
+          <div style={{ background: 'rgba(30, 41, 59, 0.4)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '16px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#3b82f6', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center' }}>
+              <User size={18} style={{ color: 'white' }} />
+            </div>
+            <div>
+              <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8' }}>Supervisor Activo</p>
+              <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700 }}>{supervisor.name}</h3>
+            </div>
+          </div>
+
+          {/* ESTADO DE CANDIDATO EN EVALUACIÓN */}
+          {!activeCandidate ? (
+            
+            /* ESPERANDO CANDIDATO */
+            <div style={{ background: 'rgba(30, 41, 59, 0.7)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '48px 32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
+              <div className="animate-pulse" style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <RefreshCw style={{ color: '#3b82f6' }} size={24} />
+              </div>
+              <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Esperando Candidato</h3>
+              <p style={{ color: '#94a3b8', fontSize: '13.5px', margin: 0, lineHeight: 1.5 }}>
+                El reclutador principal aún no ha iniciado la evaluación de un candidato. La pantalla se actualizará automáticamente cuando empiece.
+              </p>
+            </div>
+
+          ) : !assigned ? (
+
+            /* NO ASIGNADO A ESTE CANDIDATO */
+            <div style={{ background: 'rgba(30, 41, 59, 0.7)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '48px 32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
+              <AlertCircle style={{ color: '#eab308' }} size={48} />
+              <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Sin Asignación</h3>
+              <p style={{ color: '#eab308', fontSize: '14px', fontWeight: 'bold', margin: 0 }}>{activeCandidate.candidate_name}</p>
+              <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0, lineHeight: 1.5 }}>
+                No tienes asignada la evaluación de este candidato. Por favor, solicita al reclutador que te asigne en su panel si consideras que es un error.
+              </p>
+            </div>
+
+          ) : evaluationSubmitted ? (
+            
+            /* EVALUACIÓN ENVIADA - ESPERANDO SIGUIENTE */
+            <div style={{ background: 'rgba(30, 41, 59, 0.7)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '48px 32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
+              <CheckCircle2 style={{ color: '#10b981' }} size={48} />
+              <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>¡Evaluación Enviada!</h3>
+              <p style={{ color: '#10b981', fontSize: '14px', fontWeight: 'bold', margin: 0 }}>{activeCandidate.candidate_name}</p>
+              <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0, lineHeight: 1.5 }}>
+                Tu calificación para este candidato ha sido guardada. Esperando a que el reclutador inicie la evaluación del siguiente postulante...
+              </p>
+            </div>
+
+          ) : (
+
+            /* FORMULARIO DE EVALUACIÓN */
+            <div style={{ background: 'rgba(30, 41, 59, 0.7)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
+              
+              {/* FICHA CANDIDATO */}
+              <div style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.05)', padding: '16px', borderRadius: '16px' }}>
+                <span style={{ fontSize: '10px', fontWeight: 800, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Evaluando Candidato</span>
+                <h2 style={{ fontSize: '18px', fontWeight: 800, margin: '4px 0 2px' }}>{activeCandidate.candidate_name}</h2>
+                <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>{activeCandidate.candidate_cargo}</p>
+              </div>
+
+              {/* OPCIONES DE EVALUACIÓN POR CATEGORÍA */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Criterios de Evaluación</span>
+                
+                {options.length === 0 ? (
+                  <p style={{ fontSize: '13px', color: '#64748b' }}>Cargando criterios configurados...</p>
+                ) : (
+                  options.map(opt => {
+                    const isSelected = selectedOptions.includes(opt.id)
+                    return (
+                      <button
+                        key={opt.id}
+                        onClick={() => handleToggleOption(opt.id)}
+                        style={{
+                          textAlign: 'left',
+                          width: '100%',
+                          background: isSelected ? 'rgba(59, 130, 246, 0.15)' : 'rgba(15, 23, 42, 0.6)',
+                          border: isSelected ? '1px solid #3b82f6' : '1px solid rgba(255,255,255,0.03)',
+                          borderRadius: '12px',
+                          padding: '14px 16px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <div style={{
+                          width: '20px',
+                          height: '20px',
+                          borderRadius: '6px',
+                          border: isSelected ? '2px solid #3b82f6' : '2px solid rgba(255,255,255,0.2)',
+                          background: isSelected ? '#3b82f6' : 'transparent',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}>
+                          {isSelected && <CheckCircle2 size={12} style={{ color: 'white' }} />}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <p style={{ margin: 0, fontSize: '13.5px', color: isSelected ? '#f8fafc' : '#cbd5e1', fontWeight: isSelected ? '700' : '500', lineHeight: 1.4 }}>
+                            {opt.label}
+                          </p>
+                          <span style={{ fontSize: '10.5px', color: '#64748b', marginTop: '2px', display: 'inline-block' }}>
+                            Categoría: {opt.category}
+                          </span>
+                        </div>
+                      </button>
+                    )
+                  })
+                )}
+              </div>
+
+              {/* BOTÓN DE ENVIAR */}
+              <button 
+                onClick={handleSubmitEvaluation}
+                disabled={submittingEvaluation || selectedOptions.length === 0}
+                style={{
+                  width: '100%',
+                  background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  boxShadow: '0 10px 15px -3px rgba(59, 130, 246, 0.3)',
+                  opacity: (submittingEvaluation || selectedOptions.length === 0) ? 0.6 : 1,
+                  transition: 'all 0.2s'
+                }}
+              >
+                {submittingEvaluation ? (
+                  <>
+                    <RefreshCw className="animate-spin" size={16} />
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <MessageSquare size={16} />
+                    Enviar Calificación
+                  </>
+                )}
+              </button>
+
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
