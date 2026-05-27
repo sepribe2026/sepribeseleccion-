@@ -17,20 +17,64 @@ export async function POST(req: NextRequest) {
 
     const openai = new OpenAI({ apiKey: openaiKey });
 
-    // 1. Obtener candidatos de email_resumes
+    // 1. Obtener candidatos de email_resumes (últimos 40 para contexto general)
     let resumesQuery = supabase
       .from('email_resumes')
       .select('*')
       .neq('classification_status', 'DELETED')
       .order('received_date', { ascending: false })
-      .limit(60);
+      .limit(40);
 
     if (company_slug) {
       resumesQuery = resumesQuery.eq('company_slug', company_slug);
     }
 
-    const { data: resumes, error: resumesErr } = await resumesQuery;
+    const { data: recentResumes, error: resumesErr } = await resumesQuery;
     if (resumesErr) throw resumesErr;
+
+    // Buscar candidatos por nombre/email basados en el mensaje del chat para no perder coincidencias antiguas
+    let searchedResumes: any[] = [];
+    const cleanMsg = message.trim().replace(/['"“”*?¿!¡]/g, '');
+    const words = cleanMsg
+      .replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ ]/g, '')
+      .split(/\s+/)
+      .filter((w: string) => w.length >= 3);
+
+    if (words.length > 0) {
+      let searchQuery = supabase
+        .from('email_resumes')
+        .select('*')
+        .neq('classification_status', 'DELETED');
+
+      if (company_slug) {
+        searchQuery = searchQuery.eq('company_slug', company_slug);
+      }
+
+      const orConditions: string[] = [
+        `sender_name.ilike.%${cleanMsg}%`,
+        `sender_email.ilike.%${cleanMsg}%`
+      ];
+
+      const stopWords = new Set(['del', 'los', 'con', 'por', 'para', 'una', 'uno', 'que', 'las', 'como', 'esta', 'este', 'hola', 'bien', 'buen', 'dias', 'tardes', 'noches', 'buscar', 'quien', 'existe', 'candidato']);
+      words.forEach((w: string) => {
+        if (!stopWords.has(w.toLowerCase())) {
+          orConditions.push(`sender_name.ilike.%${w}%`);
+          orConditions.push(`sender_email.ilike.%${w}%`);
+        }
+      });
+
+      searchQuery = searchQuery.or(orConditions.join(',')).limit(20);
+      const { data: searchData, error: searchErr } = await searchQuery;
+      if (!searchErr && searchData) {
+        searchedResumes = searchData;
+      }
+    }
+
+    // Combinar y deduplicar
+    const mergedResumesMap = new Map();
+    (recentResumes || []).forEach((r: any) => mergedResumesMap.set(r.id, r));
+    searchedResumes.forEach((r: any) => mergedResumesMap.set(r.id, r));
+    const resumes = Array.from(mergedResumesMap.values());
 
     // 2. Obtener pruebas psicométricas asociadas
     const { data: psychTests, error: psychErr } = await supabase
