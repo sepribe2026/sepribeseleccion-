@@ -827,7 +827,7 @@ export default function CandidatesAdmin() {
     if (data.data) {
       // Filtrar por empresa y por usuario individual para el resumen
       setPipelineData(data.data.filter((p: any) => 
-        p.company_slug === user.company_slug && 
+        p.candidate?.company_slug === user.company_slug && 
         p.created_by_cedula === user.cedula
       ))
     }

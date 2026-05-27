@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
 
   const { data: resumes, error: resumeError } = await supabase
     .from('email_resumes')
-    .select('id, sender_name, sender_email, sender_phone, city, position, pdf_url')
+    .select('id, sender_name, sender_email, sender_phone, city, position, pdf_url, company_slug')
     .in('id', resumeIds);
 
   if (resumeError) return NextResponse.json({ error: resumeError.message }, { status: 500 });
