@@ -288,6 +288,11 @@ export default function CandidatesAdmin() {
   const [rankingLoading, setRankingLoading] = useState(false)
   const [rankingError, setRankingError] = useState('')
   const [savingPosition, setSavingPosition] = useState(false)
+  const [rankingFilterSector, setRankingFilterSector] = useState('ALL')
+  const [rankingFilterCiudad, setRankingFilterCiudad] = useState('')
+  const [rankingFilterRegion, setRankingFilterRegion] = useState('ALL')
+  const [rankingFilterEdad, setRankingFilterEdad] = useState('ALL')
+  const [rankingFilterGenero, setRankingFilterGenero] = useState('ALL')
   const [showJobMaintenance, setShowJobMaintenance] = useState(false)
   const [editingPositionId, setEditingPositionId] = useState<string | null>(null)
 
@@ -762,7 +767,12 @@ export default function CandidatesAdmin() {
           funciones: rankingFunciones, 
           apiKey: openAiKey, 
           cedula: user?.cedula,
-          company_slug: user?.company_slug
+          company_slug: user?.company_slug,
+          filterSector: rankingFilterSector,
+          filterCiudad: rankingFilterCiudad,
+          filterRegion: rankingFilterRegion,
+          filterEdad: rankingFilterEdad,
+          filterGenero: rankingFilterGenero
         })
       })
       const data = await res.json()
@@ -1727,7 +1737,80 @@ export default function CandidatesAdmin() {
                 {jobPositions.map(p => <option key={p.id} value={p.id}>{p.cargo} {p.ciudad ? `· ${p.ciudad}` : ''}</option>)}
               </select>
               <button onClick={() => setShowJobMaintenance(true)} style={{ width: '100%', padding: '8px', background: '#f3f4f6', border: 'none', borderRadius: '8px', marginBottom: '12px' }}>⚙️ Ajustar Perfil</button>
+              
+              {/* Filtros Adicionales */}
+              <div style={{ borderTop: '1px solid #e2e8f0', marginTop: '16px', paddingTop: '16px', marginBottom: '16px' }}>
+                <p style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  🔍 Filtros de Optimización IA
+                </p>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div>
+                    <label className="ranking-label" style={{ margin: 0, fontSize: '10px' }}>Sector de Vivienda</label>
+                    <select className="ranking-select" style={{ marginBottom: 0, padding: '8px 12px' }} value={rankingFilterSector} onChange={e => setRankingFilterSector(e.target.value)}>
+                      <option value="ALL">Todos los Sectores</option>
+                      <option value="Norte">Norte</option>
+                      <option value="Centro">Centro</option>
+                      <option value="Sur">Sur</option>
+                      <option value="Cumbayá">Cumbayá</option>
+                      <option value="Valle de los Chillos">Valle de los Chillos</option>
+                      <option value="Via la Costa">Via la Costa</option>
+                      <option value="Samborondon">Samborondon</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="ranking-label" style={{ margin: 0, fontSize: '10px' }}>Ciudad</label>
+                    <input 
+                      type="text" 
+                      className="ranking-input" 
+                      placeholder="Ej. Quito, Guayaquil..." 
+                      style={{ marginBottom: 0, padding: '8px 12px' }}
+                      value={rankingFilterCiudad} 
+                      onChange={e => setRankingFilterCiudad(e.target.value)} 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="ranking-label" style={{ margin: 0, fontSize: '10px' }}>Región</label>
+                    <select className="ranking-select" style={{ marginBottom: 0, padding: '8px 12px' }} value={rankingFilterRegion} onChange={e => setRankingFilterRegion(e.target.value)}>
+                      <option value="ALL">Todas las Regiones</option>
+                      <option value="Costa">Costa</option>
+                      <option value="Sierra">Sierra</option>
+                      <option value="Oriente">Oriente</option>
+                      <option value="Insular">Insular</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="ranking-label" style={{ margin: 0, fontSize: '10px' }}>Edad</label>
+                    <select className="ranking-select" style={{ marginBottom: 0, padding: '8px 12px' }} value={rankingFilterEdad} onChange={e => setRankingFilterEdad(e.target.value)}>
+                      <option value="ALL">Todas las Edades</option>
+                      <option value="18-25">18 a 25 años</option>
+                      <option value="26-35">26 a 35 años</option>
+                      <option value="36-45">36 a 45 años</option>
+                      <option value="46+">46 años o más</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="ranking-label" style={{ margin: 0, fontSize: '10px' }}>Género</label>
+                    <select className="ranking-select" style={{ marginBottom: 0, padding: '8px 12px' }} value={rankingFilterGenero} onChange={e => setRankingFilterGenero(e.target.value)}>
+                      <option value="ALL">Todos los Géneros</option>
+                      <option value="Masculino">Masculino</option>
+                      <option value="Femenino">Femenino</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
               <button className="ranking-btn-primary" onClick={handleRankCandidates} disabled={rankingLoading}><Brain size={16} /> {rankingLoading ? 'Evaluando...' : 'Evaluar con IA'}</button>
+              
+              {rankingError && (
+                <div style={{ color: '#ef4444', background: '#fee2e2', border: '1px solid #fca5a5', padding: '12px', borderRadius: '8px', marginTop: '12px', fontSize: '13px', fontWeight: 600 }}>
+                  ⚠️ {rankingError}
+                </div>
+              )}
             </div>
             <div>
               {rankingResults && rankingResults.length > 0 && (

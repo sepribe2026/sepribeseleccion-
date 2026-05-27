@@ -4,7 +4,7 @@ import OpenAI from 'openai';
 
 export async function POST(req: NextRequest) {
   try {
-    const { cargo, ciudad, funciones, apiKey, cedula, company_slug } = await req.json();
+    const { cargo, ciudad, funciones, apiKey, cedula, company_slug, filterSector, filterCiudad, filterRegion, filterEdad, filterGenero } = await req.json();
     const openaiKey = (apiKey || process.env.OPENAI_API_KEY || '').trim();
 
     if (!openaiKey) return NextResponse.json({ error: 'Falta API Key de OpenAI' }, { status: 401 });
@@ -59,12 +59,49 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No hay candidatos recientes (últimos 90 días) en la base de datos para esta empresa.' }, { status: 404 });
     }
 
-    // 2. Pre-filtrar por palabras clave del cargo buscado
+    // 2. Pre-filtrar por Sector, Ciudad, Región, Edad, Género
     let finalResumes = resumes;
+
+    if (filterSector && filterSector !== 'ALL') {
+      finalResumes = finalResumes.filter(r => r.sector && r.sector.toLowerCase() === filterSector.toLowerCase());
+    }
+
+    if (filterCiudad) {
+      finalResumes = finalResumes.filter(r => r.city && r.city.toLowerCase().includes(filterCiudad.toLowerCase()));
+    }
+
+    if (filterRegion && filterRegion !== 'ALL') {
+      finalResumes = finalResumes.filter(r => {
+        const reg = getRegionByCity(r.city || '');
+        return reg.toLowerCase() === filterRegion.toLowerCase();
+      });
+    }
+
+    if (filterEdad && filterEdad !== 'ALL') {
+      finalResumes = finalResumes.filter(r => {
+        if (!r.age) return false;
+        const ageNum = parseInt(r.age, 10);
+        if (isNaN(ageNum)) return false;
+        if (filterEdad === '18-25') return ageNum >= 18 && ageNum <= 25;
+        if (filterEdad === '26-35') return ageNum >= 26 && ageNum <= 35;
+        if (filterEdad === '36-45') return ageNum >= 36 && ageNum <= 45;
+        if (filterEdad === '46+') return ageNum >= 46;
+        return true;
+      });
+    }
+
+    if (filterGenero && filterGenero !== 'ALL') {
+      finalResumes = finalResumes.filter(r => {
+        const gen = inferGender(r.sender_name || '');
+        return gen.toLowerCase() === filterGenero.toLowerCase();
+      });
+    }
+
+    // 3. Pre-filtrar por palabras clave del cargo buscado
     if (cargo) {
       const cargoKeywords = cargo.toLowerCase().split(' ').filter((w: string) => w.length > 3);
       if (cargoKeywords.length > 0) {
-        const keywordMatched = resumes.filter(r => {
+        const keywordMatched = finalResumes.filter(r => {
           const pos = (r.position || '').toLowerCase();
           return cargoKeywords.some((word: string) => pos.includes(word));
         });
@@ -72,6 +109,10 @@ export async function POST(req: NextRequest) {
           finalResumes = keywordMatched;
         }
       }
+    }
+
+    if (finalResumes.length === 0) {
+      return NextResponse.json({ error: 'No se encontraron candidatos que coincidan con los filtros aplicados (Sector, Ciudad, Región, Edad, Género).' }, { status: 404 });
     }
 
     // 3. Limitar a un máximo de 60 candidatos (los más recientes) para prevenir desbordamiento de contexto
@@ -140,4 +181,39 @@ export async function POST(req: NextRequest) {
     console.error('Error Ranking OpenAI:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+}
+
+// Funciones auxiliares para filtrado
+function getRegionByCity(city: string): 'Costa' | 'Sierra' | 'Oriente' | 'Insular' | 'Otro' {
+  if (!city) return 'Otro';
+  const normCity = city.toLowerCase();
+  
+  const costaCities = ['guayaquil', 'samborondon', 'samborondón', 'vía la costa', 'via la costa', 'manta', 'portoviejo', 'machala', 'esmeraldas', 'salinas', 'libertad', 'babahoyo', 'quevedo', 'milagro', 'chone', 'bahia', 'bahía', 'daule', 'durán', 'duran', 'santa elena', 'jipijapa', 'montecristi'];
+  const sierraCities = ['quito', 'cumbaya', 'cumbayá', 'valle de los chillos', 'valle chillos', 'los chillos', 'cuenca', 'ambato', 'riobamba', 'loja', 'ibarra', 'latacunga', 'tulcán', 'tulcan', 'guaranda', 'azogues', 'otavalo', 'cayambe', 'sangolquí', 'sangolqui', 'machachi', 'baños', 'banos'];
+  const orienteCities = ['coca', 'lago agrio', 'nueva loja', 'tena', 'puyo', 'macas', 'zamora', 'archidona', 'shushufindi', 'yantzaza'];
+  const insularCities = ['galapagos', 'galápagos', 'santa cruz', 'san cristobal', 'san cristóbal', 'isabela', 'puerto baquerizo', 'puerto ayora'];
+
+  if (costaCities.some(c => normCity.includes(c))) return 'Costa';
+  if (sierraCities.some(c => normCity.includes(c))) return 'Sierra';
+  if (orienteCities.some(c => normCity.includes(c))) return 'Oriente';
+  if (insularCities.some(c => normCity.includes(c))) return 'Insular';
+
+  return 'Otro';
+}
+
+function inferGender(name: string): 'Masculino' | 'Femenino' | 'Otro' {
+  if (!name) return 'Otro';
+  const firstName = name.trim().split(' ')[0].toLowerCase();
+  
+  const maleNames = ['juan', 'luis', 'jose', 'carlos', 'angel', 'miguel', 'david', 'jorge', 'ramon', 'felix', 'adrian', 'christian', 'cristian', 'esteban', 'german', 'hernando', 'ivan', 'joaquin', 'martin', 'oscar', 'ruben', 'sebastian', 'victor', 'hector', 'cesar', 'walter', 'raul', 'manuel', 'daniel', 'gabriel', 'rafael', 'samuel', 'javier', 'alex', 'ariel', 'rene'];
+  const femaleNames = ['maria', 'carmen', 'isabel', 'pilar', 'dolores', 'beatriz', 'lourdes', 'mercedes', 'raquel', 'irene', 'ester', 'ruth', 'judith', 'miriam', 'elizabeth', 'ines', 'abigail', 'belen', 'consuelo', 'socorro', 'sol'];
+
+  if (femaleNames.includes(firstName)) return 'Femenino';
+  if (maleNames.includes(firstName)) return 'Masculino';
+
+  if (firstName.endsWith('a')) {
+    return 'Femenino';
+  }
+  
+  return 'Masculino';
 }
