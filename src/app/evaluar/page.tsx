@@ -19,7 +19,8 @@ interface ActiveCandidate {
 }
 
 export default function SupervisorPortal() {
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [supervisor, setSupervisor] = useState<{ id: string; name: string; email: string } | null>(null)
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -33,18 +34,7 @@ export default function SupervisorPortal() {
   const [checkingActive, setCheckingActive] = useState(true)
   const [assigned, setAssigned] = useState<boolean>(true) // default true to avoid flicker
 
-  // 1. Cargar sesión guardada en localStorage
-  useEffect(() => {
-    const savedEmail = localStorage.getItem('supervisor_email')
-    if (savedEmail) {
-      setEmail(savedEmail)
-      handleLogin(savedEmail)
-    } else {
-      setCheckingActive(false)
-    }
-  }, [])
-
-  // 2. Cargar opciones predefinidas de la base
+  // 1. Cargar opciones predefinidas de la base
   const fetchOptions = async () => {
     const { data, error } = await supabase
       .from('formative_options')
@@ -55,39 +45,76 @@ export default function SupervisorPortal() {
     }
   }
 
-  // 3. Inicio de sesión / Verificación del supervisor
-  const handleLogin = async (loginEmail?: string) => {
-    const targetEmail = loginEmail || email
-    if (!targetEmail.trim()) return
+  // 2. Cargar sesión guardada en localStorage
+  useEffect(() => {
+    const savedSupervisor = localStorage.getItem('supervisor_session')
+    if (savedSupervisor) {
+      try {
+        const parsed = JSON.parse(savedSupervisor)
+        setSupervisor(parsed)
+        fetchOptions()
+      } catch (e) {
+        localStorage.removeItem('supervisor_session')
+      }
+    }
+    setCheckingActive(false)
+  }, [])
+
+  // 3. Inicio de sesión / Verificación con Windows AD
+  const handleLogin = async () => {
+    if (!username.trim() || !password.trim()) {
+      setErrorMessage('Por favor ingrese usuario y contraseña.')
+      return
+    }
 
     setLoading(true)
     setErrorMessage('')
     try {
-      const { data, error } = await supabase
+      // 1. Autenticar con Active Directory a través de la API
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cedula: username.trim(),
+          password: password,
+          app: 'supervisor'
+        })
+      })
+
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Credenciales de Windows inválidas')
+      }
+
+      // 2. Buscar si el usuario autenticado está registrado como supervisor
+      const cleanUser = username.trim().toLowerCase()
+      const shortUser = cleanUser.split('@')[0]
+
+      const { data: supData, error: supError } = await supabase
         .from('formative_supervisors')
         .select('*')
-        .eq('email', targetEmail.trim().toLowerCase())
-        .single()
+        .or(`email.ilike."${cleanUser}",email.ilike."${shortUser}@%"`)
+        .maybeSingle()
 
-      if (error || !data) {
-        setErrorMessage('Este correo no está registrado como supervisor. Solicite registro al reclutador.')
+      if (supError || !supData) {
+        setErrorMessage(`Autenticación de Windows exitosa para "${cleanUser}", pero no está registrado como supervisor en el panel formativo. Pida al reclutador que lo registre.`)
         setSupervisor(null)
       } else {
-        setSupervisor(data)
-        localStorage.setItem('supervisor_email', targetEmail.trim().toLowerCase())
+        setSupervisor(supData)
+        localStorage.setItem('supervisor_session', JSON.stringify(supData))
         fetchOptions()
       }
     } catch (e: any) {
-      setErrorMessage('Error al verificar supervisor: ' + e.message)
+      setErrorMessage(e.message || 'Error de conexión con el servidor de autenticación.')
+      setSupervisor(null)
     } finally {
       setLoading(false)
-      setCheckingActive(false)
     }
   }
 
   // 4. Salir / LogOut
   const handleLogout = () => {
-    localStorage.removeItem('supervisor_email')
+    localStorage.removeItem('supervisor_session')
     setSupervisor(null)
     setActiveCandidate(null)
     setEvaluationSubmitted(false)
@@ -260,17 +287,28 @@ export default function SupervisorPortal() {
         <div style={{ width: '100%', maxWidth: '480px', background: 'rgba(30, 41, 59, 0.7)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '32px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px' }}>Acceso Supervisor</h2>
-            <p style={{ color: '#94a3b8', fontSize: '13.5px', margin: 0 }}>Ingresa tu correo para comenzar a evaluar candidatos en tiempo real.</p>
+            <p style={{ color: '#94a3b8', fontSize: '13.5px', margin: 0 }}>Inicia sesión con tu usuario y contraseña de Windows.</p>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Correo Electrónico</label>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Usuario de Windows</label>
               <input 
-                type="email" 
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="ejemplo@empresa.com"
+                type="text" 
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                placeholder="ej: jsoto"
+                style={{ width: '100%', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', color: '#f8fafc', fontSize: '14px', outline: 'none' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Contraseña</label>
+              <input 
+                type="password" 
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="••••••••"
                 style={{ width: '100%', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', color: '#f8fafc', fontSize: '14px', outline: 'none' }}
               />
             </div>
@@ -283,11 +321,11 @@ export default function SupervisorPortal() {
             )}
 
             <button 
-              onClick={() => handleLogin()}
-              disabled={loading || !email.trim()}
-              style={{ width: '100%', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '12px', padding: '14px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', opacity: (loading || !email.trim()) ? 0.6 : 1, transition: 'all 0.2s' }}
+              onClick={handleLogin}
+              disabled={loading || !username.trim() || !password.trim()}
+              style={{ width: '100%', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '12px', padding: '14px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', opacity: (loading || !username.trim() || !password.trim()) ? 0.6 : 1, transition: 'all 0.2s' }}
             >
-              {loading ? 'Verificando...' : 'Comenzar'}
+              {loading ? 'Iniciando Sesión...' : 'Ingresar'}
             </button>
           </div>
         </div>
