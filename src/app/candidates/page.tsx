@@ -315,6 +315,7 @@ export default function CandidatesAdmin() {
   const [psychometricTests, setPsychometricTests] = useState<any[]>([])
   const [viewingPsychometric, setViewingPsychometric] = useState<any | null>(null)
   const [sendingPsychometricId, setSendingPsychometricId] = useState<string | null>(null)
+  const [sendingThankYouId, setSendingThankYouId] = useState<string | null>(null)
   const [qrModalUrl, setQrModalUrl] = useState<string | null>(null)
   const [loadingRecommendation, setLoadingRecommendation] = useState(false)
   const [aiRecommendation, setAiRecommendation] = useState<any | null>(null)
@@ -1161,6 +1162,26 @@ export default function CandidatesAdmin() {
       if (res.ok) alert('✅ Correo enviado con éxito.');
       else alert('❌ Error al enviar correo: ' + (data.error || 'Fallo en el servidor SMTP'));
     } catch (e: any) { alert('❌ Error de conexión: ' + e.message); }
+  }
+
+  const handleSendThankYouEmail = async (candidateId: string, email: string, name: string, cargo: string) => {
+    if (!email) { alert('Este candidato no tiene email registrado.'); return; }
+    if (!confirm(`¿Enviar correo de agradecimiento por postulación a ${name} (${email}) para el cargo de ${cargo}?`)) return;
+    setSendingThankYouId(candidateId);
+    try {
+      const res = await fetch('/api/send-thank-you-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name, cargo })
+      });
+      const data = await res.json();
+      if (res.ok) alert('✅ Correo de agradecimiento enviado correctamente a ' + email);
+      else alert('❌ Error al enviar correo: ' + (data.error || 'Fallo en el servidor'));
+    } catch (e: any) {
+      alert('❌ Error de conexión: ' + e.message);
+    } finally {
+      setSendingThankYouId(null);
+    }
   }
 
   const handleScanEmails = async () => {
@@ -2243,9 +2264,20 @@ export default function CandidatesAdmin() {
                             <td style={{ textAlign: 'right' }}>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
                                 {status === 'PENDIENTE' ? (
-                                  <button className="ai-btn-accept" onClick={() => updateTracking(r.id, 'MENSAJE_ENVIADO')} disabled={isUpd}>
-                                    {isUpd ? '...' : 'Aceptar Candidato'}
-                                  </button>
+                                  <>
+                                    <button className="ai-btn-accept" onClick={() => updateTracking(r.id, 'MENSAJE_ENVIADO')} disabled={isUpd}>
+                                      {isUpd ? '...' : 'Aceptar Candidato'}
+                                    </button>
+                                    <button
+                                      className="track-btn"
+                                      style={{ color: '#f59e0b', borderColor: '#fde68a', background: 'rgba(245, 158, 11, 0.05)', fontSize: '11px', padding: '4px 10px' }}
+                                      onClick={() => handleSendThankYouEmail(r.id, r.sender_email || r.email || '', r.name || r.sender_name || '', rankingCargo)}
+                                      disabled={sendingThankYouId === r.id}
+                                      title="Enviar correo de agradecimiento por postulación"
+                                    >
+                                      {sendingThankYouId === r.id ? '⏳ Enviando...' : '🙏 Agradecer'}
+                                    </button>
+                                  </>
                                 ) : (
                                   <>
                                     <span className="pipeline-badge" style={{ background: '#dcfce7', color: '#166534', border: '1px solid #bbf7d0', marginBottom: '4px' }}>
