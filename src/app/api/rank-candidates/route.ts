@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
 
     if (filterGenero && filterGenero !== 'ALL') {
       finalResumes = finalResumes.filter(r => {
-        const gen = inferGender(r.sender_name || '');
+        const gen = r.gender || inferGender(r.sender_name || '');
         return gen.toLowerCase() === filterGenero.toLowerCase();
       });
     }

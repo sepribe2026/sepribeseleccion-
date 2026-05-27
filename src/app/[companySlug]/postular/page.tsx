@@ -71,7 +71,8 @@ export default function ApplyPage() {
     heard_from: '',
     likes_sports: '',
     sports_practiced: '',
-    work_culture_motivation: ''
+    work_culture_motivation: '',
+    genero: ''
   })
 
   useEffect(() => {
@@ -191,6 +192,8 @@ export default function ApplyPage() {
     if (formData.cedula.length < 10) { setError('La cédula debe tener al menos 10 dígitos.'); return }
     if (parseInt(formData.experiencia) > 15) { setError('Los años de experiencia no pueden superar los 15 años.'); return }
     if (parseInt(formData.edad) < 18) { setError('Debes tener al menos 18 años para postularte.'); return }
+    if (!formData.ciudad) { setError('Por favor, selecciona tu ciudad.'); return }
+    if (!formData.genero) { setError('Por favor, selecciona tu género.'); return }
     
     setLoading(true)
     setError('')
@@ -255,6 +258,7 @@ export default function ApplyPage() {
         education_institution: formData.education_institution || null,
         education_title: formData.education_title || null,
         heard_from: formData.heard_from || null,
+        gender: formData.genero || null,
         likes_sports: formData.likes_sports || null,
         sports_practiced: formData.sports_practiced || null,
         work_culture_motivation: formData.work_culture_motivation || null
@@ -373,7 +377,7 @@ export default function ApplyPage() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 0.5fr', gap: '20px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Fecha de Nacimiento *</label>
                 <div style={{ position: 'relative' }}>
@@ -387,6 +391,9 @@ export default function ApplyPage() {
                   <input type="number" name="edad" readOnly placeholder="Autocalculada" value={formData.edad} style={{ width: '100%', padding: '12px 12px 12px 42px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', backgroundColor: '#f1f5f9', cursor: 'not-allowed' }} />
                 </div>
               </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Estado Civil *</label>
                 <div style={{ position: 'relative' }}>
@@ -407,15 +414,64 @@ export default function ApplyPage() {
                   <ChevronDown size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
                 </div>
               </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '20px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Dirección domiciliaria *</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Género *</label>
                 <div style={{ position: 'relative' }}>
-                  <input type="text" name="home_address" required placeholder="Detallar Calle principal, numeración y calle transversal" value={formData.home_address} onChange={handleChange} style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} />
+                  <select 
+                    name="genero"
+                    required 
+                    value={formData.genero}
+                    onChange={handleChange}
+                    style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', appearance: 'none', background: 'white' }}
+                  >
+                    <option value="">Seleccionar...</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Femenino">Femenino</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                  <ChevronDown size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
                 </div>
               </div>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Dirección domiciliaria *</label>
+              <div style={{ position: 'relative' }}>
+                <input type="text" name="home_address" required placeholder="Detallar Calle principal, numeración y calle transversal" value={formData.home_address} onChange={handleChange} style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Ciudad de Residencia *</label>
+                <div style={{ position: 'relative' }}>
+                  <select 
+                    name="ciudad"
+                    required 
+                    value={formData.ciudad}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData(prev => ({ ...prev, ciudad: val, sector: '' }));
+                    }}
+                    style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', appearance: 'none', background: 'white' }}
+                  >
+                    <option value="">Seleccionar...</option>
+                    <option value="Quito">Quito</option>
+                    <option value="Guayaquil">Guayaquil</option>
+                    <option value="Cuenca">Cuenca</option>
+                    <option value="Manta">Manta</option>
+                    <option value="Portoviejo">Portoviejo</option>
+                    <option value="Machala">Machala</option>
+                    <option value="Loja">Loja</option>
+                    <option value="Ambato">Ambato</option>
+                    <option value="Santo Domingo">Santo Domingo</option>
+                    <option value="Ibarra">Ibarra</option>
+                    <option value="Otra">Otra / Provincia</option>
+                  </select>
+                  <ChevronDown size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                </div>
+              </div>
+
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Sector *</label>
                 <div style={{ position: 'relative' }}>
@@ -430,10 +486,18 @@ export default function ApplyPage() {
                     <option value="Norte">Norte</option>
                     <option value="Centro">Centro</option>
                     <option value="Sur">Sur</option>
-                    <option value="Cumbayá">Cumbayá</option>
-                    <option value="Valle de los Chillos">Valle de los Chillos</option>
-                    <option value="Via la Costa">Via la Costa</option>
-                    <option value="Samborondon">Samborondon</option>
+                    {formData.ciudad === 'Quito' && (
+                      <>
+                        <option value="Cumbayá">Cumbayá</option>
+                        <option value="Valle de los Chillos">Valle de los Chillos</option>
+                      </>
+                    )}
+                    {formData.ciudad === 'Guayaquil' && (
+                      <>
+                        <option value="Samborondón">Samborondón</option>
+                        <option value="Vía a la Costa">Vía a la Costa</option>
+                      </>
+                    )}
                   </select>
                   <ChevronDown size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
                 </div>
@@ -462,7 +526,6 @@ export default function ApplyPage() {
 
             {/* Hidden fields but updated by state */}
             <input type="hidden" name="cargo" value={formData.cargo} />
-            <input type="hidden" name="ciudad" value={formData.ciudad} />
 
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Habilidad principal o logro clave</label>
