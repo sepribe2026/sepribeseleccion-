@@ -297,7 +297,7 @@ export default function CandidatesAdmin() {
   const [interviewModal, setInterviewModal] = useState<{ id: string; name: string; resumeId: string; cargo: string } | null>(null)
   const [interviewDate, setInterviewDate] = useState('')
   const [interviewTime, setInterviewTime] = useState('09:00')
-  const [interviewNotes, setInterviewNotes] = useState('Cita en las Av Galo Plaza Lasso 13205 de los Ceresos.')
+  const [interviewNotes, setInterviewNotes] = useState('Cita en las Av Galo Plaza Lasso 13205 de los Cerezos.')
 
   // === PIPELINE GLOBAL ===
   const [pipelineData, setPipelineData] = useState<any[]>([])
@@ -314,6 +314,7 @@ export default function CandidatesAdmin() {
   const [loadingRecommendation, setLoadingRecommendation] = useState(false)
   const [aiRecommendation, setAiRecommendation] = useState<any | null>(null)
   const [activeResultsTab, setActiveResultsTab] = useState<'disc' | 'cognicion' | 'preguntas'>('disc')
+  const [openAiKey, setOpenAiKey] = useState('')
 
   // === CONFIGURACIÓN DE POSTULACIONES POR EMPRESA ===
   const [companySettings, setCompanySettings] = useState<Record<string, boolean>>({
@@ -372,7 +373,8 @@ export default function CandidatesAdmin() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               testId: viewingPsychometric.test.id,
-              cargo: viewingPsychometric.candidate?.position || viewingPsychometric.test.candidate?.position || 'Candidato'
+              cargo: viewingPsychometric.candidate?.position || viewingPsychometric.test.candidate?.position || 'Candidato',
+              apiKey: openAiKey
             })
           })
           const data = await res.json()
@@ -386,6 +388,9 @@ export default function CandidatesAdmin() {
                 ai_recommendation: data.recommendation
               }
             } : t))
+          } else {
+            console.error('Error al generar recomendación:', data.error)
+            alert('No se pudo generar la guía de entrevista: ' + (data.error || 'Error desconocido'))
           }
         } catch (e) {
           console.error('Error al cargar recomendación:', e)
@@ -395,14 +400,13 @@ export default function CandidatesAdmin() {
       }
       fetchRecommendation()
     }
-  }, [viewingPsychometric])
+  }, [viewingPsychometric, openAiKey])
 
   // === BANDEJA FILTERS ===
   const [inboxSearch, setInboxSearch] = useState('')
   const [inboxCargo, setInboxCargo] = useState('')
   const [inboxCity, setInboxCity] = useState('')
   const [inboxExp, setInboxExp] = useState('')
-  const [openAiKey, setOpenAiKey] = useState('')
 
   // === ESTADOS COPILOTO IA ===
   const [showCopilot, setShowCopilot] = useState(false);
@@ -2149,7 +2153,7 @@ export default function CandidatesAdmin() {
                               <a 
                                 href={p.status === 'PENDIENTE' ? '#' : `https://wa.me/${p.candidate.sender_phone.replace(/\D/g, '').replace(/^0/, '593')}?text=${encodeURIComponent(
                                   p.status === 'ENTREVISTA_PROGRAMADA' 
-                                  ? `Hola ${p.candidate?.sender_name || 'candidat@'}, nos complace informarte que has pasado la primera etapa de nuestro proceso de selección para Superdeporte S.A. Para la siguiente fase, deberás asistir a una entrevista presencial y/o virtual.\n\nTe enviamos los detalles para que puedas asistir:\n📅Fecha: ${p.interview_date ? new Date(p.interview_date.split(' ')[0] + 'T12:00:00').toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long' }) : '—'}\n⏰Hora: ${p.interview_date?.split(' ')[1] || '09:00'}\n📍Lugar: Av Galo Plaza Lasso 13205 de los Ceresos.`
+                                  ? `Hola ${p.candidate?.sender_name || 'candidat@'}, nos complace informarte que has pasado la primera etapa de nuestro proceso de selección para Superdeporte S.A. Para la siguiente fase, deberás asistir a una entrevista presencial y/o virtual.\n\nTe enviamos los detalles para que puedas asistir:\n📅Fecha: ${p.interview_date ? new Date(p.interview_date.split(' ')[0] + 'T12:00:00').toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long' }) : '—'}\n⏰Hora: ${p.interview_date?.split(' ')[1] || '09:00'}\n📍Lugar: Av Galo Plaza Lasso 13205 de los Cerezos.`
                                   : `Hola ${p.candidate?.sender_name || 'candidat@'}, te saludamos de RRHH de Superdeporte S.A. Estamos revisando tu perfil para el cargo de ${p.cargo} y nos gustaría agendar una entrevista.`
                                 )}`} 
                                 onClick={(e) => (p.status === 'PENDIENTE' || p.status === 'ENTREVISTA_APROBADA' || p.status === 'RECHAZADO') && e.preventDefault()}

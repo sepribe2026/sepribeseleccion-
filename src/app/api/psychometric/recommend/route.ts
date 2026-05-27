@@ -4,7 +4,7 @@ import OpenAI from 'openai';
 
 export async function POST(req: NextRequest) {
   try {
-    const { testId, cargo } = await req.json();
+    const { testId, cargo, apiKey } = await req.json();
     if (!testId) {
       return NextResponse.json({ error: 'Falta ID de evaluación' }, { status: 400 });
     }
@@ -27,9 +27,9 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Preparar OpenAI
-    const openaiKey = (process.env.OPENAI_API_KEY || '').trim();
+    const openaiKey = (apiKey || process.env.OPENAI_API_KEY || '').trim();
     if (!openaiKey) {
-      return NextResponse.json({ error: 'Falta la API Key de OpenAI en las variables de entorno.' }, { status: 500 });
+      return NextResponse.json({ error: 'Falta la API Key de OpenAI. Configúrala en el icono de engranaje (⚙️).' }, { status: 401 });
     }
 
     const openai = new OpenAI({ apiKey: openaiKey });
