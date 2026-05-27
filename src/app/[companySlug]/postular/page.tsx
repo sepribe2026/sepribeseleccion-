@@ -341,365 +341,410 @@ export default function ApplyPage() {
             </div>
           )}
 
-          <div style={{ display: 'grid', gap: '24px' }}>
+          <div style={{ display: 'grid', gap: '32px' }}>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Nombre Completo</label>
-                <div style={{ position: 'relative' }}>
-                  <User size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                  <input type="text" name="nombre" required placeholder="Ej: Juan Pérez" value={formData.nombre} onChange={(e) => setFormData({...formData, nombre: e.target.value.toUpperCase()})} style={{ width: '100%', padding: '12px 12px 12px 42px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} />
+            {/* Sección 1: Información Personal */}
+            <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: '#0f172a', letterSpacing: '0.05em', borderLeft: '4px solid #002f6c', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <User size={18} color="#002f6c" /> Información Personal
+              </h3>
+              
+              <div style={{ display: 'grid', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Nombre Completo *</label>
+                    <div style={{ position: 'relative' }}>
+                      <User size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                      <input type="text" name="nombre" required placeholder="Ej: Juan Pérez" value={formData.nombre} onChange={(e) => setFormData({...formData, nombre: e.target.value.toUpperCase()})} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Número de Cédula *</label>
+                    <div style={{ position: 'relative' }}>
+                      <User size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                      <input type="text" name="cedula" required placeholder="10 dígitos" maxLength={10} value={formData.cedula} onChange={handleChange} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} />
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Número de Cédula</label>
-                <div style={{ position: 'relative' }}>
-                  <User size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                  <input type="text" name="cedula" required placeholder="10 dígitos" maxLength={10} value={formData.cedula} onChange={handleChange} style={{ width: '100%', padding: '12px 12px 12px 42px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} />
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Correo Electrónico *</label>
+                    <div style={{ position: 'relative' }}>
+                      <Mail size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                      <input type="email" name="email" required placeholder="tu@email.com" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value.toLowerCase()})} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Celular / WhatsApp *</label>
+                    <div style={{ position: 'relative' }}>
+                      <Clock size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                      <input type="text" name="celular" required placeholder="Ej: 0987654321" value={formData.celular} onChange={handleChange} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} />
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Fecha de Nacimiento *</label>
+                    <div style={{ position: 'relative' }}>
+                      <input type="date" name="birth_date" required value={formData.birth_date} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', background: 'white' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Edad</label>
+                    <div style={{ position: 'relative' }}>
+                      <User size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                      <input type="number" name="edad" readOnly placeholder="Auto" value={formData.edad} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '14px', outline: 'none', backgroundColor: '#f1f5f9', cursor: 'not-allowed' }} />
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Estado Civil *</label>
+                    <div style={{ position: 'relative' }}>
+                      <select 
+                        name="civil_status"
+                        required 
+                        value={formData.civil_status}
+                        onChange={handleChange}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', appearance: 'none', background: 'white' }}
+                      >
+                        <option value="">Seleccionar...</option>
+                        <option value="Soltero/a">Soltero/a</option>
+                        <option value="Casado/a">Casado/a</option>
+                        <option value="Unión Libre legalizada">Unión Libre legalizada</option>
+                        <option value="Divorciado/a">Divorciado/a</option>
+                        <option value="Viudo/a">Viudo/a</option>
+                      </select>
+                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Género *</label>
+                    <div style={{ position: 'relative' }}>
+                      <select 
+                        name="genero"
+                        required 
+                        value={formData.genero}
+                        onChange={handleChange}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', appearance: 'none', background: 'white' }}
+                      >
+                        <option value="">Seleccionar...</option>
+                        <option value="Masculino">Masculino</option>
+                        <option value="Femenino">Femenino</option>
+                        <option value="Otro">Otro</option>
+                      </select>
+                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Correo Electrónico *</label>
-                <div style={{ position: 'relative' }}>
-                  <Mail size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                  <input type="email" name="email" required placeholder="tu@email.com" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value.toLowerCase()})} style={{ width: '100%', padding: '12px 12px 12px 42px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} />
+            {/* Sección 2: Dirección y Residencia */}
+            <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: '#0f172a', letterSpacing: '0.05em', borderLeft: '4px solid #002f6c', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <MapPin size={18} color="#002f6c" /> Dirección y Residencia
+              </h3>
+              
+              <div style={{ display: 'grid', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Ciudad de Residencia *</label>
+                    <div style={{ position: 'relative' }}>
+                      <select 
+                        name="ciudad"
+                        required 
+                        value={formData.ciudad}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData(prev => ({ ...prev, ciudad: val, sector: '' }));
+                        }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', appearance: 'none', background: 'white' }}
+                      >
+                        <option value="">Seleccionar...</option>
+                        <option value="Quito">Quito</option>
+                        <option value="Guayaquil">Guayaquil</option>
+                        <option value="Cuenca">Cuenca</option>
+                        <option value="Manta">Manta</option>
+                        <option value="Portoviejo">Portoviejo</option>
+                        <option value="Machala">Machala</option>
+                        <option value="Loja">Loja</option>
+                        <option value="Ambato">Ambato</option>
+                        <option value="Santo Domingo">Santo Domingo</option>
+                        <option value="Ibarra">Ibarra</option>
+                        <option value="Otra">Otra / Provincia</option>
+                      </select>
+                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Sector *</label>
+                    <div style={{ position: 'relative' }}>
+                      <select 
+                        name="sector"
+                        required 
+                        value={formData.sector}
+                        onChange={handleChange}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', appearance: 'none', background: 'white' }}
+                      >
+                        <option value="">Seleccionar...</option>
+                        <option value="Norte">Norte</option>
+                        <option value="Centro">Centro</option>
+                        <option value="Sur">Sur</option>
+                        {formData.ciudad === 'Quito' && (
+                          <>
+                            <option value="Cumbayá">Cumbayá</option>
+                            <option value="Valle de los Chillos">Valle de los Chillos</option>
+                          </>
+                        )}
+                        {formData.ciudad === 'Guayaquil' && (
+                          <>
+                            <option value="Samborondón">Samborondón</option>
+                            <option value="Vía a la Costa">Vía a la Costa</option>
+                          </>
+                        )}
+                      </select>
+                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Celular / WhatsApp *</label>
-                <div style={{ position: 'relative' }}>
-                  <Clock size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                  <input type="text" name="celular" required placeholder="Ej: 0987654321" value={formData.celular} onChange={handleChange} style={{ width: '100%', padding: '12px 12px 12px 42px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} />
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Dirección Domiciliaria Completa *</label>
+                  <div style={{ position: 'relative' }}>
+                    <input type="text" name="home_address" required placeholder="Detallar Calle principal, numeración y calle transversal" value={formData.home_address} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} />
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 0.5fr', gap: '20px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Fecha de Nacimiento *</label>
-                <div style={{ position: 'relative' }}>
-                  <input type="date" name="birth_date" required value={formData.birth_date} onChange={handleChange} style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', background: 'white' }} />
+            {/* Perfil y Experiencia */}
+            <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: '#0f172a', letterSpacing: '0.05em', borderLeft: '4px solid #002f6c', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Briefcase size={18} color="#002f6c" /> Perfil y Experiencia
+              </h3>
+              
+              <div style={{ display: 'grid', gap: '20px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Seleccionar Cargo al que Postula *</label>
+                  <div style={{ position: 'relative' }}>
+                    <Briefcase size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 1 }} />
+                    <select 
+                      required 
+                      onChange={handleJobSelect} 
+                      style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', appearance: 'none', background: 'white' }}
+                    >
+                      <option value="">Seleccionar...</option>
+                      {jobPositions.map(job => (
+                        <option key={job.id} value={job.id}>
+                          {job.cargo} {job.ciudad ? '· ' + job.ciudad : ''}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                  </div>
                 </div>
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Edad</label>
-                <div style={{ position: 'relative' }}>
-                  <User size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                  <input type="number" name="edad" readOnly placeholder="Autocalculada" value={formData.edad} style={{ width: '100%', padding: '12px 12px 12px 42px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', backgroundColor: '#f1f5f9', cursor: 'not-allowed' }} />
-                </div>
-              </div>
-            </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Estado Civil *</label>
-                <div style={{ position: 'relative' }}>
-                  <select 
-                    name="civil_status"
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Años de Experiencia *</label>
+                    <div style={{ position: 'relative' }}>
+                      <Clock size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                      <input type="number" name="experiencia" required min="0" max="15" placeholder="Ej: 3" value={formData.experiencia} onChange={handleChange} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Herramientas / Idiomas clave *</label>
+                    <input 
+                      type="text" 
+                      name="herramientas" 
+                      required 
+                      placeholder="Ej: Excel intermedio, Inglés B2" 
+                      value={formData.herramientas} 
+                      onChange={handleChange} 
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} 
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Habilidad principal o logro clave *</label>
+                  <textarea 
+                    name="logro" 
                     required 
-                    value={formData.civil_status}
-                    onChange={handleChange}
-                    style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', appearance: 'none', background: 'white' }}
-                  >
-                    <option value="">Seleccionar...</option>
-                    <option value="Soltero/a">Soltero/a</option>
-                    <option value="Casado/a">Casado/a</option>
-                    <option value="Unión Libre legalizada">Unión Libre legalizada</option>
-                    <option value="Divorciado/a">Divorciado/a</option>
-                    <option value="Viudo/a">Viudo/a</option>
-                  </select>
-                  <ChevronDown size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
-                </div>
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Género *</label>
-                <div style={{ position: 'relative' }}>
-                  <select 
-                    name="genero"
-                    required 
-                    value={formData.genero}
-                    onChange={handleChange}
-                    style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', appearance: 'none', background: 'white' }}
-                  >
-                    <option value="">Seleccionar...</option>
-                    <option value="Masculino">Masculino</option>
-                    <option value="Femenino">Femenino</option>
-                    <option value="Otro">Otro</option>
-                  </select>
-                  <ChevronDown size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Dirección domiciliaria *</label>
-              <div style={{ position: 'relative' }}>
-                <input type="text" name="home_address" required placeholder="Detallar Calle principal, numeración y calle transversal" value={formData.home_address} onChange={handleChange} style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} />
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Ciudad de Residencia *</label>
-                <div style={{ position: 'relative' }}>
-                  <select 
-                    name="ciudad"
-                    required 
-                    value={formData.ciudad}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setFormData(prev => ({ ...prev, ciudad: val, sector: '' }));
-                    }}
-                    style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', appearance: 'none', background: 'white' }}
-                  >
-                    <option value="">Seleccionar...</option>
-                    <option value="Quito">Quito</option>
-                    <option value="Guayaquil">Guayaquil</option>
-                    <option value="Cuenca">Cuenca</option>
-                    <option value="Manta">Manta</option>
-                    <option value="Portoviejo">Portoviejo</option>
-                    <option value="Machala">Machala</option>
-                    <option value="Loja">Loja</option>
-                    <option value="Ambato">Ambato</option>
-                    <option value="Santo Domingo">Santo Domingo</option>
-                    <option value="Ibarra">Ibarra</option>
-                    <option value="Otra">Otra / Provincia</option>
-                  </select>
-                  <ChevronDown size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
-                </div>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Sector *</label>
-                <div style={{ position: 'relative' }}>
-                  <select 
-                    name="sector"
-                    required 
-                    value={formData.sector}
-                    onChange={handleChange}
-                    style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', appearance: 'none', background: 'white' }}
-                  >
-                    <option value="">Seleccionar...</option>
-                    <option value="Norte">Norte</option>
-                    <option value="Centro">Centro</option>
-                    <option value="Sur">Sur</option>
-                    {formData.ciudad === 'Quito' && (
-                      <>
-                        <option value="Cumbayá">Cumbayá</option>
-                        <option value="Valle de los Chillos">Valle de los Chillos</option>
-                      </>
-                    )}
-                    {formData.ciudad === 'Guayaquil' && (
-                      <>
-                        <option value="Samborondón">Samborondón</option>
-                        <option value="Vía a la Costa">Vía a la Costa</option>
-                      </>
-                    )}
-                  </select>
-                  <ChevronDown size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Seleccionar Cargo</label>
-              <div style={{ position: 'relative' }}>
-                <Briefcase size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 1 }} />
-                <select 
-                  required 
-                  onChange={handleJobSelect} 
-                  style={{ width: '100%', padding: '12px 12px 12px 42px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', appearance: 'none', background: 'white' }}
-                >
-                  <option value="">Seleccionar...</option>
-                  {jobPositions.map(job => (
-                    <option key={job.id} value={job.id}>
-                      {job.cargo} {job.ciudad ? `· ${job.ciudad}` : ''}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
-              </div>
-            </div>
-
-            {/* Hidden fields but updated by state */}
-            <input type="hidden" name="cargo" value={formData.cargo} />
-
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Habilidad principal o logro clave</label>
-              <textarea 
-                name="logro" 
-                required 
-                placeholder="Ej: Especialista en campañas Google Ads con ROAS del 300%" 
-                value={formData.logro} 
-                onChange={(e: any) => handleChange(e)} 
-                style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', minHeight: '80px', fontFamily: 'inherit' }} 
-              />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2.5fr', gap: '20px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Años de experiencia *</label>
-                <div style={{ position: 'relative' }}>
-                  <Clock size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                  <input type="number" name="experiencia" required min="0" max="15" placeholder="Máx: 15" value={formData.experiencia} onChange={handleChange} style={{ width: '100%', padding: '12px 12px 12px 42px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} />
-                </div>
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Herramientas o idiomas clave *</label>
-                <input 
-                  type="text" 
-                  name="herramientas" 
-                  required 
-                  placeholder="Ej: Nivel C2 de inglés, manejo de PowerBI" 
-                  value={formData.herramientas} 
-                  onChange={handleChange} 
-                  style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} 
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr 1fr', gap: '20px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Estudios *</label>
-                <div style={{ position: 'relative' }}>
-                  <select 
-                    name="education_level"
-                    required 
-                    value={formData.education_level}
-                    onChange={handleChange}
-                    style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', appearance: 'none', background: 'white' }}
-                  >
-                    <option value="">Seleccionar...</option>
-                    <option value="Bachiller">Bachiller</option>
-                    <option value="Instrucción técnica completa">Instrucción técnica completa</option>
-                    <option value="Instrucción técnica incompleta">Instrucción técnica incompleta</option>
-                    <option value="Universidad Completa">Universidad Completa</option>
-                    <option value="Universidad Incompleta">Universidad Incompleta</option>
-                  </select>
-                  <ChevronDown size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
-                </div>
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Institución Educativa/Universidad *</label>
-                <div style={{ position: 'relative' }}>
-                  <input type="text" name="education_institution" required placeholder="Colegio, instituto o universidad" value={formData.education_institution} onChange={handleChange} style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} />
-                </div>
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Título Obtenido</label>
-                <div style={{ position: 'relative' }}>
-                  <input type="text" name="education_title" placeholder="Ej: Bachiller, Ingeniero, etc." value={formData.education_title} onChange={handleChange} style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none' }} />
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '20px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>¿Te gusta el deporte? *</label>
-                <div style={{ position: 'relative' }}>
-                  <select 
-                    name="likes_sports"
-                    required 
-                    value={formData.likes_sports}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setFormData(prev => ({
-                        ...prev,
-                        likes_sports: val,
-                        sports_practiced: val === 'No' ? 'Ninguno' : prev.sports_practiced === 'Ninguno' ? '' : prev.sports_practiced
-                      }));
-                    }}
-                    style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', appearance: 'none', background: 'white' }}
-                  >
-                    <option value="">Seleccionar...</option>
-                    <option value="Si">Sí</option>
-                    <option value="No">No</option>
-                  </select>
-                  <ChevronDown size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
-                </div>
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>¿Qué tipo de deporte prácticas? {formData.likes_sports === 'Si' ? '*' : ''}</label>
-                <div style={{ position: 'relative' }}>
-                  <input 
-                    type="text" 
-                    name="sports_practiced" 
-                    required={formData.likes_sports === 'Si'} 
-                    disabled={formData.likes_sports === 'No'} 
-                    placeholder={formData.likes_sports === 'No' ? 'No aplica' : 'Ej: Fútbol, natación, etc.'} 
-                    value={formData.sports_practiced} 
-                    onChange={handleChange} 
-                    style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', backgroundColor: formData.likes_sports === 'No' ? '#f1f5f9' : 'white' }} 
+                    placeholder="Ej: Incremento de ventas en un 15% o manejo de presupuestos de +10k" 
+                    value={formData.logro} 
+                    onChange={(e) => handleChange(e)} 
+                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', minHeight: '80px', fontFamily: 'inherit', resize: 'vertical' }} 
                   />
                 </div>
               </div>
             </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>¿Qué tipo de cultura laboral te motiva y te hace sentir más productivo? *</label>
-              <textarea 
-                name="work_culture_motivation" 
-                required 
-                placeholder="Cuéntanos qué ambiente laboral prefieres para dar lo mejor de ti" 
-                value={formData.work_culture_motivation} 
-                onChange={handleChange} 
-                style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', minHeight: '80px', fontFamily: 'inherit' }} 
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>¿En qué medio conociste sobre esta postulación? *</label>
-              <div style={{ position: 'relative' }}>
-                <select 
-                  name="heard_from"
-                  required 
-                  value={formData.heard_from}
-                  onChange={handleChange}
-                  style={{ width: '100%', padding: '12px 12px 12px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', outline: 'none', appearance: 'none', background: 'white' }}
-                >
-                  <option value="">Seleccionar...</option>
-                  <option value="LinkedIn">LinkedIn</option>
-                  <option value="Facebook">Facebook</option>
-                  <option value="Telegram">Telegram</option>
-                  <option value="Referidos">Referidos</option>
-                  <option value="Otros">Otros</option>
-                </select>
-                <ChevronDown size={18} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
-              </div>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Adjuntar Hoja de Vida (PDF)</label>
-              <div 
-                onClick={() => document.getElementById('cv-upload')?.click()}
-                style={{ 
-                  border: '2px dashed #e2e8f0', 
-                  borderRadius: '16px', 
-                  padding: '32px', 
-                  textAlign: 'center', 
-                  cursor: 'pointer', 
-                  background: file ? '#f0fdf4' : '#f8fafc',
-                  borderColor: file ? '#22c55e' : '#e2e8f0',
-                  transition: 'all 0.2s'
-                }}
-              >
-                <input type="file" id="cv-upload" accept=".pdf" style={{ display: 'none' }} onChange={(e) => setFile(e.target.files?.[0] || null)} />
-                <UploadCloud size={40} color={file ? '#22c55e' : '#94a3b8'} style={{ marginBottom: '12px' }} />
-                {file ? (
-                  <p style={{ margin: 0, fontWeight: '700', color: '#166534' }}>{file.name}</p>
-                ) : (
-                  <>
-                    <p style={{ margin: '0 0 4px', fontWeight: '700', color: '#475569' }}>Haz clic para subir tu PDF</p>
-                    <p style={{ margin: 0, fontSize: '12px', color: '#94a3b8' }}>Tamaño máximo sugerido: 5MB</p>
-                  </>
-                )}
-              </div>
-            </div>
-
+            {/* Educación y Estudios */}
             <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: '#0f172a', letterSpacing: '0.05em', borderLeft: '4px solid #002f6c', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                🎓 Educación y Estudios
+              </h3>
+              
+              <div style={{ display: 'grid', gap: '20px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Nivel de Estudios *</label>
+                  <div style={{ position: 'relative' }}>
+                    <select 
+                      name="education_level"
+                      required 
+                      value={formData.education_level}
+                      onChange={handleChange}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', appearance: 'none', background: 'white' }}
+                    >
+                      <option value="">Seleccionar...</option>
+                      <option value="Bachiller">Bachiller</option>
+                      <option value="Instrucción técnica completa">Instrucción técnica completa</option>
+                      <option value="Instrucción técnica incompleta">Instrucción técnica incompleta</option>
+                      <option value="Universidad Completa">Universidad Completa</option>
+                      <option value="Universidad Incompleta">Universidad Incompleta</option>
+                    </select>
+                    <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Institución / Universidad *</label>
+                    <input type="text" name="education_institution" required placeholder="Nombre de la institución" value={formData.education_institution} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Título Obtenido</label>
+                    <input type="text" name="education_title" placeholder="Ej: Bachiller, Licenciado, Ingeniero" value={formData.education_title} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Información Adicional */}
+            <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: '#0f172a', letterSpacing: '0.05em', borderLeft: '4px solid #002f6c', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                📋 Información Adicional
+              </h3>
+              
+              <div style={{ display: 'grid', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>¿Te gusta el deporte? *</label>
+                    <div style={{ position: 'relative' }}>
+                      <select 
+                        name="likes_sports"
+                        required 
+                        value={formData.likes_sports}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData(prev => ({
+                            ...prev,
+                            likes_sports: val,
+                            sports_practiced: val === 'No' ? 'Ninguno' : prev.sports_practiced === 'Ninguno' ? '' : prev.sports_practiced
+                          }));
+                        }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', appearance: 'none', background: 'white' }}
+                      >
+                        <option value="">Seleccionar...</option>
+                        <option value="Si">Sí</option>
+                        <option value="No">No</option>
+                      </select>
+                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>¿Qué deporte practicas? {formData.likes_sports === 'Si' ? '*' : ''}</label>
+                    <input 
+                      type="text" 
+                      name="sports_practiced" 
+                      required={formData.likes_sports === 'Si'} 
+                      disabled={formData.likes_sports === 'No'} 
+                      placeholder={formData.likes_sports === 'No' ? 'No aplica' : 'Ej: Fútbol, natación, correr'} 
+                      value={formData.sports_practiced} 
+                      onChange={handleChange} 
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', backgroundColor: formData.likes_sports === 'No' ? '#f1f5f9' : 'white' }} 
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>¿En qué medio conociste sobre esta postulación? *</label>
+                  <div style={{ position: 'relative' }}>
+                    <select 
+                      name="heard_from"
+                      required 
+                      value={formData.heard_from}
+                      onChange={handleChange}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', appearance: 'none', background: 'white' }}
+                    >
+                      <option value="">Seleccionar...</option>
+                      <option value="LinkedIn">LinkedIn</option>
+                      <option value="Facebook">Facebook</option>
+                      <option value="Telegram">Telegram</option>
+                      <option value="Referidos">Referidos</option>
+                      <option value="Otros">Otros</option>
+                    </select>
+                    <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>¿Qué tipo de cultura laboral te motiva y te hace sentir más productivo? *</label>
+                  <textarea 
+                    name="work_culture_motivation" 
+                    required 
+                    placeholder="Cuéntanos qué ambiente laboral prefieres para dar lo mejor de ti" 
+                    value={formData.work_culture_motivation} 
+                    onChange={handleChange} 
+                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', minHeight: '80px', fontFamily: 'inherit', resize: 'vertical' }} 
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Documentación */}
+            <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: '#0f172a', letterSpacing: '0.05em', borderLeft: '4px solid #002f6c', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <UploadCloud size={18} color="#002f6c" /> Documentación
+              </h3>
+              
+              <div style={{ display: 'grid', gap: '20px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Adjuntar Hoja de Vida (PDF) *</label>
+                  <div 
+                    onClick={() => document.getElementById('cv-upload')?.click()}
+                    style={{ 
+                      border: '2px dashed #cbd5e1', 
+                      borderRadius: '12px', 
+                      padding: '24px', 
+                      textAlign: 'center', 
+                      cursor: 'pointer', 
+                      background: file ? '#f0fdf4' : 'white',
+                      borderColor: file ? '#22c55e' : '#cbd5e1',
+                      transition: 'all 0.2s',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                    }}
+                  >
+                    <input type="file" id="cv-upload" accept=".pdf" style={{ display: 'none' }} onChange={(e) => setFile(e.target.files?.[0] || null)} />
+                    <UploadCloud size={32} color={file ? '#22c55e' : '#94a3b8'} style={{ marginBottom: '8px' }} />
+                    {file ? (
+                      <p style={{ margin: 0, fontWeight: '700', color: '#166534', fontSize: '14px' }}>{file.name}</p>
+                    ) : (
+                      <>
+                        <p style={{ margin: '0 0 4px', fontWeight: '700', color: '#475569', fontSize: '14px' }}>Haz clic para seleccionar tu PDF</p>
+                        <p style={{ margin: 0, fontSize: '11px', color: '#94a3b8' }}>Tamaño máximo sugerido: 5MB</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+<div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
               <div style={{ maxHeight: '200px', overflowY: 'auto', fontSize: '13px', color: '#475569', lineHeight: '1.6', marginBottom: '20px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
                 {CONSENT_TEXT(companyInfo.name, getPrivacyEmail(companySlug)).split('\n\n').map((para, i) => (
                   <p key={i} style={{ marginBottom: para.includes(':') ? '8px' : '12px', fontWeight: para.startsWith('CONSENTIMIENTO') ? '800' : 'normal' }}>
