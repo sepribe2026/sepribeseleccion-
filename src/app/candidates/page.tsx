@@ -2245,13 +2245,7 @@ export default function CandidatesAdmin() {
                                     <button className="ai-btn" style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }} onClick={() => handleAnalyzeResume(r.id)} disabled={analyzingId === r.id}>
                                       {analyzingId === r.id ? 'Analizando...' : 'Profundizar con IA'}
                                     </button>
-                                    <button 
-                                      className="ai-btn" 
-                                      style={{ background: '#10b981', boxShadow: '0 4px 10px rgba(16, 185, 129, 0.2)' }} 
-                                      onClick={() => handleMarkAsReviewed(r.id)}
-                                    >
-                                      Aceptar Directo (Sin IA)
-                                    </button>
+                                    {/* Oculto: Aceptar Directo (Sin IA) */}
                                   </div>
                                 )}
                               </div>
@@ -2260,13 +2254,7 @@ export default function CandidatesAdmin() {
                                 <button className="ai-btn" onClick={() => handleAnalyzeResume(r.id)} disabled={analyzingId === r.id}>
                                   {analyzingId === r.id ? 'Analizando...' : 'Analizar con IA'}
                                 </button>
-                                <button 
-                                  className="ai-btn" 
-                                  style={{ background: '#10b981', boxShadow: '0 4px 10px rgba(16, 185, 129, 0.2)' }} 
-                                  onClick={() => handleMarkAsReviewed(r.id)}
-                                >
-                                  Aceptar Directo (Sin IA)
-                                </button>
+                                {/* Oculto: Aceptar Directo (Sin IA) */}
                               </div>
                             )}
                           </div>
@@ -2286,9 +2274,10 @@ export default function CandidatesAdmin() {
                       </td>
                       <td style={{ fontSize: '13px' }}>{r.received_date ? new Date(r.received_date).toLocaleDateString() : '—'}</td>
                       <td>
-                        <span className={`status-badge ${r.classification_status === 'REVIEWED' ? 'status-synced' : 'status-pending'}`}>
-                          {r.classification_status === 'REVIEWED' ? 'REVISADO' : 'PENDIENTE'}
-                        </span>
+                        {/* Solo mostrar REVISADO, ocultar badge PENDIENTE */}
+                        {r.classification_status === 'REVIEWED' && (
+                          <span className="status-badge status-synced">REVISADO</span>
+                        )}
                         <button
                           onClick={() => handleDeleteResume(r)}
                           title="Borrar candidato y PDF adjunto"
