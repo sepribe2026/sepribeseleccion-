@@ -848,6 +848,47 @@ export default function CandidatesAdmin() {
     setPipelineLoading(false)
   }
 
+  const handleDeleteResume = async (resume: any) => {
+    const resumeId = resume.id
+
+    // 1. Verificar que no está en Ranking (trackingMap)
+    const inRanking = !!trackingMap[resumeId]
+    // 2. Verificar que no está en Resumen/Pipeline
+    const inPipeline = pipelineData.some(p => p.resume_id === resumeId)
+    // 3. Verificar que no está en Formativas
+    const inFormativas = formativeCandidates.some(c => c.resume_id === resumeId)
+
+    if (inRanking || inPipeline || inFormativas) {
+      const donde = [inRanking && 'Ranking IA', inPipeline && 'Resumen', inFormativas && 'Formativas'].filter(Boolean).join(', ')
+      alert(`❌ No se puede borrar este candidato porque ya está en: ${donde}.\n\nRetíralo de esas secciones primero.`)
+      return
+    }
+
+    if (!confirm(`⚠️ ¿Borrar permanentemente el registro de ${resume.sender_name || 'este candidato'}?\n\nSe eliminará su datos y el PDF adjunto. Esta acción no se puede deshacer.`)) return
+
+    try {
+      // 4. Eliminar PDF del storage de Supabase si existe
+      if (resume.pdf_url) {
+        const parts = resume.pdf_url.split('candidate-documents/')
+        if (parts.length > 1) {
+          const storageFileName = decodeURIComponent(parts[1].split('?')[0])
+          await supabase.storage.from('candidate-documents').remove([storageFileName])
+        }
+      }
+
+      // 5. Eliminar registro de email_resumes
+      const { error } = await supabase.from('email_resumes').delete().eq('id', resumeId)
+      if (error) throw error
+
+      // 6. Actualizar estado local
+      setResumes(prev => prev.filter(r => r.id !== resumeId))
+      alert('✅ Candidato eliminado correctamente.')
+    } catch (err: any) {
+      console.error('Error al borrar candidato:', err)
+      alert('❌ Error al borrar: ' + err.message)
+    }
+  }
+
   const updatePipelineStatus = async (trackingId: string, resumeId: string, cargo: string, status: string, interview_date?: string, notes?: string) => {
     setPipelineUpdating(trackingId)
     const res = await fetch('/api/candidate-tracking', {
@@ -2248,6 +2289,27 @@ export default function CandidatesAdmin() {
                         <span className={`status-badge ${r.classification_status === 'REVIEWED' ? 'status-synced' : 'status-pending'}`}>
                           {r.classification_status === 'REVIEWED' ? 'REVISADO' : 'PENDIENTE'}
                         </span>
+                        <button
+                          onClick={() => handleDeleteResume(r)}
+                          title="Borrar candidato y PDF adjunto"
+                          style={{
+                            marginTop: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            background: '#fff1f2',
+                            color: '#dc2626',
+                            border: '1px solid #fca5a5',
+                            borderRadius: '8px',
+                            padding: '5px 10px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          <Trash2 size={12} /> Borrar
+                        </button>
                       </td>
                     </tr>
                   ))}
