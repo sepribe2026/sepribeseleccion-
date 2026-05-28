@@ -2541,10 +2541,18 @@ export default function CandidatesAdmin() {
                             const psychTest = psychometricTests.find(t => t.resume_id === p.resume_id);
                             const isCompleted = psychTest && psychTest.status === 'COMPLETADO';
                             const isSelected = formativeCandidates.some(c => c.resume_id === p.resume_id);
+                            if (isSelected) {
+                              // Ya está en formativas: mostrar badge, sin checkbox
+                              return (
+                                <span style={{ fontSize: '10px', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '3px 7px', borderRadius: '6px', fontWeight: 'bold', display: 'inline-block' }}>
+                                  🎯 En Formativas
+                                </span>
+                              );
+                            }
                             return (
                               <input
                                 type="checkbox"
-                                checked={isSelected}
+                                checked={false}
                                 disabled={!isCompleted}
                                 onChange={() => handleToggleFormative(p)}
                                 title={isCompleted ? "Seleccionar para Formativas" : "Debe completar la prueba psicométrica primero"}
