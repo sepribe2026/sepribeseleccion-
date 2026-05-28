@@ -316,6 +316,7 @@ export default function CandidatesAdmin() {
   const [viewingPsychometric, setViewingPsychometric] = useState<any | null>(null)
   const [sendingPsychometricId, setSendingPsychometricId] = useState<string | null>(null)
   const [sendingThankYouId, setSendingThankYouId] = useState<string | null>(null)
+  const [viewingFormData, setViewingFormData] = useState<any | null>(null)
   const [qrModalUrl, setQrModalUrl] = useState<string | null>(null)
   const [loadingRecommendation, setLoadingRecommendation] = useState(false)
   const [aiRecommendation, setAiRecommendation] = useState<any | null>(null)
@@ -1622,6 +1623,123 @@ export default function CandidatesAdmin() {
         </div>
       )}
 
+      {/* MODAL: Ver Formulario de Postulación Web */}
+      {viewingFormData && (
+        <div
+          style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '16px' }}
+          onClick={() => setViewingFormData(null)}
+        >
+          <div
+            style={{ background: 'white', borderRadius: '20px', width: '100%', maxWidth: '680px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ background: 'linear-gradient(135deg, #0f172a, #1e3a5f)', padding: '24px 28px', borderRadius: '20px 20px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(59,130,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <UploadCloud size={20} style={{ color: '#60a5fa' }} />
+                </div>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'white' }}>{viewingFormData.sender_name || 'Candidato'}</h2>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8' }}>Formulario de Postulación Web</p>
+                </div>
+              </div>
+              <button onClick={() => setViewingFormData(null)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', borderRadius: '8px', padding: '8px 12px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>✕ Cerrar</button>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+              {/* Datos de Contacto */}
+              <section>
+                <h3 style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>📋 Datos de Contacto</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13.5px' }}>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Nombre Completo</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.sender_name || '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Email</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.sender_email || '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Teléfono</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.sender_phone || '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Fecha de Nacimiento</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.birth_date ? new Date(viewingFormData.birth_date + 'T12:00:00').toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Edad</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.age ? `${viewingFormData.age} años` : '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Género</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.gender || '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Estado Civil</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.civil_status || '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Medio de Contacto</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.heard_from || '—'}</span></div>
+                </div>
+              </section>
+
+              {/* Residencia */}
+              <section>
+                <h3 style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>📍 Dirección y Residencia</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13.5px' }}>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Ciudad</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.city || '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Sector</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.sector || '—'}</span></div>
+                  {viewingFormData.home_address && (
+                    <div style={{ gridColumn: '1 / -1' }}><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Dirección</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.home_address}</span></div>
+                  )}
+                </div>
+              </section>
+
+              {/* Perfil Profesional */}
+              <section>
+                <h3 style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>💼 Perfil y Experiencia</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13.5px' }}>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Cargo al que Postula</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.position || '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Años de Experiencia</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.experience_years ? `${viewingFormData.experience_years} años` : '—'}</span></div>
+                  {viewingFormData.skills && (
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px' }}>Habilidades / Skills</span>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {viewingFormData.skills.split(',').map((s: string, i: number) => (
+                          <span key={i} style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', padding: '2px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>{s.trim()}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              {/* Educación */}
+              <section>
+                <h3 style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>🎓 Educación</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13.5px' }}>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Nivel de Estudios</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.education_level || '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Institución</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.education_institution || '—'}</span></div>
+                  <div style={{ gridColumn: '1 / -1' }}><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Título Obtenido</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.education_title || '—'}</span></div>
+                </div>
+              </section>
+
+              {/* Datos adicionales */}
+              {(viewingFormData.likes_sports || viewingFormData.work_culture_motivation) && (
+                <section>
+                  <h3 style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>✨ Información Adicional</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13.5px' }}>
+                    {viewingFormData.likes_sports && (
+                      <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>¿Le gusta el deporte?</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.likes_sports === 'Si' ? `Sí, practica: ${viewingFormData.sports_practiced || '—'}` : 'No'}</span></div>
+                    )}
+                    {viewingFormData.work_culture_motivation && (
+                      <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Motivación Laboral</span><span style={{ color: '#1e293b', fontWeight: 600, lineHeight: 1.5, display: 'block' }}>{viewingFormData.work_culture_motivation}</span></div>
+                    )}
+                  </div>
+                </section>
+              )}
+
+              {/* Resumen IA */}
+              {viewingFormData.ai_summary && (
+                <section style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
+                  <h3 style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>🤖 Resumen de Perfil (IA)</h3>
+                  <p style={{ margin: 0, fontSize: '13.5px', color: '#475569', lineHeight: 1.6, fontStyle: 'italic' }}>"{viewingFormData.ai_summary}"</p>
+                </section>
+              )}
+
+              {/* CV */}
+              {viewingFormData.pdf_url && (
+                <a href={viewingFormData.pdf_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '12px 16px', borderRadius: '10px', fontWeight: 700, fontSize: '13.5px', textDecoration: 'none' }}>
+                  <FileText size={16} /> Ver CV Adjunto
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {interviewModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ background: 'white', padding: '28px', borderRadius: '12px', width: '420px' }}>
@@ -1977,10 +2095,18 @@ export default function CandidatesAdmin() {
                     <tr key={r.id}>
                       <td>
                         <div className="user-cell" style={{ alignItems: 'flex-start' }}>
-                          <div className="user-avatar" style={{ 
-                            background: r.email_uid?.startsWith('WEB') ? '#eff6ff' : (r.classification_status === 'REVIEWED' ? '#f0fdf4' : '#f3e8ff'), 
-                            color: r.email_uid?.startsWith('WEB') ? '#3b82f6' : (r.classification_status === 'REVIEWED' ? '#16a34a' : '#9333ea') 
-                          }}>
+                          <div
+                            className="user-avatar"
+                            onClick={() => r.email_uid?.startsWith('WEB') ? setViewingFormData(r) : undefined}
+                            title={r.email_uid?.startsWith('WEB') ? 'Ver formulario completo' : ''}
+                            style={{ 
+                              background: r.email_uid?.startsWith('WEB') ? '#eff6ff' : (r.classification_status === 'REVIEWED' ? '#f0fdf4' : '#f3e8ff'), 
+                              color: r.email_uid?.startsWith('WEB') ? '#3b82f6' : (r.classification_status === 'REVIEWED' ? '#16a34a' : '#9333ea'),
+                              cursor: r.email_uid?.startsWith('WEB') ? 'pointer' : 'default',
+                              transition: 'transform 0.15s, box-shadow 0.15s',
+                              boxShadow: r.email_uid?.startsWith('WEB') ? '0 0 0 2px rgba(59,130,246,0.15)' : 'none'
+                            }}
+                          >
                             {r.email_uid?.startsWith('WEB') ? <UploadCloud size={20} /> : (r.classification_status === 'REVIEWED' ? <Brain size={20} /> : <Mail size={20} />)}
                           </div>
                           <div style={{ flex: 1 }}>
