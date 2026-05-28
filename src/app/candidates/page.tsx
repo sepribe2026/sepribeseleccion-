@@ -2295,15 +2295,26 @@ export default function CandidatesAdmin() {
                   </div>
 
                   <div>
-                    <label className="ranking-label" style={{ margin: 0, fontSize: '10px' }}>Ciudad</label>
-                    <input 
-                      type="text" 
-                      className="ranking-input" 
-                      placeholder="Ej. Quito, Guayaquil..." 
+                    <label className="ranking-label" style={{ margin: 0, fontSize: '10px' }}>Ciudad de Residencia</label>
+                    <select
+                      className="ranking-select"
                       style={{ marginBottom: 0, padding: '8px 12px' }}
-                      value={rankingFilterCiudad} 
-                      onChange={e => setRankingFilterCiudad(e.target.value)} 
-                    />
+                      value={rankingFilterCiudad}
+                      onChange={e => setRankingFilterCiudad(e.target.value)}
+                    >
+                      <option value="">Todas las Ciudades</option>
+                      <option value="Quito">Quito</option>
+                      <option value="Guayaquil">Guayaquil</option>
+                      <option value="Cuenca">Cuenca</option>
+                      <option value="Manta">Manta</option>
+                      <option value="Portoviejo">Portoviejo</option>
+                      <option value="Machala">Machala</option>
+                      <option value="Loja">Loja</option>
+                      <option value="Ambato">Ambato</option>
+                      <option value="Santo Domingo">Santo Domingo</option>
+                      <option value="Ibarra">Ibarra</option>
+                      <option value="Otra">Otra / Provincia</option>
+                    </select>
                   </div>
 
                   <div>
