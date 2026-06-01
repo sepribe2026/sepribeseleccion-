@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json().catch(() => ({}));
     const requesterCedula = body.cedula || null;
+    const companySlug = body.company_slug || 'superdeporte';
 
     const messages = response.value.filter((m: any) => m.hasAttachments === true);
     const resumes = [];
@@ -134,7 +135,8 @@ export async function POST(req: NextRequest) {
             experience_years: autoData?.experience_years || null,
             city: autoData?.city || '',
             ai_summary: autoData?.summary || '',
-            created_by_cedula: requesterCedula
+            created_by_cedula: requesterCedula,
+            company_slug: companySlug
           };
 
           // Guardar en la base de datos

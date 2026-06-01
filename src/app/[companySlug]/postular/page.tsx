@@ -131,7 +131,7 @@ export default function ApplyPage() {
     const { data } = await supabase
       .from('job_positions')
       .select('*')
-      .or(`company_slug.eq.${companySlug},company_slug.eq.superdeporte`)
+      .eq('company_slug', companySlug)
       .order('cargo', { ascending: true })
     if (data) {
       const seen = new Set<string>()

@@ -378,7 +378,10 @@ export default function CandidatesAdmin() {
         .eq('recruiter_user', user.cedula)
         .maybeSingle()
       
-      if (cands) setFormativeCandidates(cands)
+      if (cands) {
+        const filteredCands = cands.filter((c: any) => c.email_resumes?.company_slug === user.company_slug)
+        setFormativeCandidates(filteredCands)
+      }
       if (sups) setFormativeSupervisors(sups)
       setFormativeAssignments([])
       if (evals) setFormativeEvaluations(evals)
@@ -833,7 +836,7 @@ export default function CandidatesAdmin() {
   const fetchPipeline = async () => {
     if (!user) return
     setPipelineLoading(true)
-    const res = await fetch('/api/candidate-tracking')
+    const res = await fetch(`/api/candidate-tracking?company_slug=${user.company_slug}&cedula=${user.cedula}`)
     const data = await res.json()
     if (data.data) {
       // Filtrar por empresa y por usuario individual para el resumen
@@ -1002,13 +1005,14 @@ export default function CandidatesAdmin() {
   }
 
   const fetchJobPositions = async () => {
+    if (!user?.company_slug) return
     const { data } = await supabase
       .from('job_positions')
       .select('*')
-      .or(`company_slug.eq.${user?.company_slug},company_slug.eq.superdeporte`)
+      .eq('company_slug', user.company_slug)
       .order('cargo', { ascending: true })
     if (data) {
-      // Eliminar duplicados por nombre de cargo (preferir los propios sobre los de superdeporte)
+      // Eliminar duplicados por nombre de cargo
       const seen = new Set<string>()
       const unique = data.filter(p => {
         const key = p.cargo.toLowerCase()
@@ -1150,7 +1154,7 @@ export default function CandidatesAdmin() {
   }
 
   const fetchCandidates = async () => {
-    if (!user) return
+    if (!user?.company_slug) return
     setLoading(true)
     const { data } = await supabase
       .from('onboarding_candidates')
@@ -1163,11 +1167,12 @@ export default function CandidatesAdmin() {
   }
 
   const fetchResumes = async () => {
+    if (!user?.company_slug) return
     setLoadingResumes(true)
     const { data } = await supabase
       .from('email_resumes')
       .select('*')
-      .eq('company_slug', user?.company_slug)
+      .eq('company_slug', user.company_slug)
       .order('received_date', { ascending: false })
     if (data) setResumes(data)
     
@@ -1233,7 +1238,7 @@ export default function CandidatesAdmin() {
       const res = await fetch('/api/scan-emails', { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cedula: user.cedula })
+        body: JSON.stringify({ cedula: user.cedula, company_slug: user.company_slug })
       })
       if (res.ok) fetchResumes()
     } finally { setScanning(false) }

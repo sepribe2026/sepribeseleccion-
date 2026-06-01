@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { executeOracleQuery } from '@/lib/oracledb';
 
 export async function POST(request: NextRequest) {
     try {
@@ -14,43 +15,68 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        let adAuthenticated = false;
+        let authData: any = null;
+        let adErrorDetail = 'Credenciales de Windows inválidas';
+
         // 1. Validar contra el Web Service de Active Directory (AD)
-        const response = await fetch('https://ns.aseyco.com:444/MSWebServiceNomina/rest/service/adService', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                usuario: cedula, // Asumimos que el campo que antes era cédula ahora recibe el usuario de Windows
-                password 
-            })
-        });
-
-        if (!response.ok) {
-            return NextResponse.json(
-                { success: false, error: 'Credenciales de Windows inválidas' },
-                { status: 401 }
-            );
-        }
-
-        const responseText = await response.text();
-        let authData;
         try {
-            authData = JSON.parse(responseText);
-        } catch (e) {
-            console.error('WS Response is not JSON:', responseText);
-            return NextResponse.json(
-                { success: false, error: 'Respuesta inválida del servidor de AD', debug: responseText },
-                { status: 502 }
-            );
+            const response = await fetch('https://ns.aseyco.com:444/MSWebServiceNomina/rest/service/adService', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    usuario: cedula, 
+                    password 
+                })
+            });
+
+            if (response.ok) {
+                const responseText = await response.text();
+                try {
+                    authData = JSON.parse(responseText);
+                    if (!authData.error && authData.success !== false && (!authData.codigo || authData.codigo === '1')) {
+                        adAuthenticated = true;
+                    } else {
+                        adErrorDetail = authData.message || authData.mensaje || adErrorDetail;
+                    }
+                } catch (e) {
+                    console.error('WS Response is not JSON:', responseText);
+                }
+            } else {
+                adErrorDetail = `HTTP ${response.status}: Error en servidor AD`;
+            }
+        } catch (e: any) {
+            console.error('AD connection error:', e);
+            adErrorDetail = `Error de conexión: ${e.message}`;
         }
 
-        // Si el AD falla, devolvemos el error con debug info
-        if (authData.error || authData.success === false || (authData.codigo && authData.codigo !== '1')) {
+        // Fallback: Si no está autenticado por AD, buscar en Oracle DIGI_EMPLOYEES
+        if (!adAuthenticated) {
+            try {
+                console.log(`Fallback login check in Oracle for cedula: ${cedula}`);
+                const dbResult = await executeOracleQuery(
+                    `SELECT id, name, apellido, position FROM digi_employees WHERE id = :id AND estado = '1'`,
+                    { id: cedula }
+                );
+                
+                if (dbResult.rows && dbResult.rows.length > 0) {
+                    const employee = dbResult.rows[0];
+                    adAuthenticated = true;
+                    authData = {
+                        cedula: employee.ID || employee.id,
+                        nombre: `${employee.NAME || employee.name} ${employee.APELLIDO || employee.apellido}`.trim(),
+                        success: true
+                    };
+                    console.log(`Fallback login success for employee: ${authData.nombre}`);
+                }
+            } catch (dbErr: any) {
+                console.error('Oracle database lookup error during fallback login:', dbErr);
+            }
+        }
+
+        if (!adAuthenticated) {
             return NextResponse.json(
-                { 
-                    success: false, 
-                    error: authData.message || authData.mensaje || 'Credenciales de Windows inválidas',
-                    debug_ad: authData 
-                },
+                { success: false, error: adErrorDetail },
                 { status: 401 }
             );
         }
