@@ -782,6 +782,11 @@ export default function CandidatesAdmin() {
       .slice(0, 3)
       .map(entry => ({ name: entry[0], count: entry[1] }));
 
+    const pipelineCount = pipelineData.length;
+    const formativeCount = formativeCandidates.length;
+    const onboardingCount = candidates.length;
+    const selectedCount = candidates.filter((c: any) => c.status === 'SYNCED' || c.status === 'LLENADO').length;
+
     return {
       total,
       heardFromMap,
@@ -792,9 +797,13 @@ export default function CandidatesAdmin() {
       likesSportsNo: totalSportsAnswered - likesSportsCount,
       averageAge,
       ageRanges,
-      topPositions
+      topPositions,
+      pipelineCount,
+      formativeCount,
+      onboardingCount,
+      selectedCount
     };
-  }, [resumes]);
+  }, [resumes, pipelineData, formativeCandidates, candidates]);
 
   useEffect(() => {
     setIsMounted(true)
@@ -2556,6 +2565,101 @@ export default function CandidatesAdmin() {
                         {stats.topPositions[0]?.name || 'N/A'}
                       </h3>
                     </div>
+                  </div>
+                </div>
+
+                {/* Embudo de Selección y Conversión */}
+                <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
+                  <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 800, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    📊 Embudo de Selección y Conversión de Procesos
+                  </h3>
+                  <p style={{ margin: '0 0 24px', fontSize: '13px', color: '#64748b' }}>
+                    Porcentaje de avance y conversión desde la postulación inicial hasta la contratación (candidatos que completaron Onboarding).
+                  </p>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px', position: 'relative' }}>
+                    {[
+                      { 
+                        title: 'Postulantes', 
+                        subtitle: 'Inbox General', 
+                        count: stats.total, 
+                        pct: 100, 
+                        color: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', 
+                        desc: 'CVs recibidos' 
+                      },
+                      { 
+                        title: 'En Resumen', 
+                        subtitle: 'Pipeline Activo', 
+                        count: stats.pipelineCount, 
+                        pct: stats.total > 0 ? Math.round((stats.pipelineCount / stats.total) * 100) : 0, 
+                        color: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)', 
+                        desc: 'Pre-seleccionados' 
+                      },
+                      { 
+                        title: 'Formativas', 
+                        subtitle: 'Evaluación Práctica', 
+                        count: stats.formativeCount, 
+                        pct: stats.total > 0 ? Math.round((stats.formativeCount / stats.total) * 100) : 0, 
+                        color: 'linear-gradient(135deg, #db2777 0%, #9d174d 100%)', 
+                        desc: 'En capacitación' 
+                      },
+                      { 
+                        title: 'Onboarding', 
+                        subtitle: 'Ingreso Inicial', 
+                        count: stats.onboardingCount, 
+                        pct: stats.total > 0 ? Math.round((stats.onboardingCount / stats.total) * 100) : 0, 
+                        color: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)', 
+                        desc: 'Subiendo documentos' 
+                      },
+                      { 
+                        title: 'Seleccionados', 
+                        subtitle: 'Contratados', 
+                        count: stats.selectedCount, 
+                        pct: stats.total > 0 ? Math.round((stats.selectedCount / stats.total) * 100) : 0, 
+                        color: 'linear-gradient(135deg, #10b981 0%, #047857 100%)', 
+                        desc: 'Completaron proceso' 
+                      }
+                    ].map((step, idx) => (
+                      <div key={idx} style={{ 
+                        background: '#f8fafc', 
+                        border: '1px solid #e2e8f0', 
+                        borderRadius: '12px', 
+                        padding: '16px', 
+                        textAlign: 'center', 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        position: 'relative',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+                      }}>
+                        <div style={{ 
+                          width: '100%', 
+                          height: '6px', 
+                          background: step.color, 
+                          borderRadius: '999px',
+                          marginBottom: '12px' 
+                        }} />
+                        
+                        <div>
+                          <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{step.title}</span>
+                          <div style={{ fontSize: '28px', fontWeight: 900, color: '#1e293b', margin: '4px 0' }}>{step.count}</div>
+                          <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '8px' }}>{step.subtitle}</span>
+                        </div>
+                        
+                        <div style={{ 
+                          background: step.pct > 0 ? '#f0fdf4' : '#f1f5f9', 
+                          color: step.pct > 0 ? '#15803d' : '#64748b', 
+                          padding: '4px 8px', 
+                          borderRadius: '8px', 
+                          fontSize: '12px', 
+                          fontWeight: 'bold' 
+                        }}>
+                          {step.pct}% conversión
+                        </div>
+                        <span style={{ fontSize: '11.5px', color: '#64748b', marginTop: '8px' }}>{step.desc}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
