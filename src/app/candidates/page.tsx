@@ -304,6 +304,11 @@ export default function CandidatesAdmin() {
   const [interviewTime, setInterviewTime] = useState('09:00')
   const [interviewNotes, setInterviewNotes] = useState('Cita en Galo Plaza Lasso 13205 y de los Cerezos.')
 
+  // === PASS TO RANKING DIRECTLY MODAL ===
+  const [passToRankingModal, setPassToRankingModal] = useState<{ id: string; name: string; defaultCargo: string } | null>(null)
+  const [selectedRankingCargo, setSelectedRankingCargo] = useState('')
+  const [customRankingCargo, setCustomRankingCargo] = useState('')
+
   // === PIPELINE GLOBAL ===
   const [pipelineData, setPipelineData] = useState<any[]>([])
   const [pipelineLoading, setPipelineLoading] = useState(false)
@@ -1280,6 +1285,39 @@ export default function CandidatesAdmin() {
     }
   }
 
+  const handlePassToRankingDirectly = async (resumeId: string, cargo: string) => {
+    if (!cargo) {
+      alert('Por favor selecciona o ingresa un cargo.');
+      return;
+    }
+    setTrackingUpdating(resumeId);
+    try {
+      const res = await fetch('/api/candidate-tracking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          resume_id: resumeId, 
+          cargo: cargo, 
+          status: 'MENSAJE_ENVIADO', 
+          created_by_cedula: user?.cedula,
+          company_slug: user?.company_slug 
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTrackingMap(prev => ({ ...prev, [resumeId]: data.data }));
+        alert('✅ Candidato enviado al ranking/pipeline con éxito.');
+        fetchPipeline(); // Actualizar el pipeline
+      } else {
+        alert('❌ Error al enviar al ranking: ' + (data.error || 'Fallo desconocido'));
+      }
+    } catch (e: any) {
+      alert('❌ Error de conexión: ' + e.message);
+    } finally {
+      setTrackingUpdating(null);
+    }
+  }
+
   const handleSendCopilotMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!copilotInput.trim() || copilotLoading) return;
@@ -1795,6 +1833,78 @@ export default function CandidatesAdmin() {
         </div>
       )}
 
+      {passToRankingModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: 'white', padding: '28px', borderRadius: '12px', width: '420px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' }}>
+            <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 800, color: '#1e293b' }}>🏆 Pasar Candidato a Ranking</h3>
+            <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '20px' }}>
+              Selecciona o escribe el cargo para asignar a <strong>{passToRankingModal.name}</strong> en el Ranking IA y Pipeline.
+            </p>
+            
+            <div style={{ marginBottom: '16px' }}>
+              <label className="ranking-label">Seleccionar Cargo Existente</label>
+              <select 
+                className="ranking-select" 
+                value={selectedRankingCargo} 
+                onChange={e => {
+                  setSelectedRankingCargo(e.target.value);
+                  if (e.target.value) setCustomRankingCargo('');
+                }}
+              >
+                <option value="">-- Seleccionar --</option>
+                {jobPositions.map(p => (
+                  <option key={p.id} value={p.cargo}>{p.cargo} {p.ciudad ? `· ${p.ciudad}` : ''}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label className="ranking-label">O ingresar cargo personalizado</label>
+              <input 
+                type="text" 
+                className="ranking-input" 
+                placeholder="Ej: Cajero Principal..." 
+                value={customRankingCargo} 
+                onChange={e => {
+                  setCustomRankingCargo(e.target.value);
+                  if (e.target.value) setSelectedRankingCargo('');
+                }} 
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button 
+                onClick={() => {
+                  setPassToRankingModal(null);
+                  setSelectedRankingCargo('');
+                  setCustomRankingCargo('');
+                }} 
+                className="track-btn"
+              >
+                Cancelar
+              </button>
+              <button 
+                className="ranking-btn-primary" 
+                style={{ width: 'auto' }} 
+                onClick={async () => {
+                  const finalCargo = selectedRankingCargo || customRankingCargo;
+                  if (!finalCargo) {
+                    alert('Debes seleccionar o escribir un cargo.');
+                    return;
+                  }
+                  await handlePassToRankingDirectly(passToRankingModal.id, finalCargo);
+                  setPassToRankingModal(null);
+                  setSelectedRankingCargo('');
+                  setCustomRankingCargo('');
+                }}
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {interviewModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ background: 'white', padding: '28px', borderRadius: '12px', width: '420px' }}>
@@ -2290,8 +2400,33 @@ export default function CandidatesAdmin() {
                       <td>
                         {/* Solo mostrar REVISADO, ocultar badge PENDIENTE */}
                         {r.classification_status === 'REVIEWED' && (
-                          <span className="status-badge status-synced">REVISADO</span>
+                          <span className="status-badge status-synced" style={{ marginBottom: '6px', display: 'inline-block' }}>REVISADO</span>
                         )}
+                        <button
+                          onClick={() => {
+                            setSelectedRankingCargo(r.position || '');
+                            setPassToRankingModal({ id: r.id, name: r.sender_name || 'Sin Nombre', defaultCargo: r.position || '' });
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            background: '#eff6ff',
+                            color: '#2563eb',
+                            border: '1px solid #bfdbfe',
+                            borderRadius: '8px',
+                            padding: '5px 10px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            marginBottom: '6px',
+                            width: '100%',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          <Trophy size={12} /> Pasar a Ranking
+                        </button>
                         <button
                           onClick={() => handleDeleteResume(r)}
                           title="Borrar candidato y PDF adjunto"
