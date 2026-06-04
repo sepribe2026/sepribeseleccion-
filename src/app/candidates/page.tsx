@@ -3677,7 +3677,18 @@ export default function CandidatesAdmin() {
                         <th>Candidato</th>
                         <th>Cargo</th>
                         <th>Cita Programada</th>
-                        <th>Calif                      ) : (
+                        <th>Calificaciones Recibidas</th>
+                        <th style={{ textAlign: 'right' }}>Evaluación en Vivo</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {formativeCandidates.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                            No hay candidatos en formativas. Selecciona candidatos desde la pestaña <strong>Resumen</strong> marcando su checkbox.
+                          </td>
+                        </tr>
+                      ) : (
                         <>
                           {(formativeSessionFilter === 'ALL' ? formativeCandidates : formativeCandidates.filter(c => c.session_title === formativeSessionFilter)).length === 0 ? (
                             <tr>
