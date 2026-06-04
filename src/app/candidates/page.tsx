@@ -3048,20 +3048,25 @@ export default function CandidatesAdmin() {
                               );
                             }
                             return (
-                              <input
-                                type="checkbox"
-                                checked={false}
-                                disabled={!isCompleted}
-                                onChange={() => handleToggleFormative(p)}
-                                title={isCompleted ? "Seleccionar para Formativas" : "Debe completar la prueba psicométrica primero"}
-                                style={{
-                                  width: '18px',
-                                  height: '18px',
-                                  cursor: isCompleted ? 'pointer' : 'not-allowed',
-                                  opacity: isCompleted ? 1 : 0.4,
-                                  accentColor: '#2563eb'
-                                }}
-                              />
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={false}
+                                  onChange={() => handleToggleFormative(p)}
+                                  title="Seleccionar para Formativas"
+                                  style={{
+                                    width: '18px',
+                                    height: '18px',
+                                    cursor: 'pointer',
+                                    accentColor: '#2563eb'
+                                  }}
+                                />
+                                {isCompleted ? (
+                                  <span style={{ fontSize: '9px', color: '#16a34a', fontWeight: 'bold' }} title="Psicométrico completado">✓ Psico</span>
+                                ) : (
+                                  <span style={{ fontSize: '9px', color: '#94a3b8', fontWeight: 'bold' }} title="Sin prueba psicométrica">— Psico</span>
+                                )}
+                              </div>
                             );
                           })()}
                         </td>
