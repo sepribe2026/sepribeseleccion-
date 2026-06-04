@@ -157,37 +157,34 @@ export default function SupervisorPortal() {
           }
         }
 
-        // Cargar cola de candidatos pendientes del reclutador
-        if (supervisor.created_by_user) {
-          const { data: allCands } = await supabase
-            .from('formative_candidates')
-            .select(`
-              id,
-              resume_id,
-              email_resumes (
-                sender_name,
-                position
-              )
-            `)
-            .eq('created_by_user', supervisor.created_by_user)
-            .order('created_at', { ascending: true })
+        // Cargar cola de TODOS los candidatos formativos (todos los reclutadores de la empresa)
+        const { data: allCands } = await supabase
+          .from('formative_candidates')
+          .select(`
+            id,
+            resume_id,
+            email_resumes (
+              sender_name,
+              position
+            )
+          `)
+          .order('created_at', { ascending: true })
 
-          if (allCands) {
-            const { data: myEvals } = await supabase
-              .from('formative_evaluations')
-              .select('candidate_id')
-              .eq('supervisor_id', supervisor.id)
+        if (allCands) {
+          const { data: myEvals } = await supabase
+            .from('formative_evaluations')
+            .select('candidate_id')
+            .eq('supervisor_id', supervisor.id)
 
-            const evaluatedIds = new Set(myEvals?.map(e => e.candidate_id) || [])
-            
-            const queue = allCands.map((c: any) => ({
-              id: c.id,
-              name: c.email_resumes?.sender_name || 'Candidato',
-              position: c.email_resumes?.position || 'Cargo',
-              isEvaluated: evaluatedIds.has(c.id)
-            }))
-            setPendingCandidates(queue)
-          }
+          const evaluatedIds = new Set(myEvals?.map(e => e.candidate_id) || [])
+          
+          const queue = allCands.map((c: any) => ({
+            id: c.id,
+            name: c.email_resumes?.sender_name || 'Candidato',
+            position: c.email_resumes?.position || 'Cargo',
+            isEvaluated: evaluatedIds.has(c.id)
+          }))
+          setPendingCandidates(queue)
         }
 
         if (!candidateId) {
