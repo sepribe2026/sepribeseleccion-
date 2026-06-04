@@ -15,6 +15,9 @@ export async function GET(req: NextRequest) {
   if (cedula) {
     query = query.eq('created_by_cedula', cedula);
   }
+  if (company_slug) {
+    query = query.eq('company_slug', company_slug);
+  }
 
   if (cargo) {
     const { data, error } = await query.eq('cargo', cargo);

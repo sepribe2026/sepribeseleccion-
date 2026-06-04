@@ -362,16 +362,16 @@ export default function CandidatesAdmin() {
   const fetchFormativeData = async () => {
     if (!user) return
     try {
+      // Candidatos de formativas de toda la empresa (sin filtro por usuario individual)
       const { data: cands } = await supabase
         .from('formative_candidates')
         .select('*, email_resumes(*)')
-        .eq('created_by_user', user.cedula)
         .order('created_at', { ascending: false })
 
+      // Supervisores de toda la empresa (sin filtro por usuario individual)
       const { data: sups } = await supabase
         .from('formative_supervisors')
         .select('*')
-        .eq('created_by_user', user.cedula)
         .order('name', { ascending: true })
 
       const { data: evals } = await supabase.from('formative_evaluations').select('*')
@@ -384,6 +384,7 @@ export default function CandidatesAdmin() {
         .maybeSingle()
       
       if (cands) {
+        // Filtrar sólo por empresa para ver todos los candidatos de la compañía
         const filteredCands = cands.filter((c: any) => c.email_resumes?.company_slug === user.company_slug)
         setFormativeCandidates(filteredCands)
       }
@@ -810,6 +811,57 @@ export default function CandidatesAdmin() {
     };
   }, [resumes, pipelineData, formativeCandidates, candidates]);
 
+  const displayedRankingCandidates = useMemo(() => {
+    if (!rankingCargo) return [];
+    
+    const trackedResumeIds = Object.keys(trackingMap).filter(resumeId => {
+      const tracking = trackingMap[resumeId];
+      return tracking && tracking.cargo === rankingCargo;
+    });
+
+    const aiResultsMap = new Map<string, any>();
+    rankingResults.forEach(r => {
+      aiResultsMap.set(r.id, r);
+    });
+
+    const unifiedList: any[] = [];
+
+    rankingResults.forEach(r => {
+      unifiedList.push({
+        id: r.id,
+        name: r.name || r.sender_name || 'Sin Nombre',
+        city: r.city || r.ciudad || '',
+        score: r.score || 0,
+        justification: r.justification || 'Evaluado por IA',
+        pdf_url: r.pdf_url || '',
+        position: r.position || '',
+        experience: r.experience || '',
+        sender_phone: r.sender_phone || ''
+      });
+    });
+
+    trackedResumeIds.forEach(resumeId => {
+      if (!aiResultsMap.has(resumeId)) {
+        const resume = resumes.find(res => res.id === resumeId);
+        if (resume) {
+          unifiedList.push({
+            id: resume.id,
+            name: resume.sender_name || 'Sin Nombre',
+            city: resume.city || '',
+            score: 0,
+            justification: 'Candidato asignado directamente al cargo.',
+            pdf_url: resume.pdf_url || '',
+            position: resume.position || '',
+            experience: resume.experience_years || '',
+            sender_phone: resume.sender_phone || ''
+          });
+        }
+      }
+    });
+
+    return unifiedList;
+  }, [rankingCargo, rankingResults, trackingMap, resumes]);
+
   useEffect(() => {
     setIsMounted(true)
     if (!authLoading && !user) {
@@ -1069,6 +1121,10 @@ export default function CandidatesAdmin() {
     setRankingCargo(pos.cargo)
     setRankingCiudad(pos.ciudad || '')
     setRankingFunciones(pos.funciones)
+    setRankingResults([]) // Limpiar evaluaciones previas
+    if (pos.cargo) {
+      fetchTracking(pos.cargo)
+    }
   }
 
   const handleRankCandidates = async () => {
@@ -1135,7 +1191,9 @@ export default function CandidatesAdmin() {
   }
 
   const fetchTracking = async (cargo: string) => {
-    const res = await fetch(`/api/candidate-tracking?cargo=${encodeURIComponent(cargo)}`)
+    if (!user) return
+    const companyParam = user.company_slug ? `&company_slug=${encodeURIComponent(user.company_slug)}` : ''
+    const res = await fetch(`/api/candidate-tracking?cargo=${encodeURIComponent(cargo)}${companyParam}`)
     const data = await res.json()
     if (data.data) {
       const map: Record<string, any> = {}
@@ -2559,14 +2617,14 @@ export default function CandidatesAdmin() {
               )}
             </div>
             <div>
-              {rankingResults && rankingResults.length > 0 && (
+              {displayedRankingCandidates && displayedRankingCandidates.length > 0 ? (
                 <div className="table-container">
                   <table>
                     <thead>
                       <tr><th>#</th><th>Candidato</th><th>Ciudad</th><th>Puntaje</th><th>CV</th><th style={{ textAlign: 'right' }}>Acción</th></tr>
                     </thead>
                     <tbody>
-                      {rankingResults.map((r, idx) => {
+                      {displayedRankingCandidates.map((r, idx) => {
                         const status = trackingMap[r.id]?.status || 'PENDIENTE';
                         const isUpd = trackingUpdating === r.id;
                         const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : null;
@@ -2648,7 +2706,15 @@ export default function CandidatesAdmin() {
                     </tbody>
                   </table>
                 </div>
-              )}
+              ) : rankingCargo ? (
+                <div style={{ background: 'white', padding: '48px', borderRadius: '16px', textAlign: 'center', border: '1px dashed #cbd5e1', color: '#64748b' }}>
+                  <Trophy size={48} color="#cbd5e1" style={{ marginBottom: '16px', display: 'block', marginLeft: 'auto', marginRight: 'auto' }} />
+                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#334155', marginBottom: '8px' }}>No hay candidatos en este ranking</h3>
+                  <p style={{ fontSize: '13px', color: '#64748b', maxWidth: '320px', margin: '0 auto' }}>
+                    Agrega candidatos desde el <strong>Inbox</strong> usando el botón "Pasar a Ranking", o haz clic en <strong>Evaluar con IA</strong> para analizar a todos los postulantes.
+                  </p>
+                </div>
+              ) : null}
             </div>
           </div>
         )}
