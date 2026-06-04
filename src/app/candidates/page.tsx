@@ -342,6 +342,13 @@ export default function CandidatesAdmin() {
   const [formativeEvaluations, setFormativeEvaluations] = useState<any[]>([])
   const [formativeOptions, setFormativeOptions] = useState<any[]>([])
   const [activeEvaluatingCandidateId, setActiveEvaluatingCandidateId] = useState<string | null>(null)
+  const [formativeSessionTitle, setFormativeSessionTitle] = useState(() => {
+    const today = new Date()
+    const ymd = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`
+    return `Formativas ${ymd}`
+  })
+  const [formativeSessionFilter, setFormativeSessionFilter] = useState<string>('ALL')
+  const [formativeSessions, setFormativeSessions] = useState<string[]>([])
   
   // Modals / Inputs
   const [showMassCitationModal, setShowMassCitationModal] = useState(false)
@@ -387,6 +394,18 @@ export default function CandidatesAdmin() {
         // Filtrar sólo por empresa para ver todos los candidatos de la compañía
         const filteredCands = cands.filter((c: any) => c.email_resumes?.company_slug === user.company_slug)
         setFormativeCandidates(filteredCands)
+        // Extraer sesiones únicas para el selector
+        const sessions = [...new Set(
+          filteredCands
+            .map((c: any) => c.session_title)
+            .filter((s: any) => s && s.trim() !== '')
+        )] as string[]
+        sessions.sort((a, b) => b.localeCompare(a)) // Más reciente primero
+        setFormativeSessions(sessions)
+        // Si hay sesiones y el filtro activo no existe, seleccionar la más reciente
+        if (sessions.length > 0 && formativeSessionFilter === 'ALL') {
+          // No auto-seleccionar, dejar que el user elija
+        }
       }
       if (sups) setFormativeSupervisors(sups)
       setFormativeAssignments([])
@@ -414,9 +433,11 @@ export default function CandidatesAdmin() {
           setFormativeCandidates(prev => prev.filter(c => c.id !== candToRemove.id))
         }
       } else {
+        const sessionToUse = formativeSessionTitle.trim() || 'Sin Título'
         const { data, error } = await supabase.from('formative_candidates').insert({
           resume_id: p.resume_id,
-          created_by_user: user.cedula
+          created_by_user: user.cedula,
+          session_title: sessionToUse
         }).select().single()
         if (error) throw error
         if (data) {
@@ -3558,30 +3579,71 @@ export default function CandidatesAdmin() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             
             {/* Cabecera del Módulo */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-              <div>
-                <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Star style={{ color: '#f59e0b', fill: '#f59e0b' }} size={24} /> Módulo de Evaluaciones Formativas
-                </h2>
-                <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '14px' }}>
-                  Administra las entrevistas grupales formativas, asigna supervisores y ejecuta evaluaciones dinámicas en tiempo real.
-                </p>
+            <div style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Star style={{ color: '#f59e0b', fill: '#f59e0b' }} size={24} /> Módulo de Evaluaciones Formativas
+                  </h2>
+                  <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '14px' }}>
+                    Administra las entrevistas grupales formativas, asigna supervisores y ejecuta evaluaciones dinámicas en tiempo real.
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button 
+                    onClick={() => setShowMassCitationModal(true)} 
+                    className="ranking-btn-primary" 
+                    style={{ width: 'auto', background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', padding: '10px 20px', borderRadius: '10px', fontSize: '13px' }}
+                  >
+                    📅 Citar Grupo ({formativeSessionFilter === 'ALL' ? formativeCandidates.length : formativeCandidates.filter(c => c.session_title === formativeSessionFilter).length})
+                  </button>
+                  <button 
+                    onClick={() => setShowOptionsModal(true)} 
+                    className="track-btn" 
+                    style={{ fontSize: '13px', padding: '10px 20px', borderRadius: '10px' }}
+                  >
+                    ⚙️ Criterios y Pesos
+                  </button>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button 
-                  onClick={() => setShowMassCitationModal(true)} 
-                  className="ranking-btn-primary" 
-                  style={{ width: 'auto', background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', padding: '10px 20px', borderRadius: '10px', fontSize: '13px' }}
-                >
-                  📅 Citar Grupo ({formativeCandidates.length})
-                </button>
-                <button 
-                  onClick={() => setShowOptionsModal(true)} 
-                  className="track-btn" 
-                  style={{ fontSize: '13px', padding: '10px 20px', borderRadius: '10px' }}
-                >
-                  ⚙️ Criterios y Pesos
-                </button>
+
+              {/* Sección de Sesión */}
+              <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                {/* Input de Título de Sesión Activa */}
+                <div style={{ flex: '1', minWidth: '240px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px' }}>
+                    📋 Título de Sesión Activa
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      value={formativeSessionTitle}
+                      onChange={e => setFormativeSessionTitle(e.target.value)}
+                      placeholder="Ej: Formativas 20260604"
+                      style={{ flex: 1, border: '1.5px solid #7c3aed', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', fontWeight: 600, background: '#faf5ff', color: '#5b21b6', outline: 'none' }}
+                    />
+                  </div>
+                  <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#94a3b8' }}>Los candidatos que agregues irán a esta sesión</p>
+                </div>
+
+                {/* Selector de sesión para filtrar/ver */}
+                <div style={{ minWidth: '260px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px' }}>
+                    🔍 Ver Sesión
+                  </label>
+                  <select
+                    value={formativeSessionFilter}
+                    onChange={e => setFormativeSessionFilter(e.target.value)}
+                    style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', background: '#f8fafc', color: '#1e293b', cursor: 'pointer' }}
+                  >
+                    <option value="ALL">Todas las sesiones ({formativeCandidates.length})</option>
+                    {formativeSessions.map(s => (
+                      <option key={s} value={s}>
+                        {s} ({formativeCandidates.filter(c => c.session_title === s).length} candidatos)
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -3593,9 +3655,19 @@ export default function CandidatesAdmin() {
                 
                 <div className="table-container">
                   <div style={{ padding: '18px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#1e293b' }}>Postulantes en Formativas</h3>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#1e293b' }}>Postulantes en Formativas</h3>
+                      {formativeSessionFilter !== 'ALL' && (
+                        <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#7c3aed', fontWeight: 600 }}>
+                          📋 Sesión: {formativeSessionFilter}
+                        </p>
+                      )}
+                    </div>
                     <span style={{ fontSize: '12px', background: '#eff6ff', color: '#1e40af', padding: '4px 8px', borderRadius: '6px', fontWeight: 'bold' }}>
-                      {formativeCandidates.length} seleccionados
+                      {formativeSessionFilter === 'ALL' 
+                        ? `${formativeCandidates.length} candidatos`
+                        : `${formativeCandidates.filter(c => c.session_title === formativeSessionFilter).length} de ${formativeCandidates.length}`
+                      }
                     </span>
                   </div>
                   
@@ -3605,90 +3677,89 @@ export default function CandidatesAdmin() {
                         <th>Candidato</th>
                         <th>Cargo</th>
                         <th>Cita Programada</th>
-                        <th>Calificaciones Recibidas</th>
-                        <th style={{ textAlign: 'right' }}>Evaluación en Vivo</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {formativeCandidates.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
-                            No hay candidatos en formativas. Selecciona candidatos desde la pestaña <strong>Resumen</strong> marcando su checkbox.
-                          </td>
-                        </tr>
-                      ) : (
-                        formativeCandidates.map(c => {
-                          const isCurrentlyActive = activeEvaluatingCandidateId === c.id;
-                          
-                          // Obtener calificaciones para este candidato
-                          const candidateEvals = formativeEvaluations.filter(e => e.candidate_id === c.id);
-
-                          return (
-                            <tr key={c.id} style={{ background: isCurrentlyActive ? 'rgba(59, 130, 246, 0.03)' : 'inherit' }}>
-                              <td>
-                                <p style={{ fontWeight: 700, margin: 0, color: '#1e293b' }}>{c.email_resumes?.sender_name || 'Candidato'}</p>
-                                <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>{c.email_resumes?.sender_email || '—'}</p>
-                              </td>
-                              <td style={{ fontWeight: 600, color: '#475569' }}>{c.email_resumes?.position || '—'}</td>
-                              <td>
-                                {c.interview_date ? (
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                    <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#0f172a' }}>
-                                      {new Date(c.interview_date + 'T00:00:00').toLocaleDateString('es-EC', { day: 'numeric', month: 'short' })}
-                                    </span>
-                                    <span style={{ fontSize: '11px', color: '#64748b' }}>{c.interview_time || '—'}</span>
-                                  </div>
-                                ) : (
-                                  <span style={{ fontSize: '11px', color: '#94a3b8', fontStyle: 'italic' }}>Sin programar</span>
-                                )}
-                              </td>
-                              <td>
-                                {candidateEvals.length === 0 ? (
-                                  <span style={{ fontSize: '11px', color: '#94a3b8', fontStyle: 'italic' }}>Pendiente</span>
-                                ) : (
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    {candidateEvals.map(e => {
-                                      const sup = formativeSupervisors.find(s => s.id === e.supervisor_id);
-                                      return (
-                                        <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', fontSize: '11.5px', background: '#f8fafc', padding: '4px 8px', borderRadius: '6px', border: '1px solid #f1f5f9' }}>
-                                          <span style={{ color: '#475569', fontWeight: 600 }}>{sup?.name || 'Supervisor'}</span>
-                                          <span style={{ color: e.score >= 0 ? '#166534' : '#991b1b', fontWeight: 800 }}>
-                                            {e.score >= 0 ? `+${e.score}` : e.score} pts
-                                          </span>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                              </td>
-                              <td style={{ textAlign: 'right' }}>
-                                {isCurrentlyActive ? (
-                                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                                    <button 
-                                      onClick={() => handleSetActiveEvaluatingCandidate(null)}
-                                      className="track-btn" 
-                                      style={{ borderColor: '#ef4444', color: '#ef4444', background: 'rgba(239, 68, 68, 0.05)', fontSize: '12px', padding: '6px 12px', borderRadius: '8px' }}
-                                    >
-                                      🛑 Detener
-                                    </button>
-                                    <span style={{ fontSize: '10px', color: '#ef4444', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                      <span className="animate-pulse" style={{ width: '6px', height: '6px', background: '#ef4444', borderRadius: '50%' }}></span>
-                                      Evaluando en vivo
-                                    </span>
-                                  </div>
-                                ) : (
-                                  <button 
-                                    onClick={() => handleSetActiveEvaluatingCandidate(c.id)}
-                                    className="ranking-btn-primary"
-                                    style={{ width: 'auto', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', fontSize: '12px', padding: '6px 12px', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(139, 92, 246, 0.2)' }}
-                                  >
-                                    🎯 Evaluar
-                                  </button>
-                                )}
+                        <th>Calif                      ) : (
+                        <>
+                          {(formativeSessionFilter === 'ALL' ? formativeCandidates : formativeCandidates.filter(c => c.session_title === formativeSessionFilter)).length === 0 ? (
+                            <tr>
+                              <td colSpan={5} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                                No hay candidatos en la sesión <strong>{formativeSessionFilter}</strong>.
                               </td>
                             </tr>
-                          );
-                        })
+                          ) : (formativeSessionFilter === 'ALL' ? formativeCandidates : formativeCandidates.filter(c => c.session_title === formativeSessionFilter)).map(c => {
+                            const isCurrentlyActive = activeEvaluatingCandidateId === c.id;
+                            const candidateEvals = formativeEvaluations.filter(e => e.candidate_id === c.id);
+                            return (
+                              <tr key={c.id} style={{ background: isCurrentlyActive ? 'rgba(59, 130, 246, 0.03)' : 'inherit' }}>
+                                <td>
+                                  <p style={{ fontWeight: 700, margin: 0, color: '#1e293b' }}>{c.email_resumes?.sender_name || 'Candidato'}</p>
+                                  <p style={{ fontSize: '12px', color: '#64748b', margin: '1px 0 0' }}>{c.email_resumes?.sender_email || '—'}</p>
+                                  {c.session_title && (
+                                    <span style={{ fontSize: '9px', background: '#f3e8ff', color: '#7c3aed', border: '1px solid #ddd6fe', padding: '1px 6px', borderRadius: '4px', fontWeight: 800, display: 'inline-block', marginTop: '2px' }}>
+                                      {c.session_title}
+                                    </span>
+                                  )}
+                                </td>
+                                <td style={{ fontWeight: 600, color: '#475569' }}>{c.email_resumes?.position || '—'}</td>
+                                <td>
+                                  {c.interview_date ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                      <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#0f172a' }}>
+                                        {new Date(c.interview_date + 'T00:00:00').toLocaleDateString('es-EC', { day: 'numeric', month: 'short' })}
+                                      </span>
+                                      <span style={{ fontSize: '11px', color: '#64748b' }}>{c.interview_time || '—'}</span>
+                                    </div>
+                                  ) : (
+                                    <span style={{ fontSize: '11px', color: '#94a3b8', fontStyle: 'italic' }}>Sin programar</span>
+                                  )}
+                                </td>
+                                <td>
+                                  {candidateEvals.length === 0 ? (
+                                    <span style={{ fontSize: '11px', color: '#94a3b8', fontStyle: 'italic' }}>Pendiente</span>
+                                  ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                      {candidateEvals.map(e => {
+                                        const sup = formativeSupervisors.find(s => s.id === e.supervisor_id);
+                                        return (
+                                          <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', fontSize: '11.5px', background: '#f8fafc', padding: '4px 8px', borderRadius: '6px', border: '1px solid #f1f5f9' }}>
+                                            <span style={{ color: '#475569', fontWeight: 600 }}>{sup?.name || 'Supervisor'}</span>
+                                            <span style={{ color: e.score >= 0 ? '#166534' : '#991b1b', fontWeight: 800 }}>
+                                              {e.score >= 0 ? `+${e.score}` : e.score} pts
+                                            </span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </td>
+                                <td style={{ textAlign: 'right' }}>
+                                  {isCurrentlyActive ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                                      <button 
+                                        onClick={() => handleSetActiveEvaluatingCandidate(null)}
+                                        className="track-btn" 
+                                        style={{ borderColor: '#ef4444', color: '#ef4444', background: 'rgba(239, 68, 68, 0.05)', fontSize: '12px', padding: '6px 12px', borderRadius: '8px' }}
+                                      >
+                                        🛑 Detener
+                                      </button>
+                                      <span style={{ fontSize: '10px', color: '#ef4444', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                        <span className="animate-pulse" style={{ width: '6px', height: '6px', background: '#ef4444', borderRadius: '50%' }}></span>
+                                        Evaluando en vivo
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <button 
+                                      onClick={() => handleSetActiveEvaluatingCandidate(c.id)}
+                                      className="ranking-btn-primary"
+                                      style={{ width: 'auto', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', fontSize: '12px', padding: '6px 12px', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(139, 92, 246, 0.2)' }}
+                                    >
+                                      🎯 Evaluar
+                                    </button>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </>
                       )}
                     </tbody>
                   </table>
