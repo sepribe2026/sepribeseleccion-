@@ -515,6 +515,48 @@ export default function CandidatesAdmin() {
     }
   }
 
+  const handleCleanupNonAttendees = async () => {
+    if (!user) return
+    const sessionToDepurate = formativeSessionFilter
+    const sessionLabel = sessionToDepurate === 'ALL' ? 'TODAS las sesiones' : `la sesión "${sessionToDepurate}"`
+    
+    // Filter candidates in current company & view that fail either condition
+    const filteredCands = formativeCandidates.filter(c => {
+      const matchesSession = sessionToDepurate === 'ALL' || c.session_title === sessionToDepurate
+      const matchesCompany = c.email_resumes?.company_slug === user.company_slug
+      const isNotConfirmedOrNotAttended = !c.confirmed || !c.attended
+      return matchesSession && matchesCompany && isNotConfirmedOrNotAttended
+    })
+
+    if (filteredCands.length === 0) {
+      alert('No hay candidatos en esta vista que no hayan confirmado y asistido.')
+      return
+    }
+
+    const confirmMessage = `Esta acción eliminará de forma permanente de ${sessionLabel} a los ${filteredCands.length} candidatos que:\n` +
+      `- NO confirmaron (Confirmación desmarcada)\n` +
+      `O\n` +
+      `- NO asistieron (Asistencia desmarcada)\n\n` +
+      `¿Estás seguro de que deseas continuar?`
+      
+    if (!window.confirm(confirmMessage)) return
+
+    try {
+      const idsToDelete = filteredCands.map(c => c.id)
+      const { error } = await supabase
+        .from('formative_candidates')
+        .delete()
+        .in('id', idsToDelete)
+        
+      if (error) throw error
+      
+      alert(`✅ Depuración completada. Se removieron ${idsToDelete.length} candidatos.`)
+      await fetchFormativeData()
+    } catch (e: any) {
+      alert('❌ Error al depurar la convocatoria: ' + e.message)
+    }
+  }
+
   const handleCreateSupervisor = async () => {
     if (!user) return
     if (!supervisorName.trim() || !supervisorEmail.trim()) return
@@ -1686,9 +1728,21 @@ export default function CandidatesAdmin() {
             </div>
             
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 800, color: '#475569', marginBottom: '8px', textTransform: 'uppercase' }}>
-                Mensaje de Invitación Template
-              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 800, color: '#475569', margin: 0, textTransform: 'uppercase' }}>
+                  Mensaje de Invitación Template (Puedes editarlo)
+                </label>
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(whatsappTemplateText);
+                    alert('¡Mensaje copiado al portapapeles!');
+                  }}
+                  className="track-btn"
+                  style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', border: '1px solid #cbd5e1' }}
+                >
+                  📋 Copiar Mensaje
+                </button>
+              </div>
               <textarea 
                 value={whatsappTemplateText}
                 onChange={e => setWhatsappTemplateText(e.target.value)}
@@ -3718,7 +3772,7 @@ export default function CandidatesAdmin() {
                     Administra las entrevistas grupales formativas, asigna supervisores y ejecuta evaluaciones dinámicas en tiempo real.
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                   <button 
                     onClick={() => setShowMassCitationModal(true)} 
                     className="ranking-btn-primary" 
@@ -3732,6 +3786,13 @@ export default function CandidatesAdmin() {
                     style={{ width: 'auto', background: 'linear-gradient(135deg, #10b981, #059669)', padding: '10px 20px', borderRadius: '10px', fontSize: '13px' }}
                   >
                     💬 WhatsApp Grupal ({formativeSessionFilter === 'ALL' ? formativeCandidates.length : formativeCandidates.filter(c => c.session_title === formativeSessionFilter).length})
+                  </button>
+                  <button 
+                    onClick={handleCleanupNonAttendees} 
+                    className="ranking-btn-primary" 
+                    style={{ width: 'auto', background: 'linear-gradient(135deg, #ef4444, #dc2626)', padding: '10px 20px', borderRadius: '10px', fontSize: '13px' }}
+                  >
+                    🧹 Depurar Convocatoria
                   </button>
                   <button 
                     onClick={() => setShowOptionsModal(true)} 
@@ -3813,6 +3874,8 @@ export default function CandidatesAdmin() {
                         <th>Candidato</th>
                         <th>Cargo</th>
                         <th>Cita Programada</th>
+                        <th style={{ textAlign: 'center', width: '110px' }}>Confirmación</th>
+                        <th style={{ textAlign: 'center', width: '110px' }}>Asistencia</th>
                         <th>Calificaciones Recibidas</th>
                         <th style={{ textAlign: 'right' }}>Evaluación en Vivo</th>
                       </tr>
@@ -3820,7 +3883,7 @@ export default function CandidatesAdmin() {
                     <tbody>
                       {formativeCandidates.length === 0 ? (
                         <tr>
-                          <td colSpan={5} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                          <td colSpan={7} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
                             No hay candidatos en formativas. Selecciona candidatos desde la pestaña <strong>Resumen</strong> marcando su checkbox.
                           </td>
                         </tr>
@@ -3828,7 +3891,7 @@ export default function CandidatesAdmin() {
                         <>
                           {(formativeSessionFilter === 'ALL' ? formativeCandidates : formativeCandidates.filter(c => c.session_title === formativeSessionFilter)).length === 0 ? (
                             <tr>
-                              <td colSpan={5} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                              <td colSpan={7} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
                                 No hay candidatos en la sesión <strong>{formativeSessionFilter}</strong>.
                               </td>
                             </tr>
@@ -3858,6 +3921,50 @@ export default function CandidatesAdmin() {
                                   ) : (
                                     <span style={{ fontSize: '11px', color: '#94a3b8', fontStyle: 'italic' }}>Sin programar</span>
                                   )}
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                    <input 
+                                      type="checkbox" 
+                                      checked={!!c.confirmed} 
+                                      onChange={async (e) => {
+                                        const checked = e.target.checked;
+                                        try {
+                                          const { error } = await supabase
+                                            .from('formative_candidates')
+                                            .update({ confirmed: checked })
+                                            .eq('id', c.id);
+                                          if (error) throw error;
+                                          setFormativeCandidates(prev => prev.map(item => item.id === c.id ? { ...item, confirmed: checked } : item));
+                                        } catch (err: any) {
+                                          alert('Error al actualizar confirmación: ' + err.message);
+                                        }
+                                      }}
+                                      style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#10b981' }}
+                                    />
+                                  </div>
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                    <input 
+                                      type="checkbox" 
+                                      checked={!!c.attended} 
+                                      onChange={async (e) => {
+                                        const checked = e.target.checked;
+                                        try {
+                                          const { error } = await supabase
+                                            .from('formative_candidates')
+                                            .update({ attended: checked })
+                                            .eq('id', c.id);
+                                          if (error) throw error;
+                                          setFormativeCandidates(prev => prev.map(item => item.id === c.id ? { ...item, attended: checked } : item));
+                                        } catch (err: any) {
+                                          alert('Error al actualizar asistencia: ' + err.message);
+                                        }
+                                      }}
+                                      style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#2563eb' }}
+                                    />
+                                  </div>
                                 </td>
                                 <td>
                                   {candidateEvals.length === 0 ? (
