@@ -373,7 +373,7 @@ export default function CandidatesAdmin() {
   const [showOptionsModal, setShowOptionsModal] = useState(false)
   const [newOptionLabel, setNewOptionLabel] = useState('')
   const [newOptionWeight, setNewOptionWeight] = useState(10)
-  const [newOptionCategory, setNewOptionCategory] = useState('Imagen y Actitud')
+  const [newOptionCategory, setNewOptionCategory] = useState('Formación')
   const [savingOption, setSavingOption] = useState(false)
 
   const fetchFormativeData = async () => {
@@ -753,6 +753,7 @@ export default function CandidatesAdmin() {
   const [inboxCity, setInboxCity] = useState('')
   const [inboxExp, setInboxExp] = useState('')
   const [inboxSector, setInboxSector] = useState('')
+  const [inboxCedula, setInboxCedula] = useState('')
 
   // === ESTADOS COPILOTO IA ===
   const [showCopilot, setShowCopilot] = useState(false);
@@ -1893,10 +1894,11 @@ export default function CandidatesAdmin() {
                       className="ranking-select"
                       style={{ marginBottom: 0, height: '43px' }}
                     >
-                      <option value="Imagen y Actitud">Imagen y Actitud</option>
-                      <option value="Desenvolvimiento">Desenvolvimiento</option>
+                      <option value="Formación">Formación</option>
                       <option value="Experiencia">Experiencia</option>
-                      <option value="Otros">Otros</option>
+                      <option value="Alineamiento cultural">Alineamiento cultural</option>
+                      <option value="Cercanía al punto de venta">Cercanía al punto de venta</option>
+                      <option value="Rango de edad (18-30 años)">Rango de edad (18-30 años)</option>
                     </select>
                   </div>
                 </div>
@@ -2449,6 +2451,19 @@ export default function CandidatesAdmin() {
                   />
                 </div>
               </div>
+              <div style={{ width: '150px' }}>
+                <label className="form-label">Cédula</label>
+                <div className="filter-input" style={{ background: '#f8fafc', marginTop: '4px' }}>
+                  <User size={18} color="#6b7280" />
+                  <input 
+                    type="text" 
+                    placeholder="Ej: 1712217502..." 
+                    value={inboxCedula}
+                    onChange={(e) => setInboxCedula(e.target.value)}
+                    style={{ background: 'transparent' }}
+                  />
+                </div>
+              </div>
               <div style={{ width: '180px' }}>
                 <label className="form-label">Cargo</label>
                 <div className="filter-input" style={{ background: '#f8fafc', marginTop: '4px' }}>
@@ -2504,7 +2519,7 @@ export default function CandidatesAdmin() {
               <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
                 <button 
                   className="track-btn" 
-                  onClick={() => { setInboxSearch(''); setInboxCargo(''); setInboxCity(''); setInboxExp(''); setInboxSector(''); }}
+                  onClick={() => { setInboxSearch(''); setInboxCargo(''); setInboxCity(''); setInboxExp(''); setInboxSector(''); setInboxCedula(''); }}
                 >
                   Limpiar
                 </button>
@@ -2531,7 +2546,8 @@ export default function CandidatesAdmin() {
                       const matchesCity = !inboxCity || (r.city || '').toLowerCase().includes(inboxCity.toLowerCase());
                       const matchesExp = !inboxExp || (parseInt(r.experience_years || '0') >= parseInt(inboxExp));
                       const matchesSector = !inboxSector || (r.sector || '').toLowerCase().includes(inboxSector.toLowerCase());
-                      return matchesSearch && matchesCargo && matchesCity && matchesExp && matchesSector;
+                      const matchesCedula = !inboxCedula || (r.cedula || '').toLowerCase().includes(inboxCedula.toLowerCase());
+                      return matchesSearch && matchesCargo && matchesCity && matchesExp && matchesSector && matchesCedula;
                     })
                     .map(r => (
                     <tr key={r.id}>
