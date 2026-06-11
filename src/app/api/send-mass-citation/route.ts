@@ -29,7 +29,9 @@ export async function POST(req: NextRequest) {
       tls: { ciphers: 'SSLv3' },
     });
 
-    const sendPromises = candidates.map(async (candidate: { email: string; name: string; cargo: string }) => {
+    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    for (const candidate of candidates) {
       const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('es-EC', {
         weekday: 'long',
         year: 'numeric',
@@ -39,7 +41,7 @@ export async function POST(req: NextRequest) {
 
       const message = `Hola ${candidate.name},\n\nHas sido seleccionado para la etapa de Evaluación Formativa para el puesto de ${candidate.cargo}.\n\nDetalles de la citación:\nFecha: ${formattedDate}\nHora: ${time}\nLugar: Oficina Principal (Cerezos)\n\nPor favor, sé puntual.\n\nSaludos cordiales,\nTalento Humano`;
 
-      return transporter.sendMail({
+      await transporter.sendMail({
         from: `"RRHH Selección" <${smtpUser}>`,
         to: candidate.email,
         subject: `Citación a Evaluación Formativa - ${candidate.cargo}`,
@@ -68,9 +70,10 @@ export async function POST(req: NextRequest) {
           </div>
         </div>`
       });
-    });
 
-    await Promise.all(sendPromises);
+      // Pequeña pausa para evitar que el servidor de SMTP detecte spam o demasiadas conexiones rápidas
+      await delay(300);
+    }
 
     return NextResponse.json({ success: true, count: candidates.length });
   } catch (error: any) {
