@@ -752,6 +752,7 @@ export default function CandidatesAdmin() {
   const [inboxCargo, setInboxCargo] = useState('')
   const [inboxCity, setInboxCity] = useState('')
   const [inboxExp, setInboxExp] = useState('')
+  const [inboxSector, setInboxSector] = useState('')
 
   // === ESTADOS COPILOTO IA ===
   const [showCopilot, setShowCopilot] = useState(false);
@@ -2474,6 +2475,19 @@ export default function CandidatesAdmin() {
                   />
                 </div>
               </div>
+              <div style={{ width: '150px' }}>
+                <label className="form-label">Sector</label>
+                <div className="filter-input" style={{ background: '#f8fafc', marginTop: '4px' }}>
+                  <MapPin size={18} color="#6b7280" />
+                  <input 
+                    type="text" 
+                    placeholder="Ej: Carcelén..." 
+                    value={inboxSector}
+                    onChange={(e) => setInboxSector(e.target.value)}
+                    style={{ background: 'transparent' }}
+                  />
+                </div>
+              </div>
               <div style={{ width: '100px' }}>
                 <label className="form-label">Min. Años</label>
                 <div className="filter-input" style={{ background: '#f8fafc', marginTop: '4px' }}>
@@ -2490,7 +2504,7 @@ export default function CandidatesAdmin() {
               <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
                 <button 
                   className="track-btn" 
-                  onClick={() => { setInboxSearch(''); setInboxCargo(''); setInboxCity(''); setInboxExp(''); }}
+                  onClick={() => { setInboxSearch(''); setInboxCargo(''); setInboxCity(''); setInboxExp(''); setInboxSector(''); }}
                 >
                   Limpiar
                 </button>
@@ -2516,7 +2530,8 @@ export default function CandidatesAdmin() {
                       const matchesCargo = !inboxCargo || (r.position || '').toLowerCase().includes(inboxCargo.toLowerCase());
                       const matchesCity = !inboxCity || (r.city || '').toLowerCase().includes(inboxCity.toLowerCase());
                       const matchesExp = !inboxExp || (parseInt(r.experience_years || '0') >= parseInt(inboxExp));
-                      return matchesSearch && matchesCargo && matchesCity && matchesExp;
+                      const matchesSector = !inboxSector || (r.sector || '').toLowerCase().includes(inboxSector.toLowerCase());
+                      return matchesSearch && matchesCargo && matchesCity && matchesExp && matchesSector;
                     })
                     .map(r => (
                     <tr key={r.id}>
