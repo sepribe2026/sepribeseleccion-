@@ -356,6 +356,16 @@ export default function CandidatesAdmin() {
   const [massCitationTime, setMassCitationTime] = useState('09:00')
   const [sendingMassCitation, setSendingMassCitation] = useState(false)
   
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false)
+  const [whatsappTemplateText, setWhatsappTemplateText] = useState(
+    `Estimad@ candidat@, te invitamos a participar en nuestro proceso de selección para nuestras tiendas Marathon en Quito, llamado "Formativas". ⚽\n` +
+    `Te comparto los detalles para que puedas asistir: \n` +
+    `📅Fecha: Viernes 12 de junio de 2026. \n` +
+    `🕘Hora: 09h30 (Trata de llegar 10 min. antes)\n` +
+    `📍Dirección: Av. Galo Plaza Lasso 13205 y De los Cerezos.\n` +
+    `Te recomendamos asistir con un estilo semiformal y zapatos deportivos. Por favor confirma tu asistencia.`
+  )
+  
   const [supervisorName, setSupervisorName] = useState('')
   const [supervisorEmail, setSupervisorEmail] = useState('')
   const [savingSupervisor, setSavingSupervisor] = useState(false)
@@ -1660,6 +1670,125 @@ export default function CandidatesAdmin() {
               >
                 {sendingMassCitation ? 'Enviando...' : 'Confirmar y Enviar'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showWhatsAppModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '90%', maxWidth: '650px', maxHeight: '90vh', overflow: 'auto', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                💬 Envío masivo de WhatsApp y Gestión de Grupo
+              </h3>
+              <button onClick={() => setShowWhatsAppModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X /></button>
+            </div>
+            
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 800, color: '#475569', marginBottom: '8px', textTransform: 'uppercase' }}>
+                Mensaje de Invitación Template
+              </label>
+              <textarea 
+                value={whatsappTemplateText}
+                onChange={e => setWhatsappTemplateText(e.target.value)}
+                style={{ width: '100%', height: '150px', padding: '12px', borderRadius: '12px', border: '1.5px solid #cbd5e1', fontSize: '13.5px', color: '#334155', fontFamily: 'inherit', resize: 'vertical', outline: 'none' }}
+              />
+            </div>
+
+            {(() => {
+              const activeSessionCandidates = formativeCandidates.filter(c => formativeSessionFilter === 'ALL' || c.session_title === formativeSessionFilter);
+              
+              const handleCopyPhones = () => {
+                const phones = activeSessionCandidates
+                  .map(c => c.email_resumes?.sender_phone)
+                  .filter(Boolean)
+                  .map(p => p.replace(/\s+/g, '')); // clean spaces
+                
+                navigator.clipboard.writeText(phones.join(','));
+                alert('¡Teléfonos copiados al portapapeles!');
+              };
+
+              const formatWhatsAppLink = (phone: string, text: string) => {
+                let cleanPhone = phone.replace(/\D/g, '');
+                if (cleanPhone.startsWith('0')) {
+                  cleanPhone = '593' + cleanPhone.substring(1);
+                } else if (cleanPhone.length === 9 && (cleanPhone.startsWith('9') || cleanPhone.startsWith('8'))) {
+                  cleanPhone = '593' + cleanPhone;
+                }
+                return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
+              };
+
+              return (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#334155' }}>
+                      Candidatos en la sesión ({activeSessionCandidates.length})
+                    </span>
+                    <button 
+                      onClick={handleCopyPhones}
+                      className="ranking-btn-primary" 
+                      style={{ width: 'auto', background: 'linear-gradient(135deg, #10b981, #059669)', fontSize: '12.5px', padding: '8px 16px', borderRadius: '8px' }}
+                      disabled={activeSessionCandidates.length === 0}
+                    >
+                      📋 Copiar todos los teléfonos
+                    </button>
+                  </div>
+
+                  <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', maxHeight: '250px', overflowY: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                      <thead style={{ background: '#f8fafc', position: 'sticky', top: 0 }}>
+                        <tr style={{ textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>
+                          <th style={{ padding: '10px 16px' }}>Candidato</th>
+                          <th style={{ padding: '10px 16px' }}>Teléfono</th>
+                          <th style={{ padding: '10px 16px', textAlign: 'right' }}>Acción</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {activeSessionCandidates.length === 0 ? (
+                          <tr>
+                            <td colSpan={3} style={{ padding: '24px', textAlign: 'center', color: '#94a3b8' }}>
+                              No hay candidatos en esta sesión.
+                            </td>
+                          </tr>
+                        ) : (
+                          activeSessionCandidates.map(c => {
+                            const name = c.email_resumes?.sender_name || 'Candidato';
+                            const phone = c.email_resumes?.sender_phone || '';
+                            const cleanPhone = phone.trim();
+                            const link = cleanPhone ? formatWhatsAppLink(cleanPhone, whatsappTemplateText) : '';
+                            
+                            return (
+                              <tr key={c.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                <td style={{ padding: '10px 16px', fontWeight: 600 }}>{name}</td>
+                                <td style={{ padding: '10px 16px', fontFamily: 'monospace' }}>{phone || '—'}</td>
+                                <td style={{ padding: '10px 16px', textAlign: 'right' }}>
+                                  {cleanPhone ? (
+                                    <a 
+                                      href={link} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#e8f5e9', color: '#2e7d32', border: '1px solid #a5d6a7', padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none' }}
+                                    >
+                                      <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" style={{ width: '14px' }} /> Enviar
+                                    </a>
+                                  ) : (
+                                    <span style={{ fontSize: '11px', color: '#94a3b8', fontStyle: 'italic' }}>Sin teléfono</span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '24px' }}>
+              <button onClick={() => setShowWhatsAppModal(false)} className="track-btn">Cerrar</button>
             </div>
           </div>
         </div>
@@ -3596,6 +3725,13 @@ export default function CandidatesAdmin() {
                     style={{ width: 'auto', background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', padding: '10px 20px', borderRadius: '10px', fontSize: '13px' }}
                   >
                     📅 Citar Grupo ({formativeSessionFilter === 'ALL' ? formativeCandidates.length : formativeCandidates.filter(c => c.session_title === formativeSessionFilter).length})
+                  </button>
+                  <button 
+                    onClick={() => setShowWhatsAppModal(true)} 
+                    className="ranking-btn-primary" 
+                    style={{ width: 'auto', background: 'linear-gradient(135deg, #10b981, #059669)', padding: '10px 20px', borderRadius: '10px', fontSize: '13px' }}
+                  >
+                    💬 WhatsApp Grupal ({formativeSessionFilter === 'ALL' ? formativeCandidates.length : formativeCandidates.filter(c => c.session_title === formativeSessionFilter).length})
                   </button>
                   <button 
                     onClick={() => setShowOptionsModal(true)} 
