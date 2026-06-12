@@ -353,6 +353,7 @@ export default function CandidatesAdmin() {
   const [formativasSubTab, setFormativasSubTab] = useState<'candidatos' | 'resultados' | 'fase2'>('candidatos')
   const [fase2MinScore, setFase2MinScore] = useState(0)
   const [promotingFase2, setPromotingFase2] = useState(false)
+  const [sendingBulkOnboarding, setSendingBulkOnboarding] = useState(false)
   
   // Modals / Inputs
   const [showMassCitationModal, setShowMassCitationModal] = useState(false)
@@ -1190,6 +1191,90 @@ export default function CandidatesAdmin() {
     }
   }
 
+  const handleSendBulkOnboarding = async (targets: any[]) => {
+    if (targets.length === 0) {
+      alert("No hay candidatos seleccionados para onboarding.");
+      return;
+    }
+    const confirmMsg = `¿Estás seguro de enviar correo de onboarding a los ${targets.length} candidato(s) de la Fase 2?`;
+    if (!confirm(confirmMsg)) return;
+
+    setSendingBulkOnboarding(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const c of targets) {
+      if (!c.resume_id) continue;
+      try {
+        let candidate = resumes.find(r => r.id === c.resume_id);
+        if (!candidate) {
+          candidate = rankingResults.find(r => r.id === c.resume_id);
+        }
+        if (!candidate) {
+          const pipeEntry = pipelineData.find(p => p.resume_id === c.resume_id);
+          candidate = pipeEntry?.candidate;
+        }
+        if (!candidate && c.email_resumes) {
+          candidate = {
+            ...c.email_resumes,
+            sender_email: c.email_resumes.sender_email || c.email_resumes.email,
+            sender_name: c.email_resumes.sender_name || c.email_resumes.name,
+            sender_phone: c.email_resumes.sender_phone || c.email_resumes.phone || c.email_resumes.cellphone || c.email_resumes.telefono,
+            position: c.email_resumes.position
+          };
+        }
+
+        if (!candidate || !candidate.sender_email) continue;
+
+        const names = (candidate.sender_name || candidate.name || '').split(' ');
+        const candidatePayload = {
+          email: candidate.sender_email,
+          nombres: names[0] || '',
+          apellidos: names.slice(1).join(' ') || '',
+          telefono: candidate.sender_phone || '',
+          cedula: `PENDIENTE-${candidate.sender_email}`,
+          cargo: candidate.position || (pipelineData.find(p => p.resume_id === c.resume_id)?.cargo) || '',
+          status: 'PENDING',
+          created_by_cedula: user?.cedula,
+          company_slug: user?.company_slug
+        };
+
+        const { data: existing } = await supabase.from('onboarding_candidates').select('id').eq('email', candidate.sender_email).single();
+
+        let onboardErr;
+        if (existing) {
+          const { error } = await supabase.from('onboarding_candidates').update(candidatePayload).eq('id', existing.id);
+          onboardErr = error;
+        } else {
+          const { error } = await supabase.from('onboarding_candidates').insert(candidatePayload);
+          onboardErr = error;
+        }
+
+        if (onboardErr) throw onboardErr;
+
+        const mailRes = await fetch('/api/send-approval-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            candidateName: candidate.sender_name || candidate.name,
+            candidateEmail: candidate.sender_email,
+            companySlug: user?.company_slug
+          })
+        });
+
+        if (!mailRes.ok) throw new Error("Error SMTP");
+        successCount++;
+      } catch (err) {
+        console.error(err);
+        errorCount++;
+      }
+    }
+
+    setSendingBulkOnboarding(false);
+    fetchCandidates();
+    alert(`✅ Envío masivo completado.\nExitosos: ${successCount}\nErrores: ${errorCount}`);
+  }
+
   const handleSendPsychometricEmail = async (candidate: any, cargo: string) => {
     if (!candidate || !candidate.id) return
     if (!confirm(`¿Deseas enviar la citación de evaluación psicométrica a ${candidate.sender_email}?`)) return
@@ -1409,6 +1494,14 @@ export default function CandidatesAdmin() {
     const newPhone = window.prompt("Editar número de teléfono:", phone);
     if (newPhone === null) return;
     const { error } = await supabase.from('email_resumes').update({ sender_phone: newPhone }).eq('id', id);
+    if (error) alert("Error: " + error.message);
+    else fetchResumes();
+  }
+
+  const handleUpdateEmail = async (id: string, email: string) => {
+    const newEmail = window.prompt("Editar correo electrónico:", email);
+    if (newEmail === null) return;
+    const { error } = await supabase.from('email_resumes').update({ sender_email: newEmail }).eq('id', id);
     if (error) alert("Error: " + error.message);
     else fetchResumes();
   }
@@ -2656,7 +2749,16 @@ export default function CandidatesAdmin() {
                                 {r.email_uid?.startsWith('WEB') ? 'WEB' : 'EMAIL'}
                               </span>
                             </div>
-                            <p style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '4px' }}>{r.sender_email}</p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                              <p style={{ color: '#9ca3af', fontSize: '12px', margin: 0 }}>{r.sender_email}</p>
+                              <button 
+                                onClick={() => handleUpdateEmail(r.id, r.sender_email || '')} 
+                                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '2px' }}
+                                title="Editar Correo"
+                              >
+                                <Settings size={12} />
+                              </button>
+                            </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                               {r.sender_phone ? (
                                 <p style={{ color: '#3b82f6', fontSize: '12px', fontWeight: 'bold', margin: 0 }}>📞 {r.sender_phone}</p>
@@ -4449,10 +4551,31 @@ export default function CandidatesAdmin() {
                   <div style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', border: '1px solid #bfdbfe', borderRadius: '16px', padding: '18px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                     <div>
                       <h4 style={{ margin: 0, color: '#1e40af', fontSize: '14px', fontWeight: 800 }}>🏆 Candidatos Seleccionados para Fase 2</h4>
-                      <p style={{ margin: '4px 0 0', color: '#1e3a8a', fontSize: '12.5px' }}>Estos candidatos han sido promovidos desde la pestaña de Resultados. Aquí puedes iniciar su proceso de inducción y enviarles los accesos de Onboarding.</p>
+                      <p style={{ margin: '4px 0 0', color: '#1e3a8a', fontSize: '12.5px' }}>Estos candidatos han sido promovidos desde la pestaña de Resultados. Presiona el botón para enviar los accesos de Onboarding a todos.</p>
                     </div>
-                    <div style={{ fontSize: '13px', color: '#1e40af', background: '#dbeafe', padding: '6px 14px', borderRadius: '8px', fontWeight: 800 }}>
-                      📋 Total Promovidos: {ranked.length}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ fontSize: '13px', color: '#1e40af', background: '#dbeafe', padding: '10px 16px', borderRadius: '10px', fontWeight: 800 }}>
+                        📋 Total: {ranked.length}
+                      </div>
+                      <button
+                        onClick={() => handleSendBulkOnboarding(ranked)}
+                        disabled={sendingBulkOnboarding || ranked.length === 0}
+                        style={{
+                          background: 'linear-gradient(135deg, #10b981, #059669)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '10px',
+                          padding: '10px 20px',
+                          fontSize: '13px',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          opacity: (sendingBulkOnboarding || ranked.length === 0) ? 0.5 : 1,
+                          transition: 'all 0.15s',
+                          boxShadow: '0 4px 6px -1px rgba(16,185,129,0.2)'
+                        }}
+                      >
+                        {sendingBulkOnboarding ? '⏳ Enviando...' : `🚀 Enviar Onboarding a Todos (${ranked.length})`}
+                      </button>
                     </div>
                   </div>
 
