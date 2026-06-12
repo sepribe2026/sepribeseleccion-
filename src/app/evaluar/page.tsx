@@ -32,11 +32,10 @@ export default function SupervisorPortal() {
   // ── Evaluation data ───────────────────────────────────────────────────
   const [activeCandidates, setActiveCandidates] = useState<EvalCandidate[]>([])
   const [options, setOptions] = useState<EvalOption[]>([])
-  // { candidateId: optionId[] }
-  const [selectedByCandidate, setSelectedByCandidate] = useState<Record<string, string[]>>({})
-  // Valor propuesto manualmente por el supervisor
+  // { candidateId: { optionId: valorIngresado } }
+  const [criterionValues, setCriterionValues] = useState<Record<string, Record<string, string>>>({})
+  // Valor propuesto global por candidato (override del total)
   const [proposedByCandidate, setProposedByCandidate] = useState<Record<string, string>>({})
-  // Set of candidateIds already submitted by this supervisor
   const [submittedCandidates, setSubmittedCandidates] = useState<Set<string>>(new Set())
   const [submittingId, setSubmittingId] = useState<string | null>(null)
 
@@ -86,18 +85,23 @@ export default function SupervisorPortal() {
 
       if (evals && evals.length > 0) {
         const submitted = new Set<string>()
-        const preloaded: Record<string, string[]> = {}
+        const preloadedCriterion: Record<string, Record<string, string>> = {}
         const preloadedProposed: Record<string, string> = {}
         evals.forEach((e: any) => {
           submitted.add(e.candidate_id)
-          preloaded[e.candidate_id] = e.selected_options || []
-          // Cargar valor propuesto si fue guardado en notas
+          // Restaurar valores por criterio si estaban guardados como objeto JSON en selected_options
+          if (Array.isArray(e.selected_options)) {
+            // Formato antiguo: array de IDs → restaurar como peso completo
+            const map: Record<string, string> = {}
+            e.selected_options.forEach((id: string) => map[id] = '')
+            preloadedCriterion[e.candidate_id] = map
+          }
           if (e.notes !== null && e.notes !== undefined) {
             preloadedProposed[e.candidate_id] = String(e.notes)
           }
         })
         setSubmittedCandidates(submitted)
-        setSelectedByCandidate(prev => ({ ...prev, ...preloaded }))
+        setCriterionValues(prev => ({ ...prev, ...preloadedCriterion }))
         setProposedByCandidate(prev => ({ ...prev, ...preloadedProposed }))
       }
     }
@@ -157,44 +161,43 @@ export default function SupervisorPortal() {
     setSubmittedCandidates(new Set())
   }
 
-  // ── Toggle option for a candidate ─────────────────────────────────────
-  const toggleOption = (candidateId: string, optionId: string) => {
+  // ── Set valor de un criterio para un candidato ───────────────────────────────
+  const setCriterionValue = (candidateId: string, optionId: string, raw: string, maxWeight: number) => {
     if (submittedCandidates.has(candidateId)) return
-    setSelectedByCandidate(prev => {
-      const current = prev[candidateId] || []
-      const updated = current.includes(optionId)
-        ? current.filter(id => id !== optionId)
-        : [...current, optionId]
-      return { ...prev, [candidateId]: updated }
-    })
+    // Clampar al máximo configurado
+    let val = raw === '' ? '' : String(Math.min(Math.max(0, Number(raw)), maxWeight))
+    setCriterionValues(prev => ({
+      ...prev,
+      [candidateId]: { ...(prev[candidateId] || {}), [optionId]: val }
+    }))
   }
 
   // ── Submit evaluation for ONE candidate ───────────────────────────────
   const submitEvaluation = async (candidateId: string) => {
     if (!supervisor) return
-    const selected = selectedByCandidate[candidateId] || []
+    const vals = criterionValues[candidateId] || {}
     const proposed = proposedByCandidate[candidateId]
     const hasProposed = proposed !== undefined && proposed.trim() !== ''
-    if (selected.length === 0 && !hasProposed) {
-      alert('Selecciona al menos un criterio o ingresa un valor propuesto antes de enviar.')
+    // Criterios con valor > 0
+    const activeOptions = Object.entries(vals)
+      .filter(([, v]) => v !== '' && Number(v) > 0)
+    if (activeOptions.length === 0 && !hasProposed) {
+      alert('Ingresa un valor en al menos un criterio antes de enviar.')
       return
     }
     setSubmittingId(candidateId)
     try {
-      const checkboxScore = options
-        .filter(o => selected.includes(o.id))
-        .reduce((sum, o) => sum + o.weight, 0)
-
-      // Si hay valor propuesto, se usa como puntaje principal; el de checkboxes va en notes
-      const finalScore = hasProposed ? Number(proposed) : checkboxScore
-      const notes = hasProposed && selected.length > 0 ? checkboxScore : (hasProposed ? null : null)
+      const criterionScore = activeOptions.reduce((sum, [id, v]) => sum + Number(v), 0)
+      const finalScore = hasProposed ? Number(proposed) : criterionScore
+      // Guardar IDs activos y sus valores como objeto
+      const selectedIds = activeOptions.map(([id]) => id)
 
       const { error } = await supabase.from('formative_evaluations').upsert({
         candidate_id: candidateId,
         supervisor_id: supervisor.id,
         score: finalScore,
-        selected_options: selected,
-        ...(hasProposed ? { notes: proposed } : {})
+        selected_options: selectedIds,
+        ...(hasProposed ? { notes: proposed } : { notes: JSON.stringify(Object.fromEntries(activeOptions)) })
       }, { onConflict: 'candidate_id,supervisor_id' })
 
       if (error) throw error
@@ -216,11 +219,11 @@ export default function SupervisorPortal() {
     return map
   }, [options])
 
-  // ── Compute score per candidate ───────────────────────────────────────
-  const scoreOf = (candidateId: string) =>
-    options
-      .filter(o => (selectedByCandidate[candidateId] || []).includes(o.id))
-      .reduce((sum, o) => sum + o.weight, 0)
+  // ── Compute score per candidate from criterion values ────────────────────────
+  const scoreOf = (candidateId: string) => {
+    const vals = criterionValues[candidateId] || {}
+    return Object.values(vals).reduce((sum, v) => sum + (v !== '' ? Number(v) : 0), 0)
+  }
 
   // ─────────────────────────────────────────────────────────────────────
   return (
@@ -351,32 +354,60 @@ export default function SupervisorPortal() {
 
                           {/* Option rows */}
                           {opts.map((opt, idx) => (
-                            <tr key={opt.id} style={{ background: idx % 2 === 0 ? 'rgba(15,23,42,0.3)' : 'transparent', transition: 'background 0.1s' }}>
+                            <tr key={opt.id} style={{ background: idx % 2 === 0 ? 'rgba(15,23,42,0.3)' : 'transparent' }}>
                               {/* Sticky label */}
                               <td style={{ position: 'sticky', left: 0, zIndex: 1, background: idx % 2 === 0 ? 'rgba(15,23,42,0.98)' : 'rgba(15,23,42,0.92)', padding: '10px 20px', fontSize: '12.5px', color: '#cbd5e1', borderRight: '1px solid rgba(255,255,255,0.06)', lineHeight: 1.4 }}>
                                 <span style={{ fontWeight: 500 }}>{opt.label}</span>
-                                <span style={{ display: 'block', fontSize: '10px', color: '#475569', marginTop: '1px' }}>+{opt.weight} pts</span>
+                                <span style={{ display: 'block', fontSize: '10px', color: '#475569', marginTop: '1px' }}>máx {opt.weight} pts</span>
                               </td>
-                              {/* Checkbox cells */}
+                              {/* Input numérico por criterio, por candidato */}
                               {activeCandidates.map(c => {
-                                const isSelected = (selectedByCandidate[c.id] || []).includes(opt.id)
                                 const isSubmitted = submittedCandidates.has(c.id)
+                                const val = criterionValues[c.id]?.[opt.id] ?? ''
+                                const numVal = val === '' ? 0 : Number(val)
+                                const isFull = numVal === opt.weight && opt.weight > 0
+                                const hasVal = numVal > 0
                                 return (
-                                  <td key={c.id} style={{ textAlign: 'center', padding: '8px', borderRight: '1px solid rgba(255,255,255,0.03)' }}>
-                                    <div
-                                      onClick={() => !isSubmitted && toggleOption(c.id, opt.id)}
-                                      style={{
-                                        width: '28px', height: '28px', margin: '0 auto',
-                                        borderRadius: '8px',
-                                        border: isSelected ? '2px solid #7c3aed' : '2px solid rgba(255,255,255,0.12)',
-                                        background: isSelected ? 'rgba(124,58,237,0.25)' : 'transparent',
-                                        cursor: isSubmitted ? 'default' : 'pointer',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        transition: 'all 0.15s',
-                                        opacity: isSubmitted ? 0.6 : 1
-                                      }}
-                                    >
-                                      {isSelected && <CheckCircle2 size={14} style={{ color: '#a78bfa' }} />}
+                                  <td key={c.id} style={{ textAlign: 'center', padding: '6px 8px', borderRight: '1px solid rgba(255,255,255,0.03)' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                                      <input
+                                        type="number"
+                                        min={0}
+                                        max={opt.weight}
+                                        value={val}
+                                        disabled={isSubmitted}
+                                        onChange={e => setCriterionValue(c.id, opt.id, e.target.value, opt.weight)}
+                                        placeholder="0"
+                                        title={`Máximo: ${opt.weight} pts`}
+                                        style={{
+                                          width: '62px',
+                                          background: isSubmitted
+                                            ? 'rgba(255,255,255,0.03)'
+                                            : hasVal
+                                              ? isFull ? 'rgba(124,58,237,0.2)' : 'rgba(245,158,11,0.12)'
+                                              : 'rgba(255,255,255,0.04)',
+                                          border: `1.5px solid ${isSubmitted
+                                            ? 'rgba(255,255,255,0.06)'
+                                            : hasVal
+                                              ? isFull ? '#7c3aed' : 'rgba(245,158,11,0.6)'
+                                              : 'rgba(255,255,255,0.1)'}`,
+                                          borderRadius: '7px',
+                                          padding: '5px 6px',
+                                          color: isSubmitted ? '#64748b' : hasVal ? (isFull ? '#a78bfa' : '#fbbf24') : '#94a3b8',
+                                          fontSize: '14px',
+                                          fontWeight: 700,
+                                          textAlign: 'center',
+                                          outline: 'none',
+                                          cursor: isSubmitted ? 'not-allowed' : 'text',
+                                          transition: 'all 0.15s'
+                                        }}
+                                      />
+                                      {/* Barra de progreso */}
+                                      {!isSubmitted && opt.weight > 0 && (
+                                        <div style={{ width: '62px', height: '3px', background: 'rgba(255,255,255,0.06)', borderRadius: '999px', overflow: 'hidden' }}>
+                                          <div style={{ height: '100%', width: `${(numVal / opt.weight) * 100}%`, background: isFull ? '#7c3aed' : '#f59e0b', borderRadius: '999px', transition: 'width 0.2s' }} />
+                                        </div>
+                                      )}
                                     </div>
                                   </td>
                                 )
@@ -395,7 +426,7 @@ export default function SupervisorPortal() {
                         {activeCandidates.map(c => {
                           const auto = scoreOf(c.id)
                           const isSubmitted = submittedCandidates.has(c.id)
-                          const hasAny = auto > 0 || (selectedByCandidate[c.id] || []).length > 0
+                          const hasAny = auto > 0 || Object.values(criterionValues[c.id] || {}).some(v => v !== '')
                           return (
                             <td key={c.id} style={{ textAlign: 'center', padding: '10px 8px', borderRight: '1px solid rgba(255,255,255,0.04)' }}>
                               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', flexWrap: 'wrap' }}>
@@ -448,9 +479,10 @@ export default function SupervisorPortal() {
                         {activeCandidates.map(c => {
                           const isSubmitted = submittedCandidates.has(c.id)
                           const isSubmitting = submittingId === c.id
-                          const hasSelection = (selectedByCandidate[c.id] || []).length > 0
+                          const vals = criterionValues[c.id] || {}
+                          const hasAnyVal = Object.values(vals).some(v => v !== '' && Number(v) > 0)
                           const hasProposed = (proposedByCandidate[c.id] ?? '').trim() !== ''
-                          const canSubmit = hasSelection || hasProposed
+                          const canSubmit = hasAnyVal || hasProposed
                           return (
                             <td key={c.id} style={{ textAlign: 'center', padding: '12px 8px', borderRight: '1px solid rgba(255,255,255,0.04)' }}>
                               {isSubmitted ? (
@@ -490,10 +522,8 @@ export default function SupervisorPortal() {
 
                 {/* Legend */}
                 <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-                  <span style={{ fontSize: '11px', color: '#64748b' }}>💡 Marca criterios con los checkboxes y/o ingresa un <strong style={{ color: '#f59e0b' }}>Valor Propuesto</strong> para cada candidato. Luego presiona <strong style={{ color: '#a78bfa' }}>Enviar</strong>.</span>
-                  <span style={{ fontSize: '11px', color: '#64748b' }}>
-                    Progreso: <strong style={{ color: '#a78bfa' }}>{submittedCandidates.size} / {activeCandidates.length}</strong>
-                  </span>
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>💡 Ingresa un valor por criterio (0 hasta el máximo configurado). El input se colorea en <strong style={{ color: '#f59e0b' }}>ámbar</strong> al asignar parcial y <strong style={{ color: '#a78bfa' }}>morado</strong> al completar el máximo. Presiona <strong style={{ color: '#a78bfa' }}>Enviar</strong> por candidato.</span>
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>Progreso: <strong style={{ color: '#a78bfa' }}>{submittedCandidates.size} / {activeCandidates.length}</strong></span>
                 </div>
               </div>
             )}

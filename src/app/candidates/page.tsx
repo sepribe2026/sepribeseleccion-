@@ -350,6 +350,9 @@ export default function CandidatesAdmin() {
   const [formativeSessionFilter, setFormativeSessionFilter] = useState<string>('ALL')
   const [formativeSessions, setFormativeSessions] = useState<string[]>([])
   const [formativeNameFilter, setFormativeNameFilter] = useState('')
+  const [formativasSubTab, setFormativasSubTab] = useState<'candidatos' | 'resultados' | 'fase2'>('candidatos')
+  const [fase2MinScore, setFase2MinScore] = useState(0)
+  const [promotingFase2, setPromotingFase2] = useState(false)
   
   // Modals / Inputs
   const [showMassCitationModal, setShowMassCitationModal] = useState(false)
@@ -643,6 +646,27 @@ export default function CandidatesAdmin() {
       )
     } catch (e: any) {
       alert('Error: ' + e.message)
+    }
+  }
+
+  // Promueve candidatos a Fase 2
+  const handlePromoteToFase2 = async (candidateIds: string[]) => {
+    if (candidateIds.length === 0) { alert('No hay candidatos para promover.'); return }
+    setPromotingFase2(true)
+    try {
+      const { error } = await supabase
+        .from('formative_candidates')
+        .update({ fase: 2 })
+        .in('id', candidateIds)
+      if (error) throw error
+      setFormativeCandidates(prev =>
+        prev.map(c => candidateIds.includes(c.id) ? { ...c, fase: 2 } : c)
+      )
+      alert(`✅ ${candidateIds.length} candidato(s) promovido(s) a Fase 2.`)
+    } catch (e: any) {
+      alert('Error: ' + e.message)
+    } finally {
+      setPromotingFase2(false)
     }
   }
 
@@ -3930,7 +3954,36 @@ export default function CandidatesAdmin() {
               </div>
             </div>
 
-            {/* Layout en Rejilla */}
+            {/* ── Sub-pestañas de Formativas ─────────────────────────────────── */}
+            <div style={{ display: 'flex', gap: '4px', background: '#f1f5f9', borderRadius: '12px', padding: '4px', width: 'fit-content' }}>
+              {([
+                { key: 'candidatos', label: '👥 Candidatos' },
+                { key: 'resultados', label: '📊 Resultados' },
+                { key: 'fase2',      label: '🏆 Fase 2' },
+              ] as const).map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setFormativasSubTab(tab.key)}
+                  style={{
+                    padding: '8px 18px',
+                    borderRadius: '9px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: formativasSubTab === tab.key ? 800 : 500,
+                    background: formativasSubTab === tab.key ? 'white' : 'transparent',
+                    color: formativasSubTab === tab.key ? '#7c3aed' : '#64748b',
+                    boxShadow: formativasSubTab === tab.key ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
+                    transition: 'all 0.15s'
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* ── PESTAÑA: CANDIDATOS ────────────────────────────────────── */}
+            {formativasSubTab === 'candidatos' && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '24px', alignItems: 'flex-start' }}>
               
               {/* Sección Izquierda: Candidatos Formativos */}
@@ -4211,6 +4264,209 @@ export default function CandidatesAdmin() {
               </div>
 
             </div>
+            )}{/* fin candidatos */}
+
+            {/* ── PESTAÑA: RESULTADOS ─────────────────────────────────────── */}
+            {formativasSubTab === 'resultados' && (() => {
+              // Calcular resultados por candidato
+              const resultsData = (() => {
+                const sessionCands = formativeSessionFilter === 'ALL'
+                  ? formativeCandidates
+                  : formativeCandidates.filter(c => c.session_title === formativeSessionFilter)
+                return sessionCands.map(c => {
+                  const evals = formativeEvaluations.filter((e: any) => e.candidate_id === c.id)
+                  const totalScore = evals.reduce((sum: number, e: any) => sum + (e.score || 0), 0)
+                  const avgScore = evals.length > 0 ? Math.round(totalScore / evals.length) : 0
+                  return { ...c, evals, totalScore, avgScore }
+                }).sort((a, b) => b.totalScore - a.totalScore)
+              })()
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div className="table-container">
+                    <div style={{ padding: '18px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#1e293b' }}>Resultados de Evaluación</h3>
+                        <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#64748b' }}>Todos los supervisores · ordenado por puntaje total</p>
+                      </div>
+                      <span style={{ fontSize: '12px', background: '#eff6ff', color: '#1e40af', padding: '4px 10px', borderRadius: '6px', fontWeight: 'bold' }}>
+                        {resultsData.length} candidatos
+                      </span>
+                    </div>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                          <tr style={{ background: '#f8fafc' }}>
+                            <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', minWidth: '180px' }}>Candidato</th>
+                            <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' }}>Sesión</th>
+                            {formativeSupervisors.map((s: any) => (
+                              <th key={s.id} style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 800, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', minWidth: '110px' }}>
+                                {s.name.split(' ')[0]}
+                              </th>
+                            ))}
+                            <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', minWidth: '90px' }}>Total</th>
+                            <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', minWidth: '80px' }}>Fase</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {resultsData.length === 0 ? (
+                            <tr><td colSpan={formativeSupervisors.length + 4} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>No hay candidatos en esta sesión.</td></tr>
+                          ) : resultsData.map((c: any, idx: number) => (
+                            <tr key={c.id} style={{ background: idx % 2 === 0 ? 'white' : '#fafafa', borderBottom: '1px solid #f1f5f9' }}>
+                              <td style={{ padding: '12px 16px' }}>
+                                <p style={{ margin: 0, fontWeight: 700, fontSize: '13px', color: '#1e293b' }}>{c.email_resumes?.sender_name || '—'}</p>
+                                <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>{c.email_resumes?.position || '—'}</p>
+                              </td>
+                              <td style={{ padding: '12px 16px' }}>
+                                {c.session_title ? (
+                                  <span style={{ fontSize: '10px', background: '#f3e8ff', color: '#7c3aed', border: '1px solid #ddd6fe', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>{c.session_title}</span>
+                                ) : <span style={{ color: '#94a3b8', fontSize: '11px' }}>—</span>}
+                              </td>
+                              {formativeSupervisors.map((s: any) => {
+                                const ev = c.evals.find((e: any) => e.supervisor_id === s.id)
+                                return (
+                                  <td key={s.id} style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                    {ev ? (
+                                      <span style={{ fontWeight: 800, fontSize: '14px', color: ev.score > 0 ? '#7c3aed' : '#ef4444' }}>{ev.score} pts</span>
+                                    ) : (
+                                      <span style={{ color: '#d1d5db', fontSize: '12px' }}>—</span>
+                                    )}
+                                  </td>
+                                )
+                              })}
+                              <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                <span style={{ fontWeight: 900, fontSize: '16px', color: c.totalScore > 0 ? '#1e293b' : '#94a3b8' }}>{c.totalScore > 0 ? `${c.totalScore}` : '—'}</span>
+                                {c.evals.length > 1 && <span style={{ display: 'block', fontSize: '10px', color: '#64748b' }}>prom. {c.avgScore}</span>}
+                              </td>
+                              <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                <span style={{
+                                  fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px',
+                                  background: c.fase === 2 ? '#d1fae5' : '#f1f5f9',
+                                  color: c.fase === 2 ? '#065f46' : '#64748b',
+                                  border: `1px solid ${c.fase === 2 ? '#a7f3d0' : '#e2e8f0'}`
+                                }}>
+                                  {c.fase === 2 ? '🏆 Fase 2' : 'Fase 1'}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* ── PESTAÑA: FASE 2 ─────────────────────────────────────────── */}
+            {formativasSubTab === 'fase2' && (() => {
+              const sessionCands = formativeSessionFilter === 'ALL'
+                ? formativeCandidates
+                : formativeCandidates.filter(c => c.session_title === formativeSessionFilter)
+
+              const ranked = sessionCands.map(c => {
+                const evals = formativeEvaluations.filter((e: any) => e.candidate_id === c.id)
+                const totalScore = evals.reduce((sum: number, e: any) => sum + (e.score || 0), 0)
+                return { ...c, totalScore, evalCount: evals.length }
+              }).sort((a, b) => b.totalScore - a.totalScore)
+
+              const maxScore = ranked.length > 0 ? ranked[0].totalScore : 0
+              const fase2Candidates = ranked.filter(c => c.totalScore >= fase2MinScore && fase2MinScore > 0)
+              const alreadyFase2 = ranked.filter(c => c.fase === 2)
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+                  {/* Control de puntaje mínimo */}
+                  <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', display: 'flex', gap: '20px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '220px' }}>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px' }}>🏆 Puntaje Mínimo para Fase 2</label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={maxScore}
+                        value={fase2MinScore}
+                        onChange={e => setFase2MinScore(Number(e.target.value))}
+                        placeholder="Ej: 50"
+                        style={{ width: '140px', border: '1.5px solid #7c3aed', borderRadius: '10px', padding: '10px 14px', fontSize: '16px', fontWeight: 700, color: '#7c3aed', background: '#faf5ff', outline: 'none' }}
+                      />
+                      <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#94a3b8' }}>
+                        {fase2MinScore > 0 ? `${fase2Candidates.length} candidato(s) califican` : 'Ingresa un puntaje para filtrar'}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handlePromoteToFase2(fase2Candidates.filter(c => c.fase !== 2).map(c => c.id))}
+                      disabled={promotingFase2 || fase2Candidates.filter(c => c.fase !== 2).length === 0}
+                      style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: 'white', border: 'none', borderRadius: '10px', padding: '11px 22px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', opacity: promotingFase2 || fase2Candidates.filter(c => c.fase !== 2).length === 0 ? 0.5 : 1 }}
+                    >
+                      🚀 Promover {fase2Candidates.filter(c => c.fase !== 2).length} a Fase 2
+                    </button>
+                    {alreadyFase2.length > 0 && (
+                      <div style={{ fontSize: '12px', color: '#065f46', background: '#d1fae5', border: '1px solid #a7f3d0', borderRadius: '8px', padding: '8px 14px', fontWeight: 700 }}>
+                        ✅ {alreadyFase2.length} ya en Fase 2
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Ranking */}
+                  <div className="table-container">
+                    <div style={{ padding: '18px 24px', borderBottom: '1px solid #e2e8f0' }}>
+                      <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#1e293b' }}>Ranking de Candidatos</h3>
+                      <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#64748b' }}>Ordenados por puntaje total (suma de todos los supervisores)</p>
+                    </div>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ background: '#f8fafc' }}>
+                          <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0', width: '48px' }}>#</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>Candidato</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>Evaluadores</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>Puntaje Total</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>Estado</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {ranked.length === 0 ? (
+                          <tr><td colSpan={5} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>No hay candidatos con evaluaciones en esta sesión.</td></tr>
+                        ) : ranked.map((c: any, idx: number) => {
+                          const qualifies = fase2MinScore > 0 && c.totalScore >= fase2MinScore
+                          const isFase2 = c.fase === 2
+                          return (
+                            <tr key={c.id} style={{ background: isFase2 ? 'rgba(16,185,129,0.04)' : qualifies ? 'rgba(124,58,237,0.03)' : 'white', borderBottom: '1px solid #f1f5f9', borderLeft: `3px solid ${isFase2 ? '#10b981' : qualifies ? '#7c3aed' : 'transparent'}` }}>
+                              <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                <span style={{ fontWeight: 900, fontSize: '14px', color: idx === 0 ? '#f59e0b' : idx === 1 ? '#94a3b8' : idx === 2 ? '#b45309' : '#94a3b8' }}>
+                                  {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1}
+                                </span>
+                              </td>
+                              <td style={{ padding: '12px 16px' }}>
+                                <p style={{ margin: 0, fontWeight: 700, fontSize: '13px', color: '#1e293b' }}>{c.email_resumes?.sender_name || '—'}</p>
+                                <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>{c.email_resumes?.position || '—'}</p>
+                                {c.session_title && <span style={{ fontSize: '9px', background: '#f3e8ff', color: '#7c3aed', border: '1px solid #ddd6fe', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>{c.session_title}</span>}
+                              </td>
+                              <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                <span style={{ fontSize: '13px', fontWeight: 700, color: c.evalCount > 0 ? '#475569' : '#cbd5e1' }}>{c.evalCount > 0 ? `${c.evalCount} sup.` : '—'}</span>
+                              </td>
+                              <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                <span style={{ fontWeight: 900, fontSize: '18px', color: c.totalScore > 0 ? '#1e293b' : '#94a3b8' }}>{c.totalScore > 0 ? c.totalScore : '—'}</span>
+                                <span style={{ display: 'block', fontSize: '10px', color: '#94a3b8' }}>pts</span>
+                              </td>
+                              <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                {isFase2 ? (
+                                  <span style={{ background: '#d1fae5', color: '#065f46', border: '1px solid #a7f3d0', fontSize: '11px', fontWeight: 700, padding: '4px 12px', borderRadius: '999px' }}>🏆 Fase 2</span>
+                                ) : qualifies ? (
+                                  <span style={{ background: '#f3e8ff', color: '#7c3aed', border: '1px solid #ddd6fe', fontSize: '11px', fontWeight: 700, padding: '4px 12px', borderRadius: '999px' }}>✓ Califica</span>
+                                ) : (
+                                  <span style={{ background: '#f8fafc', color: '#94a3b8', border: '1px solid #e2e8f0', fontSize: '11px', fontWeight: 600, padding: '4px 12px', borderRadius: '999px' }}>Fase 1</span>
+                                )}
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )
+            })()}
 
           </div>
         )}
