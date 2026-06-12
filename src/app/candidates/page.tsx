@@ -1123,6 +1123,18 @@ export default function CandidatesAdmin() {
       const pipeEntry = pipelineData.find(p => p.resume_id === resumeId);
       candidate = pipeEntry?.candidate;
     }
+    if (!candidate) {
+      const formativeCand = formativeCandidates.find(c => c.resume_id === resumeId);
+      if (formativeCand && formativeCand.email_resumes) {
+        candidate = {
+          ...formativeCand.email_resumes,
+          sender_email: formativeCand.email_resumes.sender_email || formativeCand.email_resumes.email,
+          sender_name: formativeCand.email_resumes.sender_name || formativeCand.email_resumes.name,
+          sender_phone: formativeCand.email_resumes.sender_phone || formativeCand.email_resumes.phone || formativeCand.email_resumes.cellphone || formativeCand.email_resumes.telefono,
+          position: formativeCand.email_resumes.position
+        };
+      }
+    }
 
     if (!candidate || !candidate.sender_email) return;
 
@@ -4428,44 +4440,20 @@ export default function CandidatesAdmin() {
                 const evals = formativeEvaluations.filter((e: any) => e.candidate_id === c.id)
                 const totalScore = evals.reduce((sum: number, e: any) => sum + (e.score || 0), 0)
                 return { ...c, totalScore, evalCount: evals.length }
-              }).sort((a, b) => b.totalScore - a.totalScore)
-
-              const maxScore = ranked.length > 0 ? ranked[0].totalScore : 0
-              const fase2Candidates = ranked.filter(c => c.totalScore >= fase2MinScore && fase2MinScore > 0)
-              const alreadyFase2 = ranked.filter(c => c.fase === 2)
+              }).filter(c => c.fase === 2).sort((a, b) => b.totalScore - a.totalScore)
 
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-                  {/* Control de puntaje mínimo */}
-                  <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', display: 'flex', gap: '20px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                    <div style={{ flex: 1, minWidth: '220px' }}>
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px' }}>🏆 Puntaje Mínimo para Fase 2</label>
-                      <input
-                        type="number"
-                        min={0}
-                        max={maxScore}
-                        value={fase2MinScore}
-                        onChange={e => setFase2MinScore(Number(e.target.value))}
-                        placeholder="Ej: 50"
-                        style={{ width: '140px', border: '1.5px solid #7c3aed', borderRadius: '10px', padding: '10px 14px', fontSize: '16px', fontWeight: 700, color: '#7c3aed', background: '#faf5ff', outline: 'none' }}
-                      />
-                      <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#94a3b8' }}>
-                        {fase2MinScore > 0 ? `${fase2Candidates.length} candidato(s) califican` : 'Ingresa un puntaje para filtrar'}
-                      </p>
+                  {/* Encabezado informativo */}
+                  <div style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', border: '1px solid #bfdbfe', borderRadius: '16px', padding: '18px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                    <div>
+                      <h4 style={{ margin: 0, color: '#1e40af', fontSize: '14px', fontWeight: 800 }}>🏆 Candidatos Seleccionados para Fase 2</h4>
+                      <p style={{ margin: '4px 0 0', color: '#1e3a8a', fontSize: '12.5px' }}>Estos candidatos han sido promovidos desde la pestaña de Resultados. Aquí puedes iniciar su proceso de inducción y enviarles los accesos de Onboarding.</p>
                     </div>
-                    <button
-                      onClick={() => handlePromoteToFase2(fase2Candidates.filter(c => c.fase !== 2).map(c => c.id))}
-                      disabled={promotingFase2 || fase2Candidates.filter(c => c.fase !== 2).length === 0}
-                      style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: 'white', border: 'none', borderRadius: '10px', padding: '11px 22px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', opacity: promotingFase2 || fase2Candidates.filter(c => c.fase !== 2).length === 0 ? 0.5 : 1 }}
-                    >
-                      🚀 Promover {fase2Candidates.filter(c => c.fase !== 2).length} a Fase 2
-                    </button>
-                    {alreadyFase2.length > 0 && (
-                      <div style={{ fontSize: '12px', color: '#065f46', background: '#d1fae5', border: '1px solid #a7f3d0', borderRadius: '8px', padding: '8px 14px', fontWeight: 700 }}>
-                        ✅ {alreadyFase2.length} ya en Fase 2
-                      </div>
-                    )}
+                    <div style={{ fontSize: '13px', color: '#1e40af', background: '#dbeafe', padding: '6px 14px', borderRadius: '8px', fontWeight: 800 }}>
+                      📋 Total Promovidos: {ranked.length}
+                    </div>
                   </div>
 
                   {/* Ranking */}
@@ -4481,17 +4469,15 @@ export default function CandidatesAdmin() {
                           <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>Candidato</th>
                           <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>Evaluadores</th>
                           <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>Puntaje Total</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>Estado</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0', minWidth: '160px' }}>Onboarding</th>
                         </tr>
                       </thead>
                       <tbody>
                         {ranked.length === 0 ? (
-                          <tr><td colSpan={5} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>No hay candidatos con evaluaciones en esta sesión.</td></tr>
+                          <tr><td colSpan={5} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>No hay candidatos promovidos a la Fase 2 en esta sesión.</td></tr>
                         ) : ranked.map((c: any, idx: number) => {
-                          const qualifies = fase2MinScore > 0 && c.totalScore >= fase2MinScore
-                          const isFase2 = c.fase === 2
                           return (
-                            <tr key={c.id} style={{ background: isFase2 ? 'rgba(16,185,129,0.04)' : qualifies ? 'rgba(124,58,237,0.03)' : 'white', borderBottom: '1px solid #f1f5f9', borderLeft: `3px solid ${isFase2 ? '#10b981' : qualifies ? '#7c3aed' : 'transparent'}` }}>
+                            <tr key={c.id} style={{ background: 'white', borderBottom: '1px solid #f1f5f9' }}>
                               <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                                 <span style={{ fontWeight: 900, fontSize: '14px', color: idx === 0 ? '#f59e0b' : idx === 1 ? '#94a3b8' : idx === 2 ? '#b45309' : '#94a3b8' }}>
                                   {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1}
@@ -4510,13 +4496,46 @@ export default function CandidatesAdmin() {
                                 <span style={{ display: 'block', fontSize: '10px', color: '#94a3b8' }}>pts</span>
                               </td>
                               <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                {isFase2 ? (
-                                  <span style={{ background: '#d1fae5', color: '#065f46', border: '1px solid #a7f3d0', fontSize: '11px', fontWeight: 700, padding: '4px 12px', borderRadius: '999px' }}>🏆 Fase 2</span>
-                                ) : qualifies ? (
-                                  <span style={{ background: '#f3e8ff', color: '#7c3aed', border: '1px solid #ddd6fe', fontSize: '11px', fontWeight: 700, padding: '4px 12px', borderRadius: '999px' }}>✓ Califica</span>
-                                ) : (
-                                  <span style={{ background: '#f8fafc', color: '#94a3b8', border: '1px solid #e2e8f0', fontSize: '11px', fontWeight: 600, padding: '4px 12px', borderRadius: '999px' }}>Fase 1</span>
-                                )}
+                                {(() => {
+                                  const onboardingCand = candidates.find(
+                                    ond => ond.email === c.email_resumes?.sender_email || ond.email === c.email_resumes?.email
+                                  )
+                                  if (onboardingCand) {
+                                    return (
+                                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                                        <span style={{
+                                          fontSize: '11.5px', fontWeight: 800, color: '#065f46', background: '#d1fae5',
+                                          border: '1px solid #a7f3d0', padding: '4px 12px', borderRadius: '8px'
+                                        }}>
+                                          ✅ Enviado ({onboardingCand.status === 'PENDING' ? 'Pendiente' : onboardingCand.status})
+                                        </span>
+                                        <button
+                                          onClick={() => handleSendApprovalEmail(c.resume_id)}
+                                          style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: '10.5px', textDecoration: 'underline', cursor: 'pointer', fontWeight: 700 }}
+                                        >
+                                          Reenviar Correo
+                                        </button>
+                                      </div>
+                                    )
+                                  }
+                                  return (
+                                    <button
+                                      onClick={() => handleSendApprovalEmail(c.resume_id)}
+                                      style={{
+                                        background: 'linear-gradient(135deg, #10b981, #059669)',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        padding: '6px 14px',
+                                        fontSize: '12px',
+                                        fontWeight: 800,
+                                        cursor: 'pointer'
+                                      }}
+                                    >
+                                      🚀 Enviar Onboarding
+                                    </button>
+                                  )
+                                })()}
                               </td>
                             </tr>
                           )
