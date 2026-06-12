@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
             adErrorDetail = `Error de conexión: ${e.message}`;
         }
 
-        // Fallback: Si no está autenticado por AD, buscar en Oracle DIGI_EMPLOYEES
+        // Fallback #2: Si no está autenticado por AD, buscar en Oracle DIGI_EMPLOYEES
         if (!adAuthenticated) {
             try {
                 console.log(`Fallback login check in Oracle for cedula: ${cedula}`);
@@ -71,6 +71,36 @@ export async function POST(request: NextRequest) {
                 }
             } catch (dbErr: any) {
                 console.error('Oracle database lookup error during fallback login:', dbErr);
+            }
+        }
+
+        // Fallback #3 (Producción): Para supervisores, validar directamente en Supabase
+        // cuando AD y Oracle no son alcanzables desde el servidor público
+        if (!adAuthenticated && app === 'supervisor') {
+            try {
+                const cleanEmailCheck = cedula.trim().toLowerCase();
+                const shortUserCheck = cleanEmailCheck.split('@')[0];
+                console.log(`Fallback #3: Supabase supervisor check for: ${cleanEmailCheck}`);
+
+                const { data: supFallback, error: supFallbackError } = await supabase
+                    .from('formative_supervisors')
+                    .select('id, name, email')
+                    .or(`email.ilike."${cleanEmailCheck}",email.ilike."${shortUserCheck}@%"`)
+                    .maybeSingle();
+
+                if (!supFallbackError && supFallback) {
+                    adAuthenticated = true;
+                    authData = {
+                        cedula: supFallback.email,
+                        nombre: supFallback.name,
+                        success: true
+                    };
+                    console.log(`Fallback #3 Supabase supervisor auth success: ${supFallback.name}`);
+                } else {
+                    console.log(`Fallback #3: Supervisor not found in Supabase for "${cleanEmailCheck}"`);
+                }
+            } catch (supErr: any) {
+                console.error('Supabase fallback supervisor check error:', supErr);
             }
         }
 
