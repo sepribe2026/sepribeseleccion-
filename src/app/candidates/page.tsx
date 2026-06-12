@@ -975,7 +975,8 @@ export default function CandidatesAdmin() {
         pdf_url: r.pdf_url || '',
         position: r.position || '',
         experience: r.experience || '',
-        sender_phone: r.sender_phone || ''
+        sender_phone: r.sender_phone || '',
+        sender_email: r.sender_email || r.email || ''
       });
     });
 
@@ -992,14 +993,38 @@ export default function CandidatesAdmin() {
             pdf_url: resume.pdf_url || '',
             position: resume.position || '',
             experience: resume.experience_years || '',
-            sender_phone: resume.sender_phone || ''
+            sender_phone: resume.sender_phone || '',
+            sender_email: resume.sender_email || ''
           });
         }
       }
     });
 
-    return unifiedList;
-  }, [rankingCargo, rankingResults, trackingMap, resumes]);
+    // Filtros solicitados por el usuario
+    return unifiedList.filter(item => {
+      const email = (item.sender_email || '').toLowerCase().trim();
+      if (!email) return true;
+
+      // 1. Ya se les envió mail de onboarding
+      const inOnboarding = candidates.some((c: any) => (c.email || '').toLowerCase().trim() === email);
+      if (inOnboarding) return false;
+
+      // 2. Se rechazó (tracking status === 'RECHAZADO')
+      const tracking = trackingMap[item.id];
+      if (tracking && tracking.status === 'RECHAZADO') return false;
+
+      // 3. Están en la pantalla Resumen (pipelineData) pero NO pasaron a formativas (formativeCandidates)
+      const inResumen = pipelineData.some((p: any) => p.resume_id === item.id);
+      if (inResumen) {
+        const passedToFormativas = formativeCandidates.some((fc: any) => fc.resume_id === item.id);
+        if (!passedToFormativas) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [rankingCargo, rankingResults, trackingMap, resumes, candidates, pipelineData, formativeCandidates]);
 
   useEffect(() => {
     setIsMounted(true)
