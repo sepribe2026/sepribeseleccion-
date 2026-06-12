@@ -602,9 +602,47 @@ export default function CandidatesAdmin() {
         })
       if (error) throw error
       setActiveEvaluatingCandidateId(candidateId)
-      alert(candidateId ? '🎯 Evaluación en vivo iniciada para este candidato.' : '🛑 Evaluación en vivo detenida.')
     } catch (e: any) {
       alert('Error al activar candidato: ' + e.message)
+    }
+  }
+
+  // Alterna is_evaluating de un candidato individual
+  const handleToggleEvaluating = async (candidate: any) => {
+    const newValue = !candidate.is_evaluating
+    try {
+      const { error } = await supabase
+        .from('formative_candidates')
+        .update({ is_evaluating: newValue })
+        .eq('id', candidate.id)
+      if (error) throw error
+      setFormativeCandidates(prev =>
+        prev.map(c => c.id === candidate.id ? { ...c, is_evaluating: newValue } : c)
+      )
+    } catch (e: any) {
+      alert('Error al actualizar estado de evaluación: ' + e.message)
+    }
+  }
+
+  // Marca/desmarca TODOS los candidatos de la sesión activa
+  const handleBulkEvaluating = async (value: boolean) => {
+    const session = formativeSessionFilter
+    const targets = session === 'ALL'
+      ? formativeCandidates
+      : formativeCandidates.filter(c => c.session_title === session)
+    if (targets.length === 0) { alert('No hay candidatos en esta vista.'); return }
+    const ids = targets.map(c => c.id)
+    try {
+      const { error } = await supabase
+        .from('formative_candidates')
+        .update({ is_evaluating: value })
+        .in('id', ids)
+      if (error) throw error
+      setFormativeCandidates(prev =>
+        prev.map(c => ids.includes(c.id) ? { ...c, is_evaluating: value } : c)
+      )
+    } catch (e: any) {
+      alert('Error: ' + e.message)
     }
   }
 
@@ -3819,19 +3857,35 @@ export default function CandidatesAdmin() {
                   >
                     💬 WhatsApp Grupal ({formativeSessionFilter === 'ALL' ? formativeCandidates.length : formativeCandidates.filter(c => c.session_title === formativeSessionFilter).length})
                   </button>
+                  {/* Botones de evaluación grupal */}
+                  <button
+                    onClick={() => handleBulkEvaluating(true)}
+                    className="ranking-btn-primary"
+                    style={{ width: 'auto', background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', padding: '10px 20px', borderRadius: '10px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    🎯 Iniciar Evaluación Grupal
+                    {(() => { const n = (formativeSessionFilter === 'ALL' ? formativeCandidates : formativeCandidates.filter(c => c.session_title === formativeSessionFilter)).length; return n > 0 ? <span style={{ background: 'rgba(255,255,255,0.2)', borderRadius: '999px', padding: '1px 7px', fontWeight: 900 }}>{n}</span> : null })()}
+                  </button>
+                  <button
+                    onClick={() => handleBulkEvaluating(false)}
+                    className="track-btn"
+                    style={{ fontSize: '13px', padding: '10px 20px', borderRadius: '10px', color: '#dc2626', borderColor: '#fecaca' }}
+                  >
+                    ⏹ Detener Evaluación
+                  </button>
                   <button 
                     onClick={handleCleanupNonAttendees} 
                     className="ranking-btn-primary" 
                     style={{ width: 'auto', background: 'linear-gradient(135deg, #ef4444, #dc2626)', padding: '10px 20px', borderRadius: '10px', fontSize: '13px' }}
                   >
-                    🧹 Depurar Convocatoria
+                    🧹 Depurar
                   </button>
                   <button 
                     onClick={() => setShowOptionsModal(true)} 
                     className="track-btn" 
                     style={{ fontSize: '13px', padding: '10px 20px', borderRadius: '10px' }}
                   >
-                    ⚙️ Criterios y Pesos
+                    ⚙️ Criterios
                   </button>
                 </div>
               </div>
@@ -4044,28 +4098,32 @@ export default function CandidatesAdmin() {
                                   )}
                                 </td>
                                 <td style={{ textAlign: 'right' }}>
-                                  {isCurrentlyActive ? (
-                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                                      <button 
-                                        onClick={() => handleSetActiveEvaluatingCandidate(null)}
-                                        className="track-btn" 
-                                        style={{ borderColor: '#ef4444', color: '#ef4444', background: 'rgba(239, 68, 68, 0.05)', fontSize: '12px', padding: '6px 12px', borderRadius: '8px' }}
-                                      >
-                                        🛑 Detener
-                                      </button>
-                                      <span style={{ fontSize: '10px', color: '#ef4444', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                        <span className="animate-pulse" style={{ width: '6px', height: '6px', background: '#ef4444', borderRadius: '50%' }}></span>
-                                        Evaluando en vivo
-                                      </span>
-                                    </div>
-                                  ) : (
-                                    <button 
-                                      onClick={() => handleSetActiveEvaluatingCandidate(c.id)}
-                                      className="ranking-btn-primary"
-                                      style={{ width: 'auto', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', fontSize: '12px', padding: '6px 12px', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(139, 92, 246, 0.2)' }}
-                                    >
-                                      🎯 Evaluar
-                                    </button>
+                                  <button
+                                    onClick={() => handleToggleEvaluating(c)}
+                                    style={{
+                                      width: 'auto',
+                                      background: c.is_evaluating
+                                        ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+                                        : 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '8px',
+                                      padding: '6px 12px',
+                                      fontSize: '12px',
+                                      fontWeight: 700,
+                                      cursor: 'pointer',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '4px'
+                                    }}
+                                  >
+                                    {c.is_evaluating ? '⏹ Quitar' : '🎯 Evaluar'}
+                                  </button>
+                                  {c.is_evaluating && (
+                                    <span style={{ fontSize: '10px', color: '#7c3aed', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '4px', justifyContent: 'flex-end' }}>
+                                      <span className="animate-pulse" style={{ width: '5px', height: '5px', background: '#7c3aed', borderRadius: '50%', display: 'inline-block' }}></span>
+                                      En evaluación
+                                    </span>
                                   )}
                                 </td>
                               </tr>
