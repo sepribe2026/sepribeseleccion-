@@ -4306,11 +4306,12 @@ export default function CandidatesAdmin() {
                             ))}
                             <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', minWidth: '90px' }}>Total</th>
                             <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', minWidth: '80px' }}>Fase</th>
+                            <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', minWidth: '130px' }}>Acciones</th>
                           </tr>
                         </thead>
                         <tbody>
                           {resultsData.length === 0 ? (
-                            <tr><td colSpan={formativeSupervisors.length + 4} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>No hay candidatos en esta sesión.</td></tr>
+                            <tr><td colSpan={formativeSupervisors.length + 5} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>No hay candidatos en esta sesión.</td></tr>
                           ) : resultsData.map((c: any, idx: number) => (
                             <tr key={c.id} style={{ background: idx % 2 === 0 ? 'white' : '#fafafa', borderBottom: '1px solid #f1f5f9' }}>
                               <td style={{ padding: '12px 16px' }}>
@@ -4347,6 +4348,65 @@ export default function CandidatesAdmin() {
                                 }}>
                                   {c.fase === 2 ? '🏆 Fase 2' : 'Fase 1'}
                                 </span>
+                              </td>
+                              <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                                {c.fase === 2 ? (
+                                  <button
+                                    onClick={async () => {
+                                      try {
+                                        const { error } = await supabase
+                                          .from('formative_candidates')
+                                          .update({ fase: 1 })
+                                          .eq('id', c.id);
+                                        if (error) throw error;
+                                        setFormativeCandidates(prev => prev.map(item => item.id === c.id ? { ...item, fase: 1 } : item));
+                                      } catch (err: any) {
+                                        alert('Error: ' + err.message);
+                                      }
+                                    }}
+                                    style={{
+                                      background: '#fef2f2',
+                                      color: '#ef4444',
+                                      border: '1px solid #fee2e2',
+                                      borderRadius: '8px',
+                                      padding: '5px 10px',
+                                      fontSize: '11.5px',
+                                      fontWeight: 700,
+                                      cursor: 'pointer',
+                                      transition: 'all 0.15s'
+                                    }}
+                                  >
+                                    Quitar Fase 2
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={async () => {
+                                      try {
+                                        const { error } = await supabase
+                                          .from('formative_candidates')
+                                          .update({ fase: 2 })
+                                          .eq('id', c.id);
+                                        if (error) throw error;
+                                        setFormativeCandidates(prev => prev.map(item => item.id === c.id ? { ...item, fase: 2 } : item));
+                                      } catch (err: any) {
+                                        alert('Error: ' + err.message);
+                                      }
+                                    }}
+                                    style={{
+                                      background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '8px',
+                                      padding: '5px 12px',
+                                      fontSize: '11.5px',
+                                      fontWeight: 700,
+                                      cursor: 'pointer',
+                                      transition: 'all 0.15s'
+                                    }}
+                                  >
+                                    Promover a Fase 2
+                                  </button>
+                                )}
                               </td>
                             </tr>
                           ))}
