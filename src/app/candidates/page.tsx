@@ -1495,7 +1495,12 @@ export default function CandidatesAdmin() {
     if (newPhone === null) return;
     const { error } = await supabase.from('email_resumes').update({ sender_phone: newPhone }).eq('id', id);
     if (error) alert("Error: " + error.message);
-    else fetchResumes();
+    else {
+      fetchResumes();
+      if (viewingFormData && viewingFormData.id === id) {
+        setViewingFormData({ ...viewingFormData, sender_phone: newPhone });
+      }
+    }
   }
 
   const handleUpdateEmail = async (id: string, email: string) => {
@@ -1503,7 +1508,25 @@ export default function CandidatesAdmin() {
     if (newEmail === null) return;
     const { error } = await supabase.from('email_resumes').update({ sender_email: newEmail }).eq('id', id);
     if (error) alert("Error: " + error.message);
-    else fetchResumes();
+    else {
+      fetchResumes();
+      if (viewingFormData && viewingFormData.id === id) {
+        setViewingFormData({ ...viewingFormData, sender_email: newEmail });
+      }
+    }
+  }
+
+  const handleUpdateName = async (id: string, name: string) => {
+    const newName = window.prompt("Editar nombre completo:", name);
+    if (newName === null) return;
+    const { error } = await supabase.from('email_resumes').update({ sender_name: newName }).eq('id', id);
+    if (error) alert("Error: " + error.message);
+    else {
+      fetchResumes();
+      if (viewingFormData && viewingFormData.id === id) {
+        setViewingFormData({ ...viewingFormData, sender_name: newName });
+      }
+    }
   }
 
   const handleSendContactEmail = async (email: string, name: string, cargo: string, interviewDate?: string, notes?: string) => {
@@ -2180,9 +2203,45 @@ export default function CandidatesAdmin() {
               <section>
                 <h3 style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>📋 Datos de Contacto</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13.5px' }}>
-                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Nombre Completo</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.sender_name || '—'}</span></div>
-                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Email</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.sender_email || '—'}</span></div>
-                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Teléfono</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.sender_phone || '—'}</span></div>
+                  <div>
+                    <span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Nombre Completo</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.sender_name || '—'}</span>
+                      <button 
+                        onClick={() => handleUpdateName(viewingFormData.id, viewingFormData.sender_name || '')} 
+                        style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '2px' }}
+                        title="Editar Nombre"
+                      >
+                        <Settings size={12} />
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Email</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.sender_email || '—'}</span>
+                      <button 
+                        onClick={() => handleUpdateEmail(viewingFormData.id, viewingFormData.sender_email || '')} 
+                        style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '2px' }}
+                        title="Editar Email"
+                      >
+                        <Settings size={12} />
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Teléfono</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.sender_phone || '—'}</span>
+                      <button 
+                        onClick={() => handleUpdatePhone(viewingFormData.id, viewingFormData.sender_phone || '')} 
+                        style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '2px' }}
+                        title="Editar Teléfono"
+                      >
+                        <Settings size={12} />
+                      </button>
+                    </div>
+                  </div>
                   <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Fecha de Nacimiento</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.birth_date ? new Date(viewingFormData.birth_date + 'T12:00:00').toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}</span></div>
                   <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Edad</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.age ? `${viewingFormData.age} años` : '—'}</span></div>
                   <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Género</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.gender || '—'}</span></div>
