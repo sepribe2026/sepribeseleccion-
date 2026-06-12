@@ -349,6 +349,7 @@ export default function CandidatesAdmin() {
   })
   const [formativeSessionFilter, setFormativeSessionFilter] = useState<string>('ALL')
   const [formativeSessions, setFormativeSessions] = useState<string[]>([])
+  const [formativeNameFilter, setFormativeNameFilter] = useState('')
   
   // Modals / Inputs
   const [showMassCitationModal, setShowMassCitationModal] = useState(false)
@@ -3882,7 +3883,7 @@ export default function CandidatesAdmin() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 
                 <div className="table-container">
-                  <div style={{ padding: '18px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ padding: '18px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                     <div>
                       <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#1e293b' }}>Postulantes en Formativas</h3>
                       {formativeSessionFilter !== 'ALL' && (
@@ -3891,7 +3892,27 @@ export default function CandidatesAdmin() {
                         </p>
                       )}
                     </div>
-                    <span style={{ fontSize: '12px', background: '#eff6ff', color: '#1e40af', padding: '4px 8px', borderRadius: '6px', fontWeight: 'bold' }}>
+                    {/* Buscador por nombre */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: '200px', maxWidth: '320px' }}>
+                      <div style={{ position: 'relative', width: '100%' }}>
+                        <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', color: '#94a3b8', pointerEvents: 'none' }}>🔎</span>
+                        <input
+                          type="text"
+                          value={formativeNameFilter}
+                          onChange={e => setFormativeNameFilter(e.target.value)}
+                          placeholder="Buscar por nombre..."
+                          style={{ width: '100%', border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '8px 12px 8px 32px', fontSize: '13px', color: '#1e293b', background: '#f8fafc', outline: 'none', boxSizing: 'border-box' }}
+                        />
+                        {formativeNameFilter && (
+                          <button
+                            onClick={() => setFormativeNameFilter('')}
+                            style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '16px', lineHeight: 1, padding: 0 }}
+                            title="Limpiar búsqueda"
+                          >×</button>
+                        )}
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '12px', background: '#eff6ff', color: '#1e40af', padding: '4px 8px', borderRadius: '6px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                       {formativeSessionFilter === 'ALL' 
                         ? `${formativeCandidates.length} candidatos`
                         : `${formativeCandidates.filter(c => c.session_title === formativeSessionFilter).length} de ${formativeCandidates.length}`
@@ -3920,13 +3941,19 @@ export default function CandidatesAdmin() {
                         </tr>
                       ) : (
                         <>
-                          {(formativeSessionFilter === 'ALL' ? formativeCandidates : formativeCandidates.filter(c => c.session_title === formativeSessionFilter)).length === 0 ? (
-                            <tr>
-                              <td colSpan={7} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
-                                No hay candidatos en la sesión <strong>{formativeSessionFilter}</strong>.
-                              </td>
-                            </tr>
-                          ) : (formativeSessionFilter === 'ALL' ? formativeCandidates : formativeCandidates.filter(c => c.session_title === formativeSessionFilter)).map(c => {
+                          {(() => {
+                            const sessionFiltered = formativeSessionFilter === 'ALL' ? formativeCandidates : formativeCandidates.filter(c => c.session_title === formativeSessionFilter);
+                            const nameFiltered = formativeNameFilter.trim()
+                              ? sessionFiltered.filter(c => (c.email_resumes?.sender_name || '').toLowerCase().includes(formativeNameFilter.trim().toLowerCase()))
+                              : sessionFiltered;
+                            if (nameFiltered.length === 0) return (
+                              <tr>
+                                <td colSpan={7} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                                  {formativeNameFilter.trim() ? (<>No se encontraron candidatos con el nombre <strong>&quot;{formativeNameFilter}&quot;</strong>.</>) : (<>No hay candidatos en la sesión <strong>{formativeSessionFilter}</strong>.</>)}
+                                </td>
+                              </tr>
+                            );
+                            return nameFiltered.map(c => {
                             const isCurrentlyActive = activeEvaluatingCandidateId === c.id;
                             const candidateEvals = formativeEvaluations.filter(e => e.candidate_id === c.id);
                             return (
@@ -4043,7 +4070,8 @@ export default function CandidatesAdmin() {
                                 </td>
                               </tr>
                             );
-                          })}
+                          })})()
+                          }
                         </>
                       )}
                     </tbody>
