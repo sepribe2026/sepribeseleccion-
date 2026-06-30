@@ -2475,7 +2475,7 @@ export default function CandidatesAdmin() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '40px', position: 'relative', zIndex: 1 }}>
             <div>
               <h1 className="onboarding-title" style={{ fontSize: '28px', letterSpacing: '0.5px', marginBottom: '4px', color: '#ffffff', textShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
-                {user?.company_name || 'SEPRIBE CIA.LTDA.'}
+                {(user?.company_name || 'SEPRIBE CIA.LTDA.').replace(/SUPERDEPORTE S\.A\./gi, 'SEPRIBE CIA.LTDA.').replace(/SUPERDEPORTE/gi, 'SEPRIBE CIA.LTDA.')}
               </h1>
               <p className="onboarding-subtitle" style={{ color: '#94a3b8', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>Panel de Gestión Administrativa</p>
             </div>
@@ -4045,7 +4045,7 @@ export default function CandidatesAdmin() {
           <div className="table-container" style={{ padding: '40px', textAlign: 'center' }}>
             <Briefcase size={48} color="#2563eb" style={{ marginBottom: '16px' }} />
             <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '8px' }}>Módulo de Nómina</h2>
-            <p style={{ color: '#64748b' }}>Bienvenido al panel de gestión de nómina para {user?.company_name}.</p>
+            <p style={{ color: '#64748b' }}>Bienvenido al panel de gestión de nómina para {(user?.company_name || 'SEPRIBE CIA.LTDA.').replace(/SUPERDEPORTE S\.A\./gi, 'SEPRIBE CIA.LTDA.').replace(/SUPERDEPORTE/gi, 'SEPRIBE CIA.LTDA.')}.</p>
           </div>
         )}
 

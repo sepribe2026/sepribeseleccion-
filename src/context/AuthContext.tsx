@@ -31,7 +31,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const storedUser = localStorage.getItem('digi_admin_user');
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser && parsedUser.company_name) {
+          parsedUser.company_name = parsedUser.company_name
+            .replace(/SUPERDEPORT S\.A\./g, 'SEPRIBE CIA.LTDA.')
+            .replace(/SUPERDEPORTE S\.A\./g, 'SEPRIBE CIA.LTDA.')
+            .replace(/SUPERDEPORTE/gi, 'SEPRIBE CIA.LTDA.');
+        }
+        setUser(parsedUser);
       } catch (e) {
         localStorage.removeItem('digi_admin_user');
       }
