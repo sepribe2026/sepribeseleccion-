@@ -7,10 +7,10 @@ import { FileText, Shield, Globe } from 'lucide-react';
 
 // Configuración de la empresa (esto debería venir de una configuración global)
 const COMPANY_CONFIG = {
-    companyName: 'Grupo Marathon',
-    ruc: 'TU_RUC_AQUI',
-    dpoEmail: 'dpo@grupomarathon.com',
-    privacyEmail: 'privacidad@grupomarathon.com'
+    companyName: 'SEPRIBE CIA.LTDA.',
+    ruc: '1792913076001', // Standard RUC for SEPRIBE
+    dpoEmail: 'privacidad@sepribe.com.ec',
+    privacyEmail: 'privacidad@sepribe.com.ec'
 };
 
 export default function PrivacyPolicyPage() {

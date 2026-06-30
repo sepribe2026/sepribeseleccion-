@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   const clientId = process.env.AZURE_CLIENT_ID || '69f4a759-9537-4f11-b398-47a7f6ef8e83';
   const tenantId = process.env.AZURE_TENANT_ID || 'a25466cf-9db0-4555-b90b-3b29d4097ff2';
   const clientSecret = process.env.AZURE_CLIENT_SECRET || 'vg98Q~Zt5MJ2ui6mpjM~CCFiPGB8o5fObGM4ZbXm';
-  const senderEmail = process.env.SMTP_USER || 'uneteanuestroequipo@ec.marathon-sports.com';
+  const senderEmail = process.env.SMTP_USER || 'uneteanuestroequipo@sepribe.com.ec';
   const onboardingUrl = process.env.ONBOARDING_URL || 'https://contrataciosuper.app/onboarding';
 
   try {
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     const htmlBody = `
       <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; color: #1a1a1a;">
         <div style="background: #1a1a2e; padding: 32px; text-align: center;">
-          <h1 style="color: #ffffff; margin: 0; font-size: 22px; letter-spacing: 1px;">SUPERDEPORTE S.A.</h1>
+          <h1 style="color: #ffffff; margin: 0; font-size: 22px; letter-spacing: 1px;">SEPRIBE CIA.LTDA.</h1>
           <p style="color: #aab4be; margin: 8px 0 0; font-size: 13px;">SOLICITUD DE DOCUMENTOS</p>
         </div>
 
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
           <p style="font-size: 15px; margin: 0 0 20px;">Estimado/a <strong>${candidateName || 'candidato/a'}</strong>,</p>
 
           <p style="font-size: 14px; line-height: 1.7; margin: 0 0 16px;">
-            A nombre de <strong>SUPERDEPORTE S.A.</strong> es un placer darte la bienvenida, esperamos que disfrutes con nosotros de nuestra actividad favorita, el deporte.
+            A nombre de <strong>SEPRIBE CIA.LTDA.</strong> es un placer darte la bienvenida, esperamos que disfrutes con nosotros de nuestra actividad favorita, el deporte.
           </p>
 
           <p style="font-size: 14px; line-height: 1.7; margin: 0 0 16px;">
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
         </div>
 
         <div style="background: #f3f4f6; padding: 20px; text-align: center; font-size: 12px; color: #6b7280;">
-          SUPERDEPORTE S.A. · uneteanuestroequipo@ec.marathon-sports.com
+          SEPRIBE CIA.LTDA. · uneteanuestroequipo@sepribe.com.ec
         </div>
       </div>
     `;
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
     // 4. Enviar el correo con adjunto inline
     const sendMail = {
       message: {
-        subject: 'SOLICITUD DOCUMENTOS MARATHON SPORTS',
+        subject: 'SOLICITUD DOCUMENTOS SEPRIBE CIA.LTDA.',
         body: { contentType: 'HTML', content: htmlBody },
         toRecipients: [{ emailAddress: { address: candidateEmail } }],
         attachments: [

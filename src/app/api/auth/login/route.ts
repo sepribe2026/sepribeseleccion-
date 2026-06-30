@@ -15,6 +15,21 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Bypass/Mock login para demostración o nuevo cliente sin AD (admin / admin)
+        if (cedula.toLowerCase() === 'admin' && password === 'admin') {
+            console.log('Bypass AD: Inicie sesión en API como admin/admin');
+            return NextResponse.json({
+                success: true,
+                user: {
+                    cedula: 'admin',
+                    name: 'Administrador Local',
+                    company_slug: 'superdeporte',
+                    company_name: 'SEPRIBE CIA.LTDA.',
+                    perfil: 'ADMIN'
+                }
+            });
+        }
+
         let adAuthenticated = false;
         let authData: any = null;
         let adErrorDetail = 'Credenciales de Windows inválidas';
@@ -147,14 +162,14 @@ export async function POST(request: NextRequest) {
             cedula: authData.cedula || cedula,
             name: authData.nombre || 'Usuario',
             company_slug: 'superdeporte',
-            company_name: 'SUPERDEPORTE S.A.',
+            company_name: 'SEPRIBE CIA.LTDA.',
             perfil: 'ADMIN'
         };
 
         if (app === 'candidates' && profile) {
             userData.name = profile.name;
             userData.company_slug = profile.company_slug || 'superdeporte';
-            userData.company_name = (profile.company_name || 'SUPERDEPORTE S.A.').replace('SUPERDEPORT S.A.', 'SUPERDEPORTE S.A.');
+            userData.company_name = (profile.company_name || 'SEPRIBE CIA.LTDA.').replace('SUPERDEPORT S.A.', 'SEPRIBE CIA.LTDA.').replace('SUPERDEPORTE S.A.', 'SEPRIBE CIA.LTDA.');
             userData.perfil = profile.perfil || 'ADMIN';
         }
 

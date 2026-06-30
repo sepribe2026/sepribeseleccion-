@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Cambia aquí el correo por uneteanuestroequipo... cuando quieras pasar a producción
-    const userEmail = 'uneteanuestroequipo@ec.marathon-sports.com'; 
+    const userEmail = process.env.SMTP_USER || 'uneteanuestroequipo@sepribe.com.ec'; 
 
     // 3. Buscar mensajes más recientes
     // Graph API no permite usar filter(hasAttachments) junto con orderby(receivedDateTime) en algunos buzones.

@@ -8,7 +8,7 @@ import { useParams } from 'next/navigation'
 // Genera el email de privacidad según la empresa
 function getPrivacyEmail(slug: string): string {
   const map: Record<string, string> = {
-    superdeporte: 'privacidad@superdeporte.com.ec',
+    superdeporte: 'privacidad@sepribe.com.ec',
     medeport:     'privacidad@medeport.com.ec',
     equinox:      'privacidad@equinox.com.ec',
   }
@@ -44,7 +44,7 @@ export default function ApplyPage() {
   const [error, setError] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [jobPositions, setJobPositions] = useState<any[]>([])
-  const [companyInfo, setCompanyInfo] = useState({ name: 'SUPERDEPORTE S.A.', slug: 'superdeporte' })
+  const [companyInfo, setCompanyInfo] = useState({ name: 'SEPRIBE CIA.LTDA.', slug: 'superdeporte' })
   const [postulationEnabled, setPostulationEnabled] = useState(true)
   const [checkingSettings, setCheckingSettings] = useState(true)
 
@@ -82,9 +82,8 @@ export default function ApplyPage() {
     }
   }, [companySlug])
 
-  // Actualizar el titulo de la pestana del navegador dinamicamente
   useEffect(() => {
-    if (companyInfo.name && companyInfo.name !== 'SUPERDEPORTE S.A.') {
+    if (companyInfo.name && companyInfo.name !== 'SEPRIBE CIA.LTDA.') {
       document.title = `Unete a ${companyInfo.name} | Talento Humano`
     }
   }, [companyInfo.name])

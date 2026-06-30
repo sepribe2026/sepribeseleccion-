@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Superdeporte S.A. - Onboarding",
+  title: "SEPRIBE CIA.LTDA. - Onboarding",
   description: "Portal de Onboarding y Selección",
 };
 

@@ -106,7 +106,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src="/logo.png"
-                            alt="Grupo Marathon Logo"
+                            alt="SEPRIBE CIA.LTDA. Logo"
                             style={{
                                 width: '60px',
                                 height: '60px',
@@ -117,7 +117,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
                             }}
                         />
                         <div>
-                            <h2 style={{ fontSize: '1.35rem', fontWeight: 'bold', marginBottom: '2px' }}>Grupo Marathon</h2>
+                            <h2 style={{ fontSize: '1.35rem', fontWeight: 'bold', marginBottom: '2px' }}>SEPRIBE CIA.LTDA.</h2>
                             <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>Gestión Documental</p>
                         </div>
                     </div>

@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
   const clientId = process.env.AZURE_CLIENT_ID || '69f4a759-9537-4f11-b398-47a7f6ef8e83';
   const tenantId = process.env.AZURE_TENANT_ID || 'a25466cf-9db0-4555-b90b-3b29d4097ff2';
   const clientSecret = process.env.AZURE_CLIENT_SECRET || 'vg98Q~Zt5MJ2ui6mpjM~CCFiPGB8o5fObGM4ZbXm';
-  const senderEmail = process.env.SMTP_USER || 'uneteanuestroequipo@ec.marathon-sports.com';
+  const senderEmail = process.env.SMTP_USER || 'uneteanuestroequipo@sepribe.com.ec';
 
   try {
     const { email, name, cargo, interviewDate, notes } = await req.json();
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       ? `<div style="font-family: sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
           <div style="background: #0f172a; padding: 24px; text-align: center;">
             <h2 style="color: white; margin: 0; font-size: 20px;">Proceso de Selección</h2>
-            <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px;">Superdeporte S.A.</p>
+            <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px;">SEPRIBE CIA.LTDA.</p>
           </div>
           <div style="padding: 32px; background: white;">
             <p>Hola <strong>${name || 'candidat@'}</strong>,</p>
@@ -53,12 +53,12 @@ export async function POST(req: NextRequest) {
             <p>Por favor, confirma tu asistencia respondiendo a este correo. Te esperamos puntualmente.</p>
             <br/>
             <p style="margin-bottom: 4px;">Saludos cordiales,</p>
-            <p><strong>Equipo de Selección Talentos</strong><br/>Superdeporte S.A.</p>
+            <p><strong>Equipo de Selección Talentos</strong><br/>SEPRIBE CIA.LTDA.</p>
           </div>
         </div>`
       : `<div style="font-family: sans-serif; line-height: 1.6; color: #333;">
           <p>Hola <strong>${name || 'Candidato'}</strong>,</p>
-          <p>Te saludamos de RRHH de <strong>SUPERDEPORTE S.A.</strong></p>
+          <p>Te saludamos de RRHH de <strong>SEPRIBE CIA.LTDA.</strong></p>
           <p>Estamos revisando tu perfil para el cargo de <strong>${cargo}</strong> y nos gustaría agendar una entrevista.</p>
           <p>Por favor, confírmanos tu disponibilidad respondiendo a este correo.</p>
           <br/>

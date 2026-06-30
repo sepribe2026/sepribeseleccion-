@@ -363,7 +363,7 @@ export default function CandidatesAdmin() {
   
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false)
   const [whatsappTemplateText, setWhatsappTemplateText] = useState(
-    `Estimad@ candidat@, te invitamos a participar en nuestro proceso de selección para nuestras tiendas Marathon en Quito, llamado "Formativas". ⚽\n` +
+    `Estimad@ candidat@, te invitamos a participar en nuestro proceso de selección para SEPRIBE CIA.LTDA. en Quito, llamado "Formativas". ⚽\n` +
     `Te comparto los detalles para que puedas asistir: \n` +
     `📅Fecha: Viernes 12 de junio de 2026. \n` +
     `🕘Hora: 09h30 (Trata de llegar 10 min. antes)\n` +
@@ -2475,7 +2475,7 @@ export default function CandidatesAdmin() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '40px', position: 'relative', zIndex: 1 }}>
             <div>
               <h1 className="onboarding-title" style={{ fontSize: '28px', letterSpacing: '0.5px', marginBottom: '4px', color: '#ffffff', textShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
-                {user?.company_name === 'SUPERDEPORT S.A.' ? 'SUPERDEPORTE S.A.' : (user?.company_name || 'SUPERDEPORTE S.A.')}
+                {user?.company_name || 'SEPRIBE CIA.LTDA.'}
               </h1>
               <p className="onboarding-subtitle" style={{ color: '#94a3b8', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>Panel de Gestión Administrativa</p>
             </div>
@@ -2553,7 +2553,7 @@ export default function CandidatesAdmin() {
               <label className="ranking-label">🟢 Recepción de Candidatos</label>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center', background: '#f8fafc', padding: '10px 16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                 {[
-                  { slug: 'superdeporte', name: 'Superdeporte' },
+                  { slug: 'superdeporte', name: 'SEPRIBE CIA.LTDA.' },
                   { slug: 'medeport', name: 'Medeport' },
                   { slug: 'equinox', name: 'Equinox' }
                 ].map(comp => {
@@ -3704,8 +3704,8 @@ export default function CandidatesAdmin() {
                               <a 
                                 href={p.status === 'PENDIENTE' ? '#' : `https://wa.me/${p.candidate.sender_phone.replace(/\D/g, '').replace(/^0/, '593')}?text=${encodeURIComponent(
                                   p.status === 'ENTREVISTA_PROGRAMADA' 
-                                  ? `Hola ${p.candidate?.sender_name || 'candidat@'}, nos complace informarte que has pasado la primera etapa de nuestro proceso de selección para Superdeporte S.A. Para la siguiente fase, deberás asistir a una entrevista presencial y/o virtual.\n\nTe enviamos los detalles para que puedas asistir:\n📅Fecha: ${p.interview_date ? new Date(p.interview_date.split(' ')[0] + 'T12:00:00').toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long' }) : '—'}\n⏰Hora: ${p.interview_date?.split(' ')[1] || '09:00'}\n📍Lugar: Galo Plaza Lasso 13205 y de los Cerezos.`
-                                  : `Hola ${p.candidate?.sender_name || 'candidat@'}, te saludamos de RRHH de Superdeporte S.A. Estamos revisando tu perfil para el cargo de ${p.cargo} y nos gustaría agendar una entrevista.`
+                                  ? `Hola ${p.candidate?.sender_name || 'candidat@'}, nos complace informarte que has pasado la primera etapa de nuestro proceso de selección para SEPRIBE CIA.LTDA. Para la siguiente fase, deberás asistir a una entrevista presencial y/o virtual.\n\nTe enviamos los detalles para que puedas asistir:\n📅Fecha: ${p.interview_date ? new Date(p.interview_date.split(' ')[0] + 'T12:00:00').toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long' }) : '—'}\n⏰Hora: ${p.interview_date?.split(' ')[1] || '09:00'}\n📍Lugar: Galo Plaza Lasso 13205 y de los Cerezos.`
+                                  : `Hola ${p.candidate?.sender_name || 'candidat@'}, te saludamos de RRHH de SEPRIBE CIA.LTDA. Estamos revisando tu perfil para el cargo de ${p.cargo} y nos gustaría agendar una entrevista.`
                                 )}`} 
                                 onClick={(e) => (p.status === 'PENDIENTE' || p.status === 'ENTREVISTA_APROBADA' || p.status === 'RECHAZADO') && e.preventDefault()}
                                 target={(p.status === 'PENDIENTE' || p.status === 'ENTREVISTA_APROBADA' || p.status === 'RECHAZADO') ? undefined : "_blank"} 

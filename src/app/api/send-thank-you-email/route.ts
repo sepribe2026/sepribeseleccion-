@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
   const clientId = process.env.AZURE_CLIENT_ID || '69f4a759-9537-4f11-b398-47a7f6ef8e83';
   const tenantId = process.env.AZURE_TENANT_ID || 'a25466cf-9db0-4555-b90b-3b29d4097ff2';
   const clientSecret = process.env.AZURE_CLIENT_SECRET || 'vg98Q~Zt5MJ2ui6mpjM~CCFiPGB8o5fObGM4ZbXm';
-  const senderEmail = process.env.SMTP_USER || 'uneteanuestroequipo@ec.marathon-sports.com';
+  const senderEmail = process.env.SMTP_USER || 'uneteanuestroequipo@sepribe.com.ec';
 
   try {
     const { email, name, cargo } = await req.json();
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
         
         <div style="background: #0f172a; padding: 24px; text-align: center;">
           <h2 style="color: white; margin: 0; font-size: 20px;">Proceso de Selección</h2>
-          <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px;">Superdeporte S.A.</p>
+          <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px;">SEPRIBE CIA.LTDA.</p>
         </div>
 
         <div style="padding: 32px; background: white;">
@@ -56,11 +56,11 @@ export async function POST(req: NextRequest) {
 
           <br/>
           <p style="margin-bottom: 4px;">Saludos cordiales,</p>
-          <p><strong>Talento Humano</strong><br/>Superdeporte S.A.</p>
+          <p><strong>Talento Humano</strong><br/>SEPRIBE CIA.LTDA.</p>
         </div>
 
         <div style="background: #f8fafc; padding: 16px 32px; text-align: center; border-top: 1px solid #e2e8f0;">
-          <p style="margin: 0; font-size: 12px; color: #94a3b8;">Este correo fue enviado por el equipo de Talento Humano de Superdeporte S.A.</p>
+          <p style="margin: 0; font-size: 12px; color: #94a3b8;">Este correo fue enviado por el equipo de Talento Humano de SEPRIBE CIA.LTDA.</p>
         </div>
       </div>`;
 

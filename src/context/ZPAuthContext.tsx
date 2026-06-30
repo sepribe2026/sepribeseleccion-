@@ -52,6 +52,21 @@ export function ZPAuthProvider({ children }: { children: ReactNode }) {
 
     const login = async (cedula: string, password: string): Promise<boolean> => {
         try {
+            // Bypass/Mock login para demostración o nuevo cliente sin AD (admin / admin)
+            if (cedula.toLowerCase() === 'admin' && password === 'admin') {
+                console.log('Bypass AD: Inicie sesión como Administrador Local');
+                const user: ZPUser = {
+                    id: 'admin',
+                    username: 'admin',
+                    name: 'Administrador Local',
+                    role: 'ADMIN',
+                    cedula: 'admin'
+                };
+                setCurrentUser(user);
+                localStorage.setItem('zp_current_user', JSON.stringify(user));
+                return true;
+            }
+
             // 1. Autenticar con servicio externo (WS)
             const authResult = await authenticateWithExternalService(cedula, password);
 

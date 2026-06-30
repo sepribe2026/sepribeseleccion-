@@ -157,7 +157,7 @@ export default function LoginPage() {
 
         <div style={{ textAlign: 'center', marginTop: '24px' }}>
           <p style={{ color: '#9ca3af', fontSize: '12px', margin: 0 }}>
-            © 2026 Superdeporte S.A. Todos los derechos reservados.
+            © 2026 SEPRIBE CIA.LTDA. Todos los derechos reservados.
           </p>
         </div>
       </div>

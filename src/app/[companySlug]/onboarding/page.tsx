@@ -32,7 +32,7 @@ const TABS = [
 // Genera el email de privacidad segun la empresa
 function getPrivacyEmail(slug: string): string {
   const map: Record<string, string> = {
-    superdeporte: 'privacidad@superdeporte.com.ec',
+    superdeporte: 'privacidad@sepribe.com.ec',
     medeport:     'privacidad@medeport.com.ec',
     equinox:      'privacidad@equinox.com.ec',
   }
@@ -68,7 +68,7 @@ export default function OnboardingTabs() {
   const [error, setError] = useState('')
   const [files, setFiles] = useState<Record<string, File | null>>({})
   const [isSuccess, setIsSuccess] = useState(false)
-  const [companyInfo, setCompanyInfo] = useState({ name: 'SUPERDEPORTE S.A.', slug: 'superdeporte' })
+  const [companyInfo, setCompanyInfo] = useState({ name: 'SEPRIBE CIA.LTDA.', slug: 'superdeporte' })
 
   useEffect(() => {
     if (companySlug) {

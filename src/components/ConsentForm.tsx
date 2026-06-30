@@ -16,7 +16,7 @@ interface ConsentFormProps {
 const consentTexts = {
     ecuador: {
         title: 'Consentimiento de Tratamiento de Datos Personales',
-        text: `Yo, {employeeName}, identificado/a con cédula {employeeCedula}, AUTORIZO expresamente a Grupo Marathon para:
+        text: `Yo, {employeeName}, identificado/a con cédula {employeeCedula}, AUTORIZO expresamente a SEPRIBE CIA.LTDA. para:
 
 1. Recopilar, almacenar y procesar mis datos personales (nombre, cédula, documentos laborales, información de contacto).
 
@@ -36,7 +36,7 @@ Conforme a la Ley Orgánica de Protección de Datos Personales de Ecuador.`
     },
     peru: {
         title: 'Autorización de Tratamiento de Datos Personales',
-        text: `Yo, {employeeName}, identificado/a con DNI {employeeCedula}, AUTORIZO a Grupo Marathon para:
+        text: `Yo, {employeeName}, identificado/a con DNI {employeeCedula}, AUTORIZO a SEPRIBE CIA.LTDA. para:
 
 1. Incluir mis datos personales en su banco de datos inscrito en el Registro Nacional de Protección de Datos Personales.
 
@@ -56,7 +56,7 @@ Conforme a la Ley N° 29733 - Ley de Protección de Datos Personales del Perú.`
     },
     chile: {
         title: 'Consentimiento Expreso para Tratamiento de Datos Sensibles',
-        text: `Yo, {employeeName}, identificado/a con RUT {employeeCedula}, CONSIENTO EXPRESAMENTE que Grupo Marathon:
+        text: `Yo, {employeeName}, identificado/a con RUT {employeeCedula}, CONSIENTO EXPRESAMENTE que SEPRIBE CIA.LTDA.:
 
 1. Trate mis datos personales sensibles (RUT, documentos laborales) en su base de datos inscrita en el Registro de Bancos de Datos Personales.
 
@@ -347,7 +347,7 @@ export default function ConsentForm({
                         <Shield size={20} color="#3b82f6" style={{ flexShrink: 0, marginTop: '2px' }} />
                         <div style={{ fontSize: '0.875rem', color: '#475569' }}>
                             <strong>Importante:</strong> Puede revocar este consentimiento en cualquier momento contactando a{' '}
-                            <a href="mailto:dpo@grupomarathon.com" style={{ color: '#3b82f6' }}>dpo@grupomarathon.com</a>
+                            <a href="mailto:privacidad@sepribe.com.ec" style={{ color: '#3b82f6' }}>privacidad@sepribe.com.ec</a>
                         </div>
                     </div>
                 </div>

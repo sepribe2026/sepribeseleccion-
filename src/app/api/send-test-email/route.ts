@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
   const clientId = process.env.AZURE_CLIENT_ID || '69f4a759-9537-4f11-b398-47a7f6ef8e83';
   const tenantId = process.env.AZURE_TENANT_ID || 'a25466cf-9db0-4555-b90b-3b29d4097ff2';
   const clientSecret = process.env.AZURE_CLIENT_SECRET || 'vg98Q~Zt5MJ2ui6mpjM~CCFiPGB8o5fObGM4ZbXm';
-  const senderEmail = process.env.SMTP_USER || 'uneteanuestroequipo@ec.marathon-sports.com';
+  const senderEmail = process.env.SMTP_USER || 'uneteanuestroequipo@sepribe.com.ec';
 
   try {
     const { email, name, cargo, candidateId } = await req.json();
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
         <div style="background: linear-gradient(135deg, #0f172a, #1e293b); padding: 32px 24px; text-align: center;">
           <h2 style="color: white; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">Evaluación Psicométrica</h2>
-          <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500;">Proceso de Selección - Superdeporte S.A.</p>
+          <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500;">Proceso de Selección - SEPRIBE CIA.LTDA.</p>
         </div>
         <div style="padding: 32px 24px; background: white;">
           <p style="font-size: 16px; margin-top: 0;">Estimado(a) <strong>${name || 'Candidato'}</strong>,</p>
@@ -65,18 +65,18 @@ export async function POST(req: NextRequest) {
               Iniciar Evaluación en Línea
             </a>
           </p>
-
+ 
           <div style="text-align: center; margin: 24px 0; border-top: 1px solid #f1f5f9; padding-top: 24px;">
             <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">O escanea el código QR desde tu teléfono celular para realizar el test:</p>
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(testUrl)}" alt="QR Test" style="display: block; margin: 0 auto; width: 180px; height: 180px; padding: 8px; border: 1px solid #e2e8f0; border-radius: 8px; background: white;"/>
           </div>
-
+ 
           <div style="background: #fffbeb; border: 1px solid #fef3c7; padding: 14px; border-radius: 8px; margin: 24px 0; font-size: 13px; color: #b45309;">
             ⚠️ <strong>Recomendación importante:</strong> Asegúrate de estar en un ambiente tranquilo y sin interrupciones. Una vez que inicies un sub-test, el temporizador correrá continuamente y no podrá pausarse.
           </div>
-
+ 
           <p style="font-size: 14px; color: #475569; margin-bottom: 0;">Atentamente,</p>
-          <p style="font-size: 14px; font-weight: 700; color: #0f172a; margin-top: 4px;">Departamento de Selección y Desarrollo de Talentos<br/>Superdeporte S.A.</p>
+          <p style="font-size: 14px; font-weight: 700; color: #0f172a; margin-top: 4px;">Departamento de Selección y Desarrollo de Talentos<br/>SEPRIBE CIA.LTDA.</p>
         </div>
       </div>
     `;

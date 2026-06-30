@@ -11,7 +11,7 @@ export const privacyPolicies = {
         sections: {
             responsible: {
                 title: '1. Responsable del Tratamiento',
-                content: `Grupo Marathon es responsable del tratamiento de sus datos personales conforme a la Ley Orgánica de Protección de Datos Personales de Ecuador.`
+                content: `SEPRIBE CIA.LTDA. es responsable del tratamiento de sus datos personales conforme a la Ley Orgánica de Protección de Datos Personales de Ecuador.`
             },
             dataCollected: {
                 title: '2. Datos Recopilados',
@@ -63,7 +63,7 @@ Para ejercer estos derechos, contacte a: {dpoEmail}`
         sections: {
             responsible: {
                 title: '1. Titular del Banco de Datos',
-                content: `Grupo Marathon, inscrito en el Registro Nacional de Protección de Datos Personales, es titular del banco de datos personales de empleados.`
+                content: `SEPRIBE CIA.LTDA., inscrito en el Registro Nacional de Protección de Datos Personales, es titular del banco de datos personales de empleados.`
             },
             dataCollected: {
                 title: '2. Datos Personales Tratados',
@@ -121,7 +121,7 @@ Plazo de respuesta: 10 días hábiles`
         sections: {
             responsible: {
                 title: '1. Responsable de la Base de Datos',
-                content: `Grupo Marathon, inscrito en el Registro de Bancos de Datos Personales del Servicio de Registro Civil, es responsable de la base de datos de personal.`
+                content: `SEPRIBE CIA.LTDA., inscrito en el Registro de Bancos de Datos Personales del Servicio de Registro Civil, es responsable de la base de datos de personal.`
             },
             dataCollected: {
                 title: '2. Datos Personales Sensibles',
@@ -179,10 +179,10 @@ export function getPrivacyPolicy(country: Country, companyConfig?: {
 
     // Default company config
     const config = {
-        companyName: companyConfig?.companyName || 'Grupo Marathon',
-        ruc: companyConfig?.ruc || 'N/A',
-        dpoEmail: companyConfig?.dpoEmail || 'privacidad@grupomarathon.com',
-        privacyEmail: companyConfig?.privacyEmail || 'privacidad@grupomarathon.com'
+        companyName: companyConfig?.companyName || 'SEPRIBE CIA.LTDA.',
+        ruc: companyConfig?.ruc || '1792913076001',
+        dpoEmail: companyConfig?.dpoEmail || 'privacidad@sepribe.com.ec',
+        privacyEmail: companyConfig?.privacyEmail || 'privacidad@sepribe.com.ec'
     };
 
     // Reemplazar variables en el contenido

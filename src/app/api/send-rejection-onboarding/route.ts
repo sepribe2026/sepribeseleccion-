@@ -4,13 +4,13 @@ import nodemailer from 'nodemailer';
 export async function POST(req: NextRequest) {
   try {
     const { email, name, observation, portalUrl } = await req.json();
-    const onboardingUrl = portalUrl || `https://tensor-planetoid.vercel.app/onboarding`;
+    const onboardingUrl = portalUrl || `https://uneteanuestroequipo.ec.aseyco.com/superdeporte/onboarding`;
 
     if (!email) return NextResponse.json({ error: 'Email requerido' }, { status: 400 });
 
     const smtpHost = process.env.SMTP_HOST || 'smtp.office365.com';
     const smtpPort = parseInt(process.env.SMTP_PORT || '587');
-    const smtpUser = process.env.SMTP_USER || 'uneteanuestroequipo@ec.marathon-sports.com';
+    const smtpUser = process.env.SMTP_USER || 'uneteanuestroequipo@sepribe.com.ec';
     const smtpPass = process.env.SMTP_PASS || '';
 
     if (!smtpPass) {
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       tls: { ciphers: 'SSLv3' },
     });
 
-    const message = `Hola ${name},\n\nTu expediente de ingreso a Superdeporte S.A. ha sido revisado y requiere algunas correcciones.\n\nOBSERVACIÓN:\n${observation}\n\nPor favor, ingresa nuevamente al portal de onboarding y completa la información solicitada correctamente.\n\nPortal: ${onboardingUrl}\n\nSaludos cordiales,\nTalento Humano - Superdeporte S.A.`;
+    const message = `Hola ${name},\n\nTu expediente de ingreso a SEPRIBE CIA.LTDA. ha sido revisado y requiere algunas correcciones.\n\nOBSERVACIÓN:\n${observation}\n\nPor favor, ingresa nuevamente al portal de onboarding y completa la información solicitada correctamente.\n\nPortal: ${onboardingUrl}\n\nSaludos cordiales,\nTalento Humano - SEPRIBE CIA.LTDA.`;
 
     await transporter.sendMail({
       from: `"RRHH Selección" <${smtpUser}>`,
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       html: `<div style="font-family: sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
         <div style="background: #ef4444; padding: 24px; text-align: center;">
           <h2 style="color: white; margin: 0; font-size: 20px;">Corrección de Expediente</h2>
-          <p style="color: #fee2e2; margin: 8px 0 0; font-size: 14px;">Superdeporte S.A.</p>
+          <p style="color: #fee2e2; margin: 8px 0 0; font-size: 14px;">SEPRIBE CIA.LTDA.</p>
         </div>
         <div style="padding: 32px; background: white;">
           <p>Hola <strong>${name}</strong>,</p>
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
           <p style="font-size: 13px; color: #64748b;">Si tienes dudas sobre esta observación, puedes responder a este correo.</p>
           <br/>
           <p style="margin-bottom: 4px;">Saludos cordiales,</p>
-          <p><strong>Talento Humano</strong><br/>Superdeporte S.A.</p>
+          <p><strong>Talento Humano</strong><br/>SEPRIBE CIA.LTDA.</p>
         </div>
       </div>`
     });
