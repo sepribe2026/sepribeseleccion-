@@ -32,11 +32,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
-        if (parsedUser && parsedUser.company_name) {
-          parsedUser.company_name = parsedUser.company_name
-            .replace(/SUPERDEPORT S\.A\./g, 'SEPRIBE CIA.LTDA.')
-            .replace(/SUPERDEPORTE S\.A\./g, 'SEPRIBE CIA.LTDA.')
-            .replace(/SUPERDEPORTE/gi, 'SEPRIBE CIA.LTDA.');
+        if (parsedUser) {
+          let modified = false;
+          if (parsedUser.company_slug === 'superdeporte') {
+            parsedUser.company_slug = 'sepribe';
+            modified = true;
+          }
+          if (parsedUser.company_name) {
+            const originalName = parsedUser.company_name;
+            parsedUser.company_name = parsedUser.company_name
+              .replace(/SUPERDEPORT S\.A\./g, 'SEPRIBE CIA.LTDA.')
+              .replace(/SUPERDEPORTE S\.A\./g, 'SEPRIBE CIA.LTDA.')
+              .replace(/SUPERDEPORTE/gi, 'SEPRIBE CIA.LTDA.');
+            if (parsedUser.company_name !== originalName) {
+              modified = true;
+            }
+          }
+          if (modified) {
+            localStorage.setItem('digi_admin_user', JSON.stringify(parsedUser));
+          }
         }
         setUser(parsedUser);
       } catch (e) {

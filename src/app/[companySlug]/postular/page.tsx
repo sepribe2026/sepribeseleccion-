@@ -2,13 +2,13 @@
 
 import { useState, useEffect, use } from 'react'
 import { supabase } from '@/lib/supabase'
-import { UploadCloud, CheckCircle2, AlertCircle, Briefcase, MapPin, User, Mail, Clock, ChevronDown } from 'lucide-react'
+import { UploadCloud, CheckCircle2, AlertCircle, Briefcase, MapPin, User, Mail, Clock, ChevronDown, Shield, FileText } from 'lucide-react'
 import { useParams } from 'next/navigation'
 
 // Genera el email de privacidad según la empresa
 function getPrivacyEmail(slug: string): string {
   const map: Record<string, string> = {
-    superdeporte: 'privacidad@sepribe.com.ec',
+    sepribe: 'privacidad@sepribe.com.ec',
     medeport:     'privacidad@medeport.com.ec',
     equinox:      'privacidad@equinox.com.ec',
   }
@@ -43,8 +43,12 @@ export default function ApplyPage() {
   const [isSuccess, setIsSuccess] = useState(false)
   const [error, setError] = useState('')
   const [file, setFile] = useState<File | null>(null)
+  const [courseFile, setCourseFile] = useState<File | null>(null)
+  const [recordFile, setRecordFile] = useState<File | null>(null)
+  const [driverFile, setDriverFile] = useState<File | null>(null)
+  const [insertedId, setInsertedId] = useState('')
   const [jobPositions, setJobPositions] = useState<any[]>([])
-  const [companyInfo, setCompanyInfo] = useState({ name: 'SEPRIBE CIA.LTDA.', slug: 'superdeporte' })
+  const [companyInfo, setCompanyInfo] = useState({ name: 'SEPRIBE CIA.LTDA.', slug: 'sepribe' })
   const [postulationEnabled, setPostulationEnabled] = useState(true)
   const [checkingSettings, setCheckingSettings] = useState(true)
 
@@ -72,7 +76,12 @@ export default function ApplyPage() {
     likes_sports: '',
     sports_practiced: '',
     work_culture_motivation: '',
-    genero: ''
+    genero: '',
+    military_experience: '',
+    guard_course: '',
+    estatura: '',
+    rotating_shifts: '',
+    driving_license: ''
   })
 
   useEffect(() => {
@@ -102,7 +111,7 @@ export default function ApplyPage() {
       setCompanyInfo({ name: data.company_name, slug: companySlug })
     } else {
       // Fallback simple si no hay perfil creado aún para ese slug
-      const name = companySlug.charAt(0).toUpperCase() + companySlug.slice(1) + ' S.A.'
+      const name = companySlug.toLowerCase() === 'sepribe' ? 'SEPRIBE CIA.LTDA.' : (companySlug.charAt(0).toUpperCase() + companySlug.slice(1) + ' S.A.')
       setCompanyInfo({ name, slug: companySlug })
     }
 
@@ -212,24 +221,48 @@ export default function ApplyPage() {
         return
       }
 
-      // 2. Subir CV a Storage (Usamos el mismo formato que scan-emails para compatibilidad con IA)
+      // 2. Subir archivos a Storage
       const emailUid = `WEB${Date.now()}`
-      const fileExt = file.name.split('.').pop()
-      const sanitizedOriginalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-      const storageFileName = `resume_${emailUid.substring(0, 8)}_${sanitizedOriginalName}`
       
-      const { error: uploadError } = await supabase.storage
-        .from('candidate-documents')
-        .upload(storageFileName, file)
+      const uploadDocument = async (fileObj: File, prefix: string) => {
+        const fileExt = fileObj.name.split('.').pop()
+        const sanitizedName = fileObj.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+        const storageFileName = `${prefix}_${emailUid}_${sanitizedName}`
+        
+        const { error: uploadError } = await supabase.storage
+          .from('candidate-documents')
+          .upload(storageFileName, fileObj, { upsert: true })
+        
+        if (uploadError) throw uploadError
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('candidate-documents')
+          .getPublicUrl(storageFileName)
+          
+        return publicUrl
+      }
 
-      if (uploadError) throw uploadError
+      // Subida de CV obligatoria
+      const publicUrl = await uploadDocument(file, 'resume')
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('candidate-documents')
-        .getPublicUrl(storageFileName)
+      // Subidas adicionales condicionales u opcionales
+      let coursePdfUrl = null
+      if (courseFile) {
+        coursePdfUrl = await uploadDocument(courseFile, 'course_cert')
+      }
 
-      // 2. Insertar en email_resumes
-      const { error: dbError } = await supabase.from('email_resumes').insert([{
+      let recordPdfUrl = null
+      if (recordFile) {
+        recordPdfUrl = await uploadDocument(recordFile, 'record_cert')
+      }
+
+      let driverPdfUrl = null
+      if (driverFile) {
+        driverPdfUrl = await uploadDocument(driverFile, 'driver_cert')
+      }
+
+      // 3. Insertar en email_resumes
+      const { data: insertedData, error: dbError } = await supabase.from('email_resumes').insert([{
         email_uid: emailUid,
         sender_email: formData.email,
         sender_name: formData.nombre,
@@ -244,10 +277,10 @@ export default function ApplyPage() {
         city: formData.ciudad,
         experience_years: formData.experiencia,
         age: formData.edad,
-        skills: formData.herramientas,
+        skills: `${formData.herramientas}${formData.guard_course === 'Sí' ? ', Curso de Guardia 120H' : ''}${formData.military_experience === 'Sí' ? ', Experiencia Militar/Policial' : ''}${formData.driving_license && formData.driving_license !== 'No posee' ? `, Licencia ${formData.driving_license}` : ''}`,
         main_achievement: formData.logro,
         key_tools: formData.herramientas,
-        ai_summary: `CED: ${formData.cedula} | TEL: ${formData.celular} | LOGRO: ${formData.logro} | HERRAMIENTAS: ${formData.herramientas} | CONSENTIMIENTO LOPDP: ACEPTADO`,
+        ai_summary: `CED: ${formData.cedula} | TEL: ${formData.celular} | ESTATURA: ${formData.estatura} cm | CURSO 120H: ${formData.guard_course} | EXP MILITAR/POLICIAL: ${formData.military_experience} | TURNOS ROTATIVOS: ${formData.rotating_shifts} | LICENCIA: ${formData.driving_license} | LOGRO: ${formData.logro} | HERRAMIENTAS: ${formData.herramientas} | CONSENTIMIENTO LOPDP: ACEPTADO`,
         company_slug: companySlug,
         birth_date: formData.birth_date || null,
         civil_status: formData.civil_status || null,
@@ -260,10 +293,24 @@ export default function ApplyPage() {
         gender: formData.genero || null,
         likes_sports: formData.likes_sports || null,
         sports_practiced: formData.sports_practiced || null,
-        work_culture_motivation: formData.work_culture_motivation || null
-      }])
+        work_culture_motivation: formData.work_culture_motivation || null,
+        
+        // Campos específicos de reclutamiento de seguridad
+        military_experience: formData.military_experience || null,
+        guard_course: formData.guard_course || null,
+        estatura: formData.estatura ? parseInt(formData.estatura) : null,
+        rotating_shifts: formData.rotating_shifts || null,
+        driving_license: formData.driving_license || null,
+        course_pdf_url: coursePdfUrl,
+        record_pdf_url: recordPdfUrl,
+        driver_pdf_url: driverPdfUrl
+      }]).select('id').single()
 
       if (dbError) throw dbError
+
+      if (insertedData) {
+        setInsertedId(insertedData.id)
+      }
 
       setIsSuccess(true)
     } catch (err: any) {
@@ -275,9 +322,9 @@ export default function ApplyPage() {
 
   if (checkingSettings) {
     return (
-      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #002f6c 0%, #001f4a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at top, #0b0f19 0%, #020617 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif' }}>
         <div style={{ textAlign: 'center' }}>
-          <Clock size={48} color="white" className="animate-spin" style={{ margin: '0 auto 16px', opacity: 0.8 }} />
+          <Clock size={48} color="#fbbf24" className="animate-spin" style={{ margin: '0 auto 16px', opacity: 0.8 }} />
           <p style={{ color: 'white', fontSize: '18px', fontWeight: 'bold' }}>Cargando portal...</p>
         </div>
       </div>
@@ -286,16 +333,16 @@ export default function ApplyPage() {
 
   if (!postulationEnabled) {
     return (
-      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #002f6c 0%, #001f4a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'system-ui, sans-serif' }}>
-        <div style={{ background: 'white', padding: '48px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', textAlign: 'center', maxWidth: '500px', width: '100%' }}>
-          <div style={{ background: '#eff6ff', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-            <Clock size={44} color="#2563eb" />
+      <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at top, #0b0f19 0%, #020617 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'system-ui, sans-serif' }}>
+        <div style={{ background: 'rgba(30, 41, 59, 0.45)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '48px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', textAlign: 'center', maxWidth: '500px', width: '100%' }}>
+          <div style={{ background: 'rgba(251, 191, 36, 0.1)', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+            <Clock size={44} color="#fbbf24" />
           </div>
-          <h2 style={{ fontSize: '26px', fontWeight: '800', color: '#0f172a', margin: '0 0 16px', lineHeight: '1.2' }}>Estamos trabajando en el servicio</h2>
-          <p style={{ color: '#475569', fontSize: '15px', lineHeight: '1.6', margin: '0 0 24px' }}>
-            En este momento, la recepción de nuevas solicitudes de postulación para <strong>{companyInfo.name}</strong> no está disponible.
+          <h2 style={{ fontSize: '26px', fontWeight: '800', color: 'white', margin: '0 0 16px', lineHeight: '1.2' }}>Recepción Pausada</h2>
+          <p style={{ color: '#94a3b8', fontSize: '15px', lineHeight: '1.6', margin: '0 0 24px' }}>
+            En este momento, la recepción de nuevas solicitudes de postulación para <strong>{companyInfo.name}</strong> no está activa.
           </p>
-          <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', fontSize: '13px', color: '#64748b', border: '1px solid #e2e8f0', margin: '0 0 12px' }}>
+          <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '16px', borderRadius: '12px', fontSize: '13px', color: '#94a3b8', border: '1px solid rgba(255, 255, 255, 0.05)', margin: '0 0 12px' }}>
             Pronto habilitaremos el portal para recibir más candidatos. ¡Muchas gracias por tu interés en formar parte de nuestro equipo!
           </div>
         </div>
@@ -305,37 +352,84 @@ export default function ApplyPage() {
 
   if (isSuccess) {
     return (
-      <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'system-ui, sans-serif' }}>
-        <div style={{ background: 'white', padding: '48px', borderRadius: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', textAlign: 'center', maxWidth: '500px', width: '100%' }}>
-          <div style={{ background: '#f0fdf4', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+      <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at top, #0b0f19 0%, #020617 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'system-ui, sans-serif' }}>
+        <div style={{ background: 'rgba(30, 41, 59, 0.45)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '48px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', textAlign: 'center', maxWidth: '550px', width: '100%' }}>
+          <div style={{ background: 'rgba(34, 197, 94, 0.1)', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
             <CheckCircle2 size={48} color="#22c55e" />
           </div>
-          <h2 style={{ fontSize: '28px', fontWeight: '800', color: '#0f172a', margin: '0 0 16px' }}>¡Postulación Enviada!</h2>
-          <p style={{ color: '#64748b', fontSize: '16px', lineHeight: '1.6', margin: '0 0 32px' }}>
-            Gracias {formData.nombre}, hemos recibido tu hoja de vida. El equipo de Talento Humano de <strong>{companyInfo.name}</strong> la revisará y se pondrá en contacto contigo muy pronto.
+          <h2 style={{ fontSize: '28px', fontWeight: '800', color: 'white', margin: '0 0 16px' }}>¡Postulación Recibida!</h2>
+          <p style={{ color: '#94a3b8', fontSize: '15px', lineHeight: '1.6', margin: '0 0 24px' }}>
+            Gracias <strong>{formData.nombre}</strong>, hemos registrado tu postulación de forma exitosa.
           </p>
-          <button onClick={() => window.location.reload()} style={{ background: '#002f6c', color: 'white', border: 'none', padding: '14px 32px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}>
-            Enviar otra postulación
-          </button>
+          
+          <div style={{ background: 'rgba(251, 191, 36, 0.05)', border: '1px solid rgba(251, 191, 36, 0.15)', padding: '20px', borderRadius: '16px', marginBottom: '32px', textAlign: 'left' }}>
+            <h4 style={{ color: '#fbbf24', fontSize: '15px', fontWeight: '800', margin: '0 0 8px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Shield size={16} /> Paso Obligatorio Siguiente
+            </h4>
+            <p style={{ color: '#cbd5e1', fontSize: '13px', lineHeight: '1.5', margin: 0 }}>
+              Como empresa de seguridad privada, requerimos que todos nuestros aspirantes completen una evaluación de aptitudes psicológicas y de comportamiento. Puedes iniciar la evaluación ahora mismo haciendo clic en el botón de abajo.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gap: '12px' }}>
+            <a 
+              href={`/evaluacion/${insertedId}`}
+              style={{ 
+                background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', 
+                color: '#0f172a', 
+                padding: '16px 32px', 
+                borderRadius: '12px', 
+                fontWeight: '900', 
+                fontSize: '15px',
+                textDecoration: 'none',
+                display: 'inline-block',
+                boxShadow: '0 10px 15px -3px rgba(251, 191, 36, 0.3)',
+                transition: 'all 0.2s'
+              }}
+            >
+              INICIAR EVALUACIÓN PSICOMÉTRICA
+            </a>
+            
+            <button 
+              onClick={() => window.location.reload()} 
+              style={{ 
+                background: 'transparent', 
+                color: '#94a3b8', 
+                border: '1px solid rgba(255, 255, 255, 0.1)', 
+                padding: '12px 24px', 
+                borderRadius: '12px', 
+                fontWeight: '600', 
+                fontSize: '13px',
+                cursor: 'pointer', 
+                transition: 'all 0.2s',
+                marginTop: '8px'
+              }}
+            >
+              Volver al inicio / Enviar otra
+            </button>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #002f6c 0%, #001f4a 100%)', padding: '40px 20px', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+    <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at top, #0b0f19 0%, #020617 100%)', padding: '40px 20px', fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ maxWidth: '650px', margin: '0 auto' }}>
         
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <h1 style={{ color: 'white', fontSize: '32px', fontWeight: '800', margin: '0 0 12px', letterSpacing: '-0.02em' }}>Únete a Nuestro Equipo</h1>
-          <p style={{ color: '#93c5fd', fontSize: '16px' }}>{companyInfo.name} | Talento Humano</p>
+          <div style={{ display: 'inline-flex', background: 'rgba(251, 191, 36, 0.08)', padding: '12px', borderRadius: '50%', marginBottom: '16px', border: '1px solid rgba(251, 191, 36, 0.2)' }}>
+            <Shield size={36} color="#fbbf24" />
+          </div>
+          <h1 style={{ color: 'white', fontSize: '32px', fontWeight: '900', margin: '0 0 12px', letterSpacing: '-0.02em', textTransform: 'uppercase' }}>Portal de Postulación</h1>
+          <p style={{ color: '#fbbf24', fontSize: '16px', fontWeight: '700', letterSpacing: '0.05em' }}>{companyInfo.name} | Reclutamiento de Seguridad</p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ background: 'white', padding: '40px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+        <form onSubmit={handleSubmit} style={{ background: 'rgba(30, 41, 59, 0.45)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '40px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
           
           {error && (
-            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '16px', borderRadius: '12px', marginBottom: '24px', display: 'flex', gap: '12px', alignItems: 'center', fontSize: '14px' }}>
-              <AlertCircle size={20} />
+            <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#fca5a5', padding: '16px', borderRadius: '12px', marginBottom: '24px', display: 'flex', gap: '12px', alignItems: 'center', fontSize: '14px' }}>
+              <AlertCircle size={20} color="#fca5a5" />
               {error}
             </div>
           )}
@@ -343,72 +437,72 @@ export default function ApplyPage() {
           <div style={{ display: 'grid', gap: '32px' }}>
             
             {/* Sección 1: Información Personal */}
-            <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: '#0f172a', letterSpacing: '0.05em', borderLeft: '4px solid #002f6c', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <User size={18} color="#002f6c" /> Información Personal
+            <div style={{ background: 'rgba(15, 23, 42, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'white', letterSpacing: '0.05em', borderLeft: '4px solid #fbbf24', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <User size={18} color="#fbbf24" /> Datos Personales
               </h3>
               
               <div style={{ display: 'grid', gap: '20px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Nombre Completo *</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Nombre Completo *</label>
                     <div style={{ position: 'relative' }}>
-                      <User size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                      <input type="text" name="nombre" required placeholder="Ej: Juan Pérez" value={formData.nombre} onChange={(e) => setFormData({...formData, nombre: e.target.value.toUpperCase()})} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} />
+                      <User size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+                      <input type="text" name="nombre" required placeholder="Ej: JUAN PÉREZ" value={formData.nombre} onChange={(e) => setFormData({...formData, nombre: e.target.value.toUpperCase()})} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                     </div>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Número de Cédula *</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Número de Cédula *</label>
                     <div style={{ position: 'relative' }}>
-                      <User size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                      <input type="text" name="cedula" required placeholder="10 dígitos" maxLength={10} value={formData.cedula} onChange={handleChange} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} />
+                      <User size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+                      <input type="text" name="cedula" required placeholder="10 dígitos" maxLength={10} value={formData.cedula} onChange={handleChange} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                     </div>
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Correo Electrónico *</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Correo Electrónico *</label>
                     <div style={{ position: 'relative' }}>
-                      <Mail size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                      <input type="email" name="email" required placeholder="tu@email.com" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value.toLowerCase()})} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} />
+                      <Mail size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+                      <input type="email" name="email" required placeholder="tu@email.com" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value.toLowerCase()})} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                     </div>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Celular / WhatsApp *</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Celular / WhatsApp *</label>
                     <div style={{ position: 'relative' }}>
-                      <Clock size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                      <input type="text" name="celular" required placeholder="Ej: 0987654321" value={formData.celular} onChange={handleChange} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} />
+                      <Clock size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+                      <input type="text" name="celular" required placeholder="Ej: 0987654321" value={formData.celular} onChange={handleChange} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                     </div>
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '20px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Fecha de Nacimiento *</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Fecha de Nacimiento *</label>
                     <div style={{ position: 'relative' }}>
-                      <input type="date" name="birth_date" required value={formData.birth_date} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', background: 'white' }} />
+                      <input type="date" name="birth_date" required value={formData.birth_date} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                     </div>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Edad</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Edad</label>
                     <div style={{ position: 'relative' }}>
-                      <User size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                      <input type="number" name="edad" readOnly placeholder="Auto" value={formData.edad} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '14px', outline: 'none', backgroundColor: '#f1f5f9', cursor: 'not-allowed' }} />
+                      <User size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+                      <input type="number" name="edad" readOnly placeholder="Auto" value={formData.edad} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '14px', outline: 'none', backgroundColor: 'rgba(15, 23, 42, 0.4)', color: '#94a3b8', cursor: 'not-allowed' }} />
                     </div>
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Estado Civil *</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Estado Civil *</label>
                     <div style={{ position: 'relative' }}>
                       <select 
                         name="civil_status"
                         required 
                         value={formData.civil_status}
                         onChange={handleChange}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', appearance: 'none', background: 'white' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
                         <option value="Soltero/a">Soltero/a</option>
@@ -417,25 +511,25 @@ export default function ApplyPage() {
                         <option value="Divorciado/a">Divorciado/a</option>
                         <option value="Viudo/a">Viudo/a</option>
                       </select>
-                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
                     </div>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Género *</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Género *</label>
                     <div style={{ position: 'relative' }}>
                       <select 
                         name="genero"
                         required 
                         value={formData.genero}
                         onChange={handleChange}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', appearance: 'none', background: 'white' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
                         <option value="Masculino">Masculino</option>
                         <option value="Femenino">Femenino</option>
                         <option value="Otro">Otro</option>
                       </select>
-                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
                     </div>
                   </div>
                 </div>
@@ -443,15 +537,15 @@ export default function ApplyPage() {
             </div>
 
             {/* Sección 2: Dirección y Residencia */}
-            <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: '#0f172a', letterSpacing: '0.05em', borderLeft: '4px solid #002f6c', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <MapPin size={18} color="#002f6c" /> Dirección y Residencia
+            <div style={{ background: 'rgba(15, 23, 42, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'white', letterSpacing: '0.05em', borderLeft: '4px solid #fbbf24', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <MapPin size={18} color="#fbbf24" /> Ubicación y Residencia
               </h3>
               
               <div style={{ display: 'grid', gap: '20px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Ciudad de Residencia *</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Ciudad de Residencia *</label>
                     <div style={{ position: 'relative' }}>
                       <select 
                         name="ciudad"
@@ -461,7 +555,7 @@ export default function ApplyPage() {
                           const val = e.target.value;
                           setFormData(prev => ({ ...prev, ciudad: val, sector: '' }));
                         }}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', appearance: 'none', background: 'white' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
                         <option value="Quito">Quito</option>
@@ -476,18 +570,18 @@ export default function ApplyPage() {
                         <option value="Ibarra">Ibarra</option>
                         <option value="Otra">Otra / Provincia</option>
                       </select>
-                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
                     </div>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Sector *</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Sector *</label>
                     <div style={{ position: 'relative' }}>
                       <select 
                         name="sector"
                         required 
                         value={formData.sector}
                         onChange={handleChange}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', appearance: 'none', background: 'white' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
                         <option value="Norte">Norte</option>
@@ -506,35 +600,35 @@ export default function ApplyPage() {
                           </>
                         )}
                       </select>
-                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Dirección Domiciliaria Completa *</label>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Dirección Domiciliaria Completa *</label>
                   <div style={{ position: 'relative' }}>
-                    <input type="text" name="home_address" required placeholder="Detallar Calle principal, numeración y calle transversal" value={formData.home_address} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} />
+                    <input type="text" name="home_address" required placeholder="Calle principal, numeración de casa y calle transversal" value={formData.home_address} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Perfil y Experiencia */}
-            <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: '#0f172a', letterSpacing: '0.05em', borderLeft: '4px solid #002f6c', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Briefcase size={18} color="#002f6c" /> Perfil y Experiencia
+            {/* Sección 3: Perfil y Experiencia */}
+            <div style={{ background: 'rgba(15, 23, 42, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'white', letterSpacing: '0.05em', borderLeft: '4px solid #fbbf24', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Briefcase size={18} color="#fbbf24" /> Perfil y Cargo
               </h3>
               
               <div style={{ display: 'grid', gap: '20px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Seleccionar Cargo al que Postula *</label>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Seleccionar Cargo al que Postula *</label>
                   <div style={{ position: 'relative' }}>
-                    <Briefcase size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 1 }} />
+                    <Briefcase size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', zIndex: 1 }} />
                     <select 
                       required 
                       onChange={handleJobSelect} 
-                      style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', appearance: 'none', background: 'white' }}
+                      style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                     >
                       <option value="">Seleccionar...</option>
                       {jobPositions.map(job => (
@@ -543,62 +637,165 @@ export default function ApplyPage() {
                         </option>
                       ))}
                     </select>
-                    <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                    <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Años de Experiencia *</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Años de Experiencia en Seguridad *</label>
                     <div style={{ position: 'relative' }}>
-                      <Clock size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                      <input type="number" name="experiencia" required min="0" max="15" placeholder="Ej: 3" value={formData.experiencia} onChange={handleChange} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} />
+                      <Clock size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+                      <input type="number" name="experiencia" required min="0" max="15" placeholder="Ej: 2" value={formData.experiencia} onChange={handleChange} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                     </div>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Herramientas / Idiomas clave *</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Habilidades / Competencias Clave *</label>
                     <input 
                       type="text" 
                       name="herramientas" 
                       required 
-                      placeholder="Ej: Excel intermedio, Inglés B2" 
+                      placeholder="Ej: Defensa personal, primeros auxilios, CCTV" 
                       value={formData.herramientas} 
                       onChange={handleChange} 
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} 
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} 
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Habilidad principal o logro clave *</label>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Logro relevante o experiencia destacada *</label>
                   <textarea 
                     name="logro" 
                     required 
-                    placeholder="Ej: Incremento de ventas en un 15% o manejo de presupuestos de +10k" 
+                    placeholder="Ej: Encargado de supervisión de seguridad nocturna en centro comercial o control de accesos de alta afluencia" 
                     value={formData.logro} 
-                    onChange={(e) => handleChange(e)} 
-                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', minHeight: '80px', fontFamily: 'inherit', resize: 'vertical' }} 
+                    onChange={handleChange} 
+                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', minHeight: '80px', fontFamily: 'inherit', resize: 'vertical' }} 
                   />
                 </div>
               </div>
             </div>
 
-            {/* Educación y Estudios */}
-            <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: '#0f172a', letterSpacing: '0.05em', borderLeft: '4px solid #002f6c', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                🎓 Educación y Estudios
+            {/* SECCIÓN NUEVA: REQUISITOS ESPECÍFICOS DE SEGURIDAD */}
+            <div style={{ background: 'rgba(15, 23, 42, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(251, 191, 36, 0.15)' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'white', letterSpacing: '0.05em', borderLeft: '4px solid #fbbf24', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Shield size={18} color="#fbbf24" /> Requisitos y Perfil de Seguridad
+              </h3>
+              
+              <div style={{ display: 'grid', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Curso de Guardia 120 Horas? *</label>
+                    <div style={{ position: 'relative' }}>
+                      <select 
+                        name="guard_course"
+                        required 
+                        value={formData.guard_course}
+                        onChange={handleChange}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                      >
+                        <option value="">Seleccionar...</option>
+                        <option value="Sí">Sí, aprobado y registrado</option>
+                        <option value="No">No, no poseo el curso</option>
+                      </select>
+                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Servicio Militar o Policial? *</label>
+                    <div style={{ position: 'relative' }}>
+                      <select 
+                        name="military_experience"
+                        required 
+                        value={formData.military_experience}
+                        onChange={handleChange}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                      >
+                        <option value="">Seleccionar...</option>
+                        <option value="Sí">Sí, licenciado/a de FFAA/Policía</option>
+                        <option value="No">No poseo experiencia militar/policial</option>
+                      </select>
+                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Estatura en Centímetros *</label>
+                    <input 
+                      type="number" 
+                      name="estatura" 
+                      required 
+                      min="100"
+                      max="250"
+                      placeholder="Ej: 175" 
+                      value={formData.estatura} 
+                      onChange={handleChange} 
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} 
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Licencia de Conducir *</label>
+                    <div style={{ position: 'relative' }}>
+                      <select 
+                        name="driving_license"
+                        required 
+                        value={formData.driving_license}
+                        onChange={handleChange}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                      >
+                        <option value="">Seleccionar...</option>
+                        <option value="No posee">No poseo licencia</option>
+                        <option value="Tipo B">Sí, Tipo B (Liviana)</option>
+                        <option value="Tipo C">Sí, Tipo C (Profesional)</option>
+                        <option value="Tipo D/E">Sí, Tipo D o E (Pesada)</option>
+                        <option value="Tipo A">Sí, Tipo A (Motocicletas)</option>
+                      </select>
+                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Disponibilidad para Turnos Rotativos 24/7? *</label>
+                  <div style={{ position: 'relative' }}>
+                    <select 
+                      name="rotating_shifts"
+                      required 
+                      value={formData.rotating_shifts}
+                      onChange={handleChange}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                    >
+                      <option value="">Seleccionar...</option>
+                      <option value="Sí">Sí, total disponibilidad para horarios rotativos</option>
+                      <option value="No">No, tengo restricciones de horario</option>
+                    </select>
+                    <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sección 5: Educación y Estudios */}
+            <div style={{ background: 'rgba(15, 23, 42, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'white', letterSpacing: '0.05em', borderLeft: '4px solid #fbbf24', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                🎓 Nivel de Estudios
               </h3>
               
               <div style={{ display: 'grid', gap: '20px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Nivel de Estudios *</label>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Nivel de Instrucción *</label>
                   <div style={{ position: 'relative' }}>
                     <select 
                       name="education_level"
                       required 
                       value={formData.education_level}
                       onChange={handleChange}
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', appearance: 'none', background: 'white' }}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                     >
                       <option value="">Seleccionar...</option>
                       <option value="Bachiller">Bachiller</option>
@@ -607,33 +804,33 @@ export default function ApplyPage() {
                       <option value="Universidad Completa">Universidad Completa</option>
                       <option value="Universidad Incompleta">Universidad Incompleta</option>
                     </select>
-                    <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                    <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Institución / Universidad *</label>
-                    <input type="text" name="education_institution" required placeholder="Nombre de la institución" value={formData.education_institution} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} />
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Institución Educativa *</label>
+                    <input type="text" name="education_institution" required placeholder="Nombre de la institución" value={formData.education_institution} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>Título Obtenido</label>
-                    <input type="text" name="education_title" placeholder="Ej: Bachiller, Licenciado, Ingeniero" value={formData.education_title} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }} />
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Título Obtenido</label>
+                    <input type="text" name="education_title" placeholder="Ej: Bachiller en Ciencias, Técnico, etc" value={formData.education_title} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Información Adicional */}
-            <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: '#0f172a', letterSpacing: '0.05em', borderLeft: '4px solid #002f6c', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                📋 Información Adicional
+            {/* Sección 6: Información Adicional */}
+            <div style={{ background: 'rgba(15, 23, 42, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'white', letterSpacing: '0.05em', borderLeft: '4px solid #fbbf24', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                📋 Información de Contexto
               </h3>
               
               <div style={{ display: 'grid', gap: '20px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>¿Te gusta el deporte? *</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Realizas actividad física? *</label>
                     <div style={{ position: 'relative' }}>
                       <select 
                         name="likes_sports"
@@ -647,39 +844,39 @@ export default function ApplyPage() {
                             sports_practiced: val === 'No' ? 'Ninguno' : prev.sports_practiced === 'Ninguno' ? '' : prev.sports_practiced
                           }));
                         }}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', appearance: 'none', background: 'white' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
                         <option value="Si">Sí</option>
                         <option value="No">No</option>
                       </select>
-                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
                     </div>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>¿Qué deporte practicas? {formData.likes_sports === 'Si' ? '*' : ''}</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Deportes / Ejercicios que prácticas *</label>
                     <input 
                       type="text" 
                       name="sports_practiced" 
                       required={formData.likes_sports === 'Si'} 
                       disabled={formData.likes_sports === 'No'} 
-                      placeholder={formData.likes_sports === 'No' ? 'No aplica' : 'Ej: Fútbol, natación, correr'} 
+                      placeholder={formData.likes_sports === 'No' ? 'No aplica' : 'Ej: Gimnasio, correr, fútbol'} 
                       value={formData.sports_practiced} 
                       onChange={handleChange} 
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', backgroundColor: formData.likes_sports === 'No' ? '#f1f5f9' : 'white' }} 
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: formData.likes_sports === 'No' ? 'rgba(255,255,255,0.05)' : '#090d16', color: formData.likes_sports === 'No' ? '#64748b' : 'white', fontSize: '14px', outline: 'none' }} 
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>¿En qué medio conociste sobre esta postulación? *</label>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Por qué medio te enteraste de la oferta? *</label>
                   <div style={{ position: 'relative' }}>
                     <select 
                       name="heard_from"
                       required 
                       value={formData.heard_from}
                       onChange={handleChange}
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', appearance: 'none', background: 'white' }}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                     >
                       <option value="">Seleccionar...</option>
                       <option value="LinkedIn">LinkedIn</option>
@@ -688,63 +885,161 @@ export default function ApplyPage() {
                       <option value="Referidos">Referidos</option>
                       <option value="Otros">Otros</option>
                     </select>
-                    <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                    <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
                   </div>
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '6px', marginLeft: '4px' }}>¿Qué tipo de cultura laboral te motiva y te hace sentir más productivo? *</label>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Qué te motiva de pertenecer a una empresa de seguridad como {companyInfo.name}? *</label>
                   <textarea 
                     name="work_culture_motivation" 
                     required 
-                    placeholder="Cuéntanos qué ambiente laboral prefieres para dar lo mejor de ti" 
+                    placeholder="Describe brevemente tus expectativas, principios y motivación" 
                     value={formData.work_culture_motivation} 
                     onChange={handleChange} 
-                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', minHeight: '80px', fontFamily: 'inherit', resize: 'vertical' }} 
+                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', minHeight: '80px', fontFamily: 'inherit', resize: 'vertical' }} 
                   />
                 </div>
               </div>
             </div>
 
-            {/* Documentación */}
-            <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: '#0f172a', letterSpacing: '0.05em', borderLeft: '4px solid #002f6c', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <UploadCloud size={18} color="#002f6c" /> Documentación
+            {/* Sección 7: Documentación */}
+            <div style={{ background: 'rgba(15, 23, 42, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'white', letterSpacing: '0.05em', borderLeft: '4px solid #fbbf24', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <UploadCloud size={18} color="#fbbf24" /> Adjuntar Documentación
               </h3>
               
               <div style={{ display: 'grid', gap: '20px' }}>
+                {/* 1. CV Obligatorio */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#64748b', marginBottom: '8px', marginLeft: '4px' }}>Adjuntar Hoja de Vida (PDF) *</label>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '8px', marginLeft: '4px' }}>Cargar Hoja de Vida (Formato PDF) *</label>
                   <div 
                     onClick={() => document.getElementById('cv-upload')?.click()}
                     style={{ 
-                      border: '2px dashed #cbd5e1', 
+                      border: '2px dashed #334155', 
                       borderRadius: '12px', 
                       padding: '24px', 
                       textAlign: 'center', 
                       cursor: 'pointer', 
-                      background: file ? '#f0fdf4' : 'white',
-                      borderColor: file ? '#22c55e' : '#cbd5e1',
+                      background: file ? 'rgba(34, 197, 94, 0.08)' : '#090d16',
+                      borderColor: file ? '#22c55e' : '#334155',
                       transition: 'all 0.2s',
                       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
                     }}
                   >
                     <input type="file" id="cv-upload" accept=".pdf" style={{ display: 'none' }} onChange={(e) => setFile(e.target.files?.[0] || null)} />
-                    <UploadCloud size={32} color={file ? '#22c55e' : '#94a3b8'} style={{ marginBottom: '8px' }} />
+                    <UploadCloud size={32} color={file ? '#22c55e' : '#64748b'} style={{ marginBottom: '8px', margin: '0 auto 8px' }} />
                     {file ? (
-                      <p style={{ margin: 0, fontWeight: '700', color: '#166534', fontSize: '14px' }}>{file.name}</p>
+                      <p style={{ margin: 0, fontWeight: '700', color: '#4ade80', fontSize: '14px' }}>{file.name}</p>
                     ) : (
                       <>
-                        <p style={{ margin: '0 0 4px', fontWeight: '700', color: '#475569', fontSize: '14px' }}>Haz clic para seleccionar tu PDF</p>
-                        <p style={{ margin: 0, fontSize: '11px', color: '#94a3b8' }}>Tamaño máximo sugerido: 5MB</p>
+                        <p style={{ margin: '0 0 4px', fontWeight: '700', color: '#cbd5e1', fontSize: '14px' }}>Haz clic para seleccionar tu archivo PDF</p>
+                        <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>Tamaño máximo: 5MB</p>
                       </>
                     )}
                   </div>
                 </div>
+
+                {/* 2. Certificado Antecedentes Penales - Recomendado */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '8px', marginLeft: '4px' }}>Certificado de Antecedentes Penales (Formato PDF) (Recomendado)</label>
+                  <div 
+                    onClick={() => document.getElementById('record-upload')?.click()}
+                    style={{ 
+                      border: '2px dashed #334155', 
+                      borderRadius: '12px', 
+                      padding: '20px', 
+                      textAlign: 'center', 
+                      cursor: 'pointer', 
+                      background: recordFile ? 'rgba(34, 197, 94, 0.08)' : '#090d16',
+                      borderColor: recordFile ? '#22c55e' : '#334155',
+                      transition: 'all 0.2s',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                    }}
+                  >
+                    <input type="file" id="record-upload" accept=".pdf" style={{ display: 'none' }} onChange={(e) => setRecordFile(e.target.files?.[0] || null)} />
+                    <UploadCloud size={28} color={recordFile ? '#22c55e' : '#64748b'} style={{ marginBottom: '8px', margin: '0 auto 8px' }} />
+                    {recordFile ? (
+                      <p style={{ margin: 0, fontWeight: '700', color: '#4ade80', fontSize: '14px' }}>{recordFile.name}</p>
+                    ) : (
+                      <>
+                        <p style={{ margin: '0 0 4px', fontWeight: '700', color: '#cbd5e1', fontSize: '13px' }}>Haz clic para seleccionar el PDF de antecedentes penales</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* 3. Certificado Curso de Guardia (120H) */}
+                {formData.guard_course === 'Sí' && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '8px', marginLeft: '4px' }}>Certificado de Curso de Guardia 120 Horas (Formato PDF)</label>
+                    <div 
+                      onClick={() => document.getElementById('course-upload')?.click()}
+                      style={{ 
+                        border: '2px dashed #334155', 
+                        borderRadius: '12px', 
+                        padding: '20px', 
+                        textAlign: 'center', 
+                        cursor: 'pointer', 
+                        background: courseFile ? 'rgba(34, 197, 94, 0.08)' : '#090d16',
+                        borderColor: courseFile ? '#22c55e' : '#334155',
+                        transition: 'all 0.2s',
+                        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                      }}
+                    >
+                      <input type="file" id="course-upload" accept=".pdf" style={{ display: 'none' }} onChange={(e) => setCourseFile(e.target.files?.[0] || null)} />
+                      <UploadCloud size={28} color={courseFile ? '#22c55e' : '#64748b'} style={{ marginBottom: '8px', margin: '0 auto 8px' }} />
+                      {courseFile ? (
+                        <p style={{ margin: 0, fontWeight: '700', color: '#4ade80', fontSize: '14px' }}>{courseFile.name}</p>
+                      ) : (
+                        <>
+                          <p style={{ margin: '0 0 4px', fontWeight: '700', color: '#cbd5e1', fontSize: '13px' }}>Haz clic para seleccionar el PDF del curso de guardia</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. Copia de Licencia */}
+                {formData.driving_license && formData.driving_license !== 'No posee' && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '8px', marginLeft: '4px' }}>Copia de Licencia de Conducir / Historial Antt (Formato PDF)</label>
+                    <div 
+                      onClick={() => document.getElementById('driver-upload')?.click()}
+                      style={{ 
+                        border: '2px dashed #334155', 
+                        borderRadius: '12px', 
+                        padding: '20px', 
+                        textAlign: 'center', 
+                        cursor: 'pointer', 
+                        background: driverFile ? 'rgba(34, 197, 94, 0.08)' : '#090d16',
+                        borderColor: driverFile ? '#22c55e' : '#334155',
+                        transition: 'all 0.2s',
+                        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                      }}
+                    >
+                      <input type="file" id="driver-upload" accept=".pdf" style={{ display: 'none' }} onChange={(e) => setDriverFile(e.target.files?.[0] || null)} />
+                      <UploadCloud size={28} color={driverFile ? '#22c55e' : '#64748b'} style={{ marginBottom: '8px', margin: '0 auto 8px' }} />
+                      {driverFile ? (
+                        <p style={{ margin: 0, fontWeight: '700', color: '#4ade80', fontSize: '14px' }}>{driverFile.name}</p>
+                      ) : (
+                        <>
+                          <p style={{ margin: '0 0 4px', fontWeight: '700', color: '#cbd5e1', fontSize: '13px' }}>Haz clic para seleccionar el PDF de tu licencia / registro</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-<div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-              <div style={{ maxHeight: '200px', overflowY: 'auto', fontSize: '13px', color: '#475569', lineHeight: '1.6', marginBottom: '20px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
+
+            {/* Sección 8: Consentimiento de Datos LOPDP */}
+            <div style={{ background: 'rgba(15, 23, 42, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'white', letterSpacing: '0.05em', borderLeft: '4px solid #fbbf24', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FileText size={18} color="#fbbf24" /> Autorización de Datos LOPDP
+              </h3>
+              
+              <div style={{ maxHeight: '180px', overflowY: 'auto', fontSize: '13px', color: '#94a3b8', lineHeight: '1.6', marginBottom: '20px', padding: '12px', background: '#090d16', borderRadius: '8px', border: '1px solid #334155' }}>
                 {CONSENT_TEXT(companyInfo.name, getPrivacyEmail(companySlug)).split('\n\n').map((para, i) => (
                   <p key={i} style={{ marginBottom: para.includes(':') ? '8px' : '12px', fontWeight: para.startsWith('CONSENTIMIENTO') ? '800' : 'normal' }}>
                     {para}
@@ -753,29 +1048,29 @@ export default function ApplyPage() {
               </div>
 
               <div style={{ display: 'grid', gap: '12px' }}>
-                <label style={{ display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', padding: '12px', borderRadius: '8px', background: formData.consentimiento ? '#f0fdf4' : 'transparent', border: `1px solid ${formData.consentimiento ? '#22c55e' : 'transparent'}`, transition: 'all 0.2s' }}>
+                <label style={{ display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', padding: '12px', borderRadius: '8px', background: formData.consentimiento ? 'rgba(34, 197, 94, 0.08)' : 'transparent', border: `1px solid ${formData.consentimiento ? '#22c55e' : 'transparent'}`, transition: 'all 0.2s' }}>
                   <input 
                     type="checkbox" 
                     name="consentimiento" 
                     checked={formData.consentimiento} 
                     onChange={handleChange} 
-                    style={{ width: '20px', height: '20px', cursor: 'pointer' }} 
+                    style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: '#fbbf24' }} 
                   />
-                  <span style={{ fontSize: '13px', color: '#1e293b', fontWeight: '500' }}>
-                    He leído y acepto el tratamiento de mis datos personales para la gestión de mi postulación, incluyendo el uso auxiliar de herramientas de inteligencia artificial.
+                  <span style={{ fontSize: '13px', color: '#cbd5e1', fontWeight: '500' }}>
+                    Acepto el tratamiento de mis datos personales para la gestión de mi postulación y el uso de herramientas auxiliares de selección.
                   </span>
                 </label>
 
-                <label style={{ display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', padding: '12px', borderRadius: '8px', background: formData.noAceptoConsentimiento ? '#fef2f2' : 'transparent', border: `1px solid ${formData.noAceptoConsentimiento ? '#ef4444' : 'transparent'}`, transition: 'all 0.2s' }}>
+                <label style={{ display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', padding: '12px', borderRadius: '8px', background: formData.noAceptoConsentimiento ? 'rgba(239, 68, 68, 0.08)' : 'transparent', border: `1px solid ${formData.noAceptoConsentimiento ? '#ef4444' : 'transparent'}`, transition: 'all 0.2s' }}>
                   <input 
                     type="checkbox" 
                     name="noAceptoConsentimiento" 
                     checked={formData.noAceptoConsentimiento} 
                     onChange={handleChange} 
-                    style={{ width: '20px', height: '20px', cursor: 'pointer' }} 
+                    style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: '#ef4444' }} 
                   />
-                  <span style={{ fontSize: '13px', color: '#1e293b', fontWeight: '500' }}>
-                    He leído y no acepto el tratamiento de mis datos personales para la gestión de mi postulación.
+                  <span style={{ fontSize: '13px', color: '#cbd5e1', fontWeight: '500' }}>
+                    No acepto el tratamiento de mis datos personales.
                   </span>
                 </label>
               </div>
@@ -785,27 +1080,27 @@ export default function ApplyPage() {
               type="submit" 
               disabled={loading || !formData.consentimiento}
               style={{ 
-                background: (loading || !formData.consentimiento) ? '#94a3b8' : '#002f6c', 
-                color: 'white', 
+                background: (loading || !formData.consentimiento) ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', 
+                color: (loading || !formData.consentimiento) ? '#64748b' : '#0f172a', 
                 border: 'none', 
                 padding: '16px', 
                 borderRadius: '12px', 
                 fontSize: '16px', 
-                fontWeight: '800', 
+                fontWeight: '900', 
                 cursor: (loading || !formData.consentimiento) ? 'not-allowed' : 'pointer', 
                 opacity: 1,
                 marginTop: '12px',
-                boxShadow: (loading || !formData.consentimiento) ? 'none' : '0 10px 15px -3px rgba(0, 47, 108, 0.3)',
+                boxShadow: (loading || !formData.consentimiento) ? 'none' : '0 10px 15px -3px rgba(251, 191, 36, 0.3)',
                 transition: 'all 0.3s ease'
               }}
             >
-              {loading ? 'Enviando...' : 'FINALIZAR POSTULACIÓN'}
+              {loading ? 'REGISTRANDO...' : 'ENVIAR MI POSTULACIÓN'}
             </button>
 
           </div>
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: '32px', color: '#93c5fd', fontSize: '13px' }}>
+        <p style={{ textAlign: 'center', marginTop: '32px', color: '#64748b', fontSize: '13px' }}>
           Al enviar este formulario, confirmas que la información proporcionada es verídica.
         </p>
 

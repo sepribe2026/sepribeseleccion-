@@ -7,8 +7,8 @@
 -- =====================================================
 -- PASO 2: Asegurarse de que existan las columnas necesarias
 -- =====================================================
-ALTER TABLE admin_profiles ADD COLUMN IF NOT EXISTS company_slug VARCHAR(100) DEFAULT 'superdeporte';
-ALTER TABLE admin_profiles ADD COLUMN IF NOT EXISTS company_name VARCHAR(200) DEFAULT 'SUPERDEPORTE S.A.';
+ALTER TABLE admin_profiles ADD COLUMN IF NOT EXISTS company_slug VARCHAR(100) DEFAULT 'sepribe';
+ALTER TABLE admin_profiles ADD COLUMN IF NOT EXISTS company_name VARCHAR(200) DEFAULT 'SEPRIBE CIA.LTDA.';
 ALTER TABLE admin_profiles ADD COLUMN IF NOT EXISTS perfil VARCHAR(50) DEFAULT 'RECLUTADOR';
 ALTER TABLE admin_profiles ADD COLUMN IF NOT EXISTS ad_user VARCHAR(200);
 

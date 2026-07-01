@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS admin_profiles (
   name VARCHAR(200) NOT NULL,
   is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT now(),
-  company_slug VARCHAR(100) DEFAULT 'superdeporte',
+  company_slug VARCHAR(100) DEFAULT 'sepribe',
   company_name VARCHAR(200) DEFAULT 'SEPRIBE CIA.LTDA.',
   perfil VARCHAR(50) DEFAULT 'RECLUTADOR',
   ad_user VARCHAR(200)
@@ -20,12 +20,12 @@ CREATE TABLE IF NOT EXISTS admin_profiles (
 
 -- Semilla inicial para administrador local (admin/admin bypass)
 INSERT INTO admin_profiles (cedula, name, company_slug, company_name, perfil, ad_user)
-VALUES ('admin', 'Administrador Local', 'superdeporte', 'SEPRIBE CIA.LTDA.', 'ADMIN', 'admin')
+VALUES ('admin', 'Administrador Local', 'sepribe', 'SEPRIBE CIA.LTDA.', 'ADMIN', 'admin')
 ON CONFLICT (cedula) DO NOTHING;
 
 -- Semilla original
 INSERT INTO admin_profiles (cedula, name, company_slug, company_name, perfil) 
-VALUES ('1714639026', 'Administrador Sistema', 'superdeporte', 'SEPRIBE CIA.LTDA.', 'ADMIN')
+VALUES ('1714639026', 'Administrador Sistema', 'sepribe', 'SEPRIBE CIA.LTDA.', 'ADMIN')
 ON CONFLICT (cedula) DO NOTHING;
 
 
@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS email_resumes (
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     
     -- Campos de postulación (Ingreso manual/Formulario)
+    cedula VARCHAR(20),
     gender VARCHAR(100),
     birth_date DATE,
     civil_status VARCHAR(100),
@@ -60,6 +61,20 @@ CREATE TABLE IF NOT EXISTS email_resumes (
     likes_sports VARCHAR(50),
     sports_practiced TEXT,
     work_culture_motivation TEXT,
+    
+    -- Campos de reclutamiento de seguridad
+    military_experience VARCHAR(50),
+    guard_course VARCHAR(50),
+    estatura INTEGER,
+    rotating_shifts VARCHAR(50),
+    driving_license VARCHAR(100),
+    course_pdf_url TEXT,
+    record_pdf_url TEXT,
+    driver_pdf_url TEXT,
+    company_slug VARCHAR(100),
+    sender_phone VARCHAR(50),
+    main_achievement TEXT,
+    key_tools TEXT,
     
     -- Campos analizados por IA (Resumen)
     ai_summary TEXT,
@@ -111,7 +126,7 @@ CREATE TABLE IF NOT EXISTS company_settings (
 
 -- Valores iniciales para las empresas
 INSERT INTO company_settings (company_slug, postulation_enabled) VALUES
-  ('superdeporte', TRUE),
+  ('sepribe', TRUE),
   ('medeport', TRUE),
   ('equinox', TRUE)
 ON CONFLICT (company_slug) DO NOTHING;
@@ -268,29 +283,34 @@ CREATE POLICY "Eliminación pública psicometrico" ON candidate_psychometric_tes
 
 -- 11. TABLA: job_positions (Cargos predefinidos y sus funciones)
 CREATE TABLE IF NOT EXISTS job_positions (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  cargo       VARCHAR(150) NOT NULL,
-  ciudad      VARCHAR(100),
-  funciones   TEXT NOT NULL,
-  created_at  TIMESTAMPTZ DEFAULT now()
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  cargo               VARCHAR(150) NOT NULL,
+  ciudad              VARCHAR(100),
+  funciones           TEXT NOT NULL,
+  company_slug        VARCHAR(100),
+  created_by_cedula   VARCHAR(50),
+  created_at          TIMESTAMPTZ DEFAULT now()
 );
 
 -- Cargos por defecto
-INSERT INTO job_positions (cargo, ciudad, funciones) VALUES
+INSERT INTO job_positions (cargo, ciudad, funciones, company_slug) VALUES
 (
   'Cajero',
   'Quito',
-  'Manejo de caja registradora y POS. Cobro en efectivo y tarjetas de crédito/débito. Cuadre y cierre de caja al final del turno. Atención al cliente en punto de pago. Manejo básico de sistemas de facturación. Honestidad y responsabilidad con valores monetarios. Orientación al servicio al cliente.'
+  'Manejo de caja registradora y POS. Cobro en efectivo y tarjetas de crédito/débito. Cuadre y cierre de caja al final del turno. Atención al cliente en punto de pago. Manejo básico de sistemas de facturación. Honestidad y responsabilidad con valores monetarios. Orientación al servicio al cliente.',
+  'sepribe'
 ),
 (
   'Vendedor',
   'Quito',
-  'Asesoramiento y venta de productos al cliente. Cumplimiento de metas y cuotas de ventas mensuales. Mantenimiento y organización del área de ventas. Conocimiento de catálogo y características de productos. Excelente comunicación y trato con clientes. Capacidad de trabajo bajo presión. Experiencia en retail o ventas presenciales.'
+  'Asesoramiento y venta de productos al cliente. Cumplimiento de metas y cuotas de ventas mensuales. Mantenimiento y organización del área de ventas. Conocimiento de catálogo y características de productos. Excelente comunicación y trato con clientes. Capacidad de trabajo bajo presión. Experiencia en retail o ventas presenciales.',
+  'sepribe'
 ),
 (
   'Bodeguero',
   'Quito',
-  'Recepción y verificación de mercadería. Control y registro de inventario. Organización de bodega y productos. Despacho de productos a las áreas solicitadas. Manejo de montacargas o transpaletas (deseable). Registro en sistema de gestión de inventarios. Trabajo físico y en ambientes de almacenamiento.'
+  'Recepción y verificación de mercadería. Control y registro de inventario. Organización de bodega y productos. Despacho de productos a las áreas solicitadas. Manejo de montacargas o transpaletas (deseable). Registro en sistema de gestión de inventarios. Trabajo físico y en ambientes de almacenamiento.',
+  'sepribe'
 )
 ON CONFLICT DO NOTHING;
 
@@ -298,6 +318,7 @@ ON CONFLICT DO NOTHING;
 ALTER TABLE job_positions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Acceso público lectura job_positions" ON job_positions FOR SELECT USING (true);
 CREATE POLICY "Acceso público inserción job_positions" ON job_positions FOR INSERT WITH CHECK (true);
+CREATE POLICY "Acceso público actualización job_positions" ON job_positions FOR UPDATE USING (true);
 CREATE POLICY "Acceso público eliminación job_positions" ON job_positions FOR DELETE USING (true);
 
 

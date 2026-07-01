@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS company_settings (
 
 -- 2. Insertar valores iniciales para las 3 compañías
 INSERT INTO company_settings (company_slug, postulation_enabled) VALUES
-  ('superdeporte', TRUE),
+  ('sepribe', TRUE),
   ('medeport', TRUE),
   ('equinox', TRUE)
 ON CONFLICT (company_slug) DO NOTHING;

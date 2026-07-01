@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
                 user: {
                     cedula: 'admin',
                     name: 'Administrador Local',
-                    company_slug: 'superdeporte',
+                    company_slug: 'sepribe',
                     company_name: 'SEPRIBE CIA.LTDA.',
                     perfil: 'ADMIN'
                 }
@@ -161,14 +161,14 @@ export async function POST(request: NextRequest) {
         let userData: any = {
             cedula: authData.cedula || cedula,
             name: authData.nombre || 'Usuario',
-            company_slug: 'superdeporte',
+            company_slug: 'sepribe',
             company_name: 'SEPRIBE CIA.LTDA.',
             perfil: 'ADMIN'
         };
 
         if (app === 'candidates' && profile) {
             userData.name = profile.name;
-            userData.company_slug = profile.company_slug || 'superdeporte';
+            userData.company_slug = profile.company_slug || 'sepribe';
             userData.company_name = (profile.company_name || 'SEPRIBE CIA.LTDA.').replace('SUPERDEPORT S.A.', 'SEPRIBE CIA.LTDA.').replace('SUPERDEPORTE S.A.', 'SEPRIBE CIA.LTDA.');
             userData.perfil = profile.perfil || 'ADMIN';
         }

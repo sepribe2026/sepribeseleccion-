@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     }
 
     // URL de onboarding dinámica según empresa
-    const slug = companySlug || 'superdeporte';
+    const slug = companySlug || 'sepribe';
     const onboardingUrl = `https://uneteanuestroequipo.ec.aseyco.com/${slug}/onboarding`;
 
     // 1. Obtener Token de Acceso

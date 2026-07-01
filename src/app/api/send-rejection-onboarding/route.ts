@@ -4,7 +4,7 @@ import nodemailer from 'nodemailer';
 export async function POST(req: NextRequest) {
   try {
     const { email, name, observation, portalUrl } = await req.json();
-    const onboardingUrl = portalUrl || `https://uneteanuestroequipo.ec.aseyco.com/superdeporte/onboarding`;
+    const onboardingUrl = portalUrl || `https://uneteanuestroequipo.ec.aseyco.com/sepribe/onboarding`;
 
     if (!email) return NextResponse.json({ error: 'Email requerido' }, { status: 400 });
 

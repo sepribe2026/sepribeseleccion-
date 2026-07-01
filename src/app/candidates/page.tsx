@@ -255,7 +255,7 @@ export default function CandidatesAdmin() {
 
   const [candidates, setCandidates] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [portalUrl, setPortalUrl] = useState(`https://uneteanuestroequipo.ec.aseyco.com/${user?.company_slug || 'superdeporte'}/onboarding`)
+  const [portalUrl, setPortalUrl] = useState(`https://uneteanuestroequipo.ec.aseyco.com/${user?.company_slug || 'sepribe'}/onboarding`)
   const [isMounted, setIsMounted] = useState(false)
 
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(portalUrl)}`
@@ -330,7 +330,7 @@ export default function CandidatesAdmin() {
 
   // === CONFIGURACIÓN DE POSTULACIONES POR EMPRESA ===
   const [companySettings, setCompanySettings] = useState<Record<string, boolean>>({
-    superdeporte: true,
+    sepribe: true,
     medeport: true,
     equinox: true
   })
@@ -706,7 +706,7 @@ export default function CandidatesAdmin() {
       const { data, error } = await supabase.from('company_settings').select('*')
       if (error) throw error
       if (data) {
-        const settings: Record<string, boolean> = { superdeporte: true, medeport: true, equinox: true }
+        const settings: Record<string, boolean> = { sepribe: true, medeport: true, equinox: true }
         data.forEach((row: any) => {
           settings[row.company_slug] = row.postulation_enabled
         })
@@ -1354,12 +1354,20 @@ export default function CandidatesAdmin() {
     if (!rankingCargo || !rankingFunciones || !user) return
     setSavingPosition(true)
     const payload = { cargo: rankingCargo, ciudad: rankingCiudad, funciones: rankingFunciones, created_by_cedula: user.cedula, company_slug: user.company_slug }
+    let errorObj = null;
     if (editingPositionId) {
-      await supabase.from('job_positions').update(payload).eq('id', editingPositionId)
+      const { error } = await supabase.from('job_positions').update(payload).eq('id', editingPositionId)
+      errorObj = error
     } else {
-      await supabase.from('job_positions').insert(payload)
+      const { error } = await supabase.from('job_positions').insert(payload)
+      errorObj = error
     }
-    await fetchJobPositions()
+    if (errorObj) {
+      alert('❌ Error al guardar cargo: ' + errorObj.message)
+    } else {
+      alert('✅ Cargo guardado con éxito.')
+      await fetchJobPositions()
+    }
     setSavingPosition(false)
   }
 
@@ -1367,12 +1375,17 @@ export default function CandidatesAdmin() {
     if (!editingPositionId) return
     if (!window.confirm('¿Eliminar perfil de cargo?')) return
     setSavingPosition(true)
-    await supabase.from('job_positions').delete().eq('id', editingPositionId)
-    setEditingPositionId(null)
-    setRankingCargo('')
-    setRankingFunciones('')
-    await fetchJobPositions()
-    setShowJobMaintenance(false)
+    const { error } = await supabase.from('job_positions').delete().eq('id', editingPositionId)
+    if (error) {
+      alert('❌ Error al eliminar cargo: ' + error.message)
+    } else {
+      alert('✅ Cargo eliminado con éxito.')
+      setEditingPositionId(null)
+      setRankingCargo('')
+      setRankingFunciones('')
+      await fetchJobPositions()
+      setShowJobMaintenance(false)
+    }
     setSavingPosition(false)
   }
 
@@ -2532,14 +2545,14 @@ export default function CandidatesAdmin() {
                 <label className="ranking-label">📋 Link Postulación (Candidatos)</label>
                 <input
                   type="text"
-                  value={`https://uneteanuestroequipo.ec.aseyco.com/${user?.company_slug || 'superdeporte'}/postular`}
+                  value={`https://uneteanuestroequipo.ec.aseyco.com/${user?.company_slug || 'sepribe'}/postular`}
                   readOnly
                   className="qr-input"
                   style={{ background: '#f8fafc', color: '#475569', cursor: 'default' }}
                 />
               </div>
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`https://uneteanuestroequipo.ec.aseyco.com/${user?.company_slug || 'superdeporte'}/postular`)}`}
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`https://uneteanuestroequipo.ec.aseyco.com/${user?.company_slug || 'sepribe'}/postular`)}`}
                 alt="QR Postulación"
                 style={{ width: '64px', height: '64px', borderRadius: '8px' }}
               />
@@ -2553,9 +2566,7 @@ export default function CandidatesAdmin() {
               <label className="ranking-label">🟢 Recepción de Candidatos</label>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center', background: '#f8fafc', padding: '10px 16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                 {[
-                  { slug: 'superdeporte', name: 'SEPRIBE CIA.LTDA.' },
-                  { slug: 'medeport', name: 'Medeport' },
-                  { slug: 'equinox', name: 'Equinox' }
+                  { slug: 'sepribe', name: 'SEPRIBE CIA.LTDA.' }
                 ].map(comp => {
                   const isEnabled = companySettings[comp.slug] !== false;
                   return (

@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json().catch(() => ({}));
     const requesterCedula = body.cedula || null;
-    const companySlug = body.company_slug || 'superdeporte';
+    const companySlug = body.company_slug || 'sepribe';
 
     const messages = response.value.filter((m: any) => m.hasAttachments === true);
     const resumes = [];
