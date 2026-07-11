@@ -43,9 +43,12 @@ export default function ApplyPage() {
   const [isSuccess, setIsSuccess] = useState(false)
   const [error, setError] = useState('')
   const [file, setFile] = useState<File | null>(null)
-  const [courseFile, setCourseFile] = useState<File | null>(null)
-  const [recordFile, setRecordFile] = useState<File | null>(null)
-  const [driverFile, setDriverFile] = useState<File | null>(null)
+  const [cedulaFile, setCedulaFile] = useState<File | null>(null)
+  const [diploma120hFile, setDiploma120hFile] = useState<File | null>(null)
+  const [diplomaNivel2File, setDiplomaNivel2File] = useState<File | null>(null)
+  const [diplomaReentrenamientoFile, setDiplomaReentrenamientoFile] = useState<File | null>(null)
+  const [historialLaboralFile, setHistorialLaboralFile] = useState<File | null>(null)
+  const [certificadosFile, setCertificadosFile] = useState<File | null>(null)
   const [insertedId, setInsertedId] = useState('')
   const [jobPositions, setJobPositions] = useState<any[]>([])
   const [companyInfo, setCompanyInfo] = useState({ name: 'SEPRIBE CIA.LTDA.', slug: 'sepribe' })
@@ -57,12 +60,12 @@ export default function ApplyPage() {
     email: '',
     cedula: '',
     celular: '',
+    contacto_adicional: '',
     cargo: '',
     ciudad: '',
     experiencia: '',
     edad: '',
-    logro: '',
-    herramientas: '',
+    worked_in_sepribe: '',
     consentimiento: false,
     noAceptoConsentimiento: false,
     birth_date: '',
@@ -73,15 +76,16 @@ export default function ApplyPage() {
     education_institution: '',
     education_title: '',
     heard_from: '',
-    likes_sports: '',
-    sports_practiced: '',
     work_culture_motivation: '',
     genero: '',
-    military_experience: '',
     guard_course: '',
     estatura: '',
-    rotating_shifts: '',
-    driving_license: ''
+    reentrenamiento_vigente: '',
+    own_transport: '',
+    driving_license: '',
+    supervisor_course: '',
+    console_course: '',
+    vip_course: ''
   })
 
   useEffect(() => {
@@ -196,6 +200,8 @@ export default function ApplyPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!file) { setError('Por favor, adjunta tu hoja de vida en PDF.'); return }
+    if (!cedulaFile) { setError('Por favor, adjunta la copia de tu cédula.'); return }
+    if (!historialLaboralFile) { setError('Por favor, adjunta tu historial laboral.'); return }
     if (!formData.consentimiento) { setError('Debes aceptar el tratamiento de datos personales para postularte.'); return }
     if (formData.cedula.length < 10) { setError('La cédula debe tener al menos 10 dígitos.'); return }
     if (parseInt(formData.experiencia) > 15) { setError('Los años de experiencia no pueden superar los 15 años.'); return }
@@ -246,20 +252,23 @@ export default function ApplyPage() {
       const publicUrl = await uploadDocument(file, 'resume')
 
       // Subidas adicionales condicionales u opcionales
-      let coursePdfUrl = null
-      if (courseFile) {
-        coursePdfUrl = await uploadDocument(courseFile, 'course_cert')
-      }
+      let cedulaPdfUrl = null
+      if (cedulaFile) cedulaPdfUrl = await uploadDocument(cedulaFile, 'cedula')
+        
+      let diploma120hUrl = null
+      if (diploma120hFile) diploma120hUrl = await uploadDocument(diploma120hFile, 'diploma_120h')
 
-      let recordPdfUrl = null
-      if (recordFile) {
-        recordPdfUrl = await uploadDocument(recordFile, 'record_cert')
-      }
+      let diplomaNivel2Url = null
+      if (diplomaNivel2File) diplomaNivel2Url = await uploadDocument(diplomaNivel2File, 'diploma_nivel_ii')
 
-      let driverPdfUrl = null
-      if (driverFile) {
-        driverPdfUrl = await uploadDocument(driverFile, 'driver_cert')
-      }
+      let diplomaReentrenamientoUrl = null
+      if (diplomaReentrenamientoFile) diplomaReentrenamientoUrl = await uploadDocument(diplomaReentrenamientoFile, 'diploma_reentrenamiento')
+        
+      let historialLaboralUrl = null
+      if (historialLaboralFile) historialLaboralUrl = await uploadDocument(historialLaboralFile, 'historial_laboral')
+        
+      let certificadosTrabajoUrl = null
+      if (certificadosFile) certificadosTrabajoUrl = await uploadDocument(certificadosFile, 'certificados_trabajo')
 
       // 3. Insertar en email_resumes
       const { data: insertedData, error: dbError } = await supabase.from('email_resumes').insert([{
@@ -277,10 +286,8 @@ export default function ApplyPage() {
         city: formData.ciudad,
         experience_years: formData.experiencia,
         age: formData.edad,
-        skills: `${formData.herramientas}${formData.guard_course === 'Sí' ? ', Curso de Guardia 120H' : ''}${formData.military_experience === 'Sí' ? ', Experiencia Militar/Policial' : ''}${formData.driving_license && formData.driving_license !== 'No posee' ? `, Licencia ${formData.driving_license}` : ''}`,
-        main_achievement: formData.logro,
-        key_tools: formData.herramientas,
-        ai_summary: `CED: ${formData.cedula} | TEL: ${formData.celular} | ESTATURA: ${formData.estatura} cm | CURSO 120H: ${formData.guard_course} | EXP MILITAR/POLICIAL: ${formData.military_experience} | TURNOS ROTATIVOS: ${formData.rotating_shifts} | LICENCIA: ${formData.driving_license} | LOGRO: ${formData.logro} | HERRAMIENTAS: ${formData.herramientas} | CONSENTIMIENTO LOPDP: ACEPTADO`,
+        skills: `${formData.guard_course === 'Sí' ? 'Curso de Guardia 120H' : ''}${formData.driving_license && formData.driving_license !== 'No posee' ? `, Licencia ${formData.driving_license}` : ''}`,
+        ai_summary: `CED: ${formData.cedula} | TEL: ${formData.celular} | ESTATURA: ${formData.estatura} cm | CURSO 120H: ${formData.guard_course} | LICENCIA: ${formData.driving_license} | CONSENTIMIENTO LOPDP: ACEPTADO`,
         company_slug: companySlug,
         birth_date: formData.birth_date || null,
         civil_status: formData.civil_status || null,
@@ -291,19 +298,25 @@ export default function ApplyPage() {
         education_title: formData.education_title || null,
         heard_from: formData.heard_from || null,
         gender: formData.genero || null,
-        likes_sports: formData.likes_sports || null,
-        sports_practiced: formData.sports_practiced || null,
         work_culture_motivation: formData.work_culture_motivation || null,
+        contacto_adicional: formData.contacto_adicional || null,
+        worked_in_sepribe: formData.worked_in_sepribe || null,
         
         // Campos específicos de reclutamiento de seguridad
-        military_experience: formData.military_experience || null,
         guard_course: formData.guard_course || null,
         estatura: formData.estatura ? parseInt(formData.estatura) : null,
-        rotating_shifts: formData.rotating_shifts || null,
         driving_license: formData.driving_license || null,
-        course_pdf_url: coursePdfUrl,
-        record_pdf_url: recordPdfUrl,
-        driver_pdf_url: driverPdfUrl
+        reentrenamiento_vigente: formData.reentrenamiento_vigente || null,
+        own_transport: formData.own_transport || null,
+        supervisor_course: formData.supervisor_course || null,
+        console_course: formData.console_course || null,
+        vip_course: formData.vip_course || null,
+        cedula_pdf_url: cedulaPdfUrl,
+        diploma_120h_url: diploma120hUrl,
+        diploma_nivel_ii_url: diplomaNivel2Url,
+        diploma_reentrenamiento_url: diplomaReentrenamientoUrl,
+        historial_laboral_url: historialLaboralUrl,
+        certificados_trabajo_url: certificadosTrabajoUrl
       }]).select('id').single()
 
       if (dbError) throw dbError
@@ -473,6 +486,16 @@ export default function ApplyPage() {
                     <div style={{ position: 'relative' }}>
                       <Clock size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
                       <input type="text" name="celular" required placeholder="Ej: 0987654321" value={formData.celular} onChange={handleChange} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Contacto Adicional (Opcional)</label>
+                    <div style={{ position: 'relative' }}>
+                      <Clock size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+                      <input type="text" name="contacto_adicional" placeholder="Ej: 0987654322 (Hermano)" value={formData.contacto_adicional} onChange={handleChange} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                     </div>
                   </div>
                 </div>
@@ -650,29 +673,22 @@ export default function ApplyPage() {
                     </div>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Habilidades / Competencias Clave *</label>
-                    <input 
-                      type="text" 
-                      name="herramientas" 
-                      required 
-                      placeholder="Ej: Defensa personal, primeros auxilios, CCTV" 
-                      value={formData.herramientas} 
-                      onChange={handleChange} 
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} 
-                    />
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Has laborado en SEPRIBE anteriormente? *</label>
+                    <div style={{ position: 'relative' }}>
+                      <select 
+                        name="worked_in_sepribe"
+                        required 
+                        value={formData.worked_in_sepribe}
+                        onChange={handleChange}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                      >
+                        <option value="">Seleccionar...</option>
+                        <option value="Sí">Sí</option>
+                        <option value="No">No</option>
+                      </select>
+                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
+                    </div>
                   </div>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Logro relevante o experiencia destacada *</label>
-                  <textarea 
-                    name="logro" 
-                    required 
-                    placeholder="Ej: Encargado de supervisión de seguridad nocturna en centro comercial o control de accesos de alta afluencia" 
-                    value={formData.logro} 
-                    onChange={handleChange} 
-                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', minHeight: '80px', fontFamily: 'inherit', resize: 'vertical' }} 
-                  />
                 </div>
               </div>
             </div>
@@ -686,7 +702,7 @@ export default function ApplyPage() {
               <div style={{ display: 'grid', gap: '20px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Curso de Guardia 120 Horas? *</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Curso de Guardia Nivel II? *</label>
                     <div style={{ position: 'relative' }}>
                       <select 
                         name="guard_course"
@@ -696,26 +712,26 @@ export default function ApplyPage() {
                         style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
-                        <option value="Sí">Sí, aprobado y registrado</option>
-                        <option value="No">No, no poseo el curso</option>
+                        <option value="Sí">Sí</option>
+                        <option value="No">No</option>
                       </select>
                       <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
                     </div>
                   </div>
                   
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Servicio Militar o Policial? *</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Curso de reentrenamiento vigente? *</label>
                     <div style={{ position: 'relative' }}>
                       <select 
-                        name="military_experience"
+                        name="reentrenamiento_vigente"
                         required 
-                        value={formData.military_experience}
+                        value={formData.reentrenamiento_vigente}
                         onChange={handleChange}
                         style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
-                        <option value="Sí">Sí, licenciado/a de FFAA/Policía</option>
-                        <option value="No">No poseo experiencia militar/policial</option>
+                        <option value="Sí">Sí</option>
+                        <option value="No">No</option>
                       </select>
                       <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
                     </div>
@@ -760,21 +776,86 @@ export default function ApplyPage() {
                   </div>
                 </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Disponibilidad para Turnos Rotativos 24/7? *</label>
-                  <div style={{ position: 'relative' }}>
-                    <select 
-                      name="rotating_shifts"
-                      required 
-                      value={formData.rotating_shifts}
-                      onChange={handleChange}
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
-                    >
-                      <option value="">Seleccionar...</option>
-                      <option value="Sí">Sí, total disponibilidad para horarios rotativos</option>
-                      <option value="No">No, tengo restricciones de horario</option>
-                    </select>
-                    <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Tienes movilidad propia? *</label>
+                    <div style={{ position: 'relative' }}>
+                      <select 
+                        name="own_transport"
+                        required 
+                        value={formData.own_transport}
+                        onChange={handleChange}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                      >
+                        <option value="">Seleccionar...</option>
+                        <option value="Sí">Sí</option>
+                        <option value="No">No</option>
+                      </select>
+                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* SECCIÓN NUEVA: CURSOS ADICIONALES */}
+            <div style={{ background: 'rgba(15, 23, 42, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(251, 191, 36, 0.15)' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'white', letterSpacing: '0.05em', borderLeft: '4px solid #fbbf24', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Shield size={18} color="#fbbf24" /> Cursos Adicionales
+              </h3>
+              
+              <div style={{ display: 'grid', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Curso de supervisor de seguridad?</label>
+                    <div style={{ position: 'relative' }}>
+                      <select 
+                        name="supervisor_course"
+                        value={formData.supervisor_course}
+                        onChange={handleChange}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                      >
+                        <option value="">Seleccionar...</option>
+                        <option value="Sí">Sí</option>
+                        <option value="No">No</option>
+                      </select>
+                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Curso de operador de consola?</label>
+                    <div style={{ position: 'relative' }}>
+                      <select 
+                        name="console_course"
+                        value={formData.console_course}
+                        onChange={handleChange}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                      >
+                        <option value="">Seleccionar...</option>
+                        <option value="Sí">Sí</option>
+                        <option value="No">No</option>
+                      </select>
+                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Curso de escolta y seguridad VIP?</label>
+                    <div style={{ position: 'relative' }}>
+                      <select 
+                        name="vip_course"
+                        value={formData.vip_course}
+                        onChange={handleChange}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                      >
+                        <option value="">Seleccionar...</option>
+                        <option value="Sí">Sí</option>
+                        <option value="No">No</option>
+                      </select>
+                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -828,45 +909,6 @@ export default function ApplyPage() {
               </h3>
               
               <div style={{ display: 'grid', gap: '20px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Realizas actividad física? *</label>
-                    <div style={{ position: 'relative' }}>
-                      <select 
-                        name="likes_sports"
-                        required 
-                        value={formData.likes_sports}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setFormData(prev => ({
-                            ...prev,
-                            likes_sports: val,
-                            sports_practiced: val === 'No' ? 'Ninguno' : prev.sports_practiced === 'Ninguno' ? '' : prev.sports_practiced
-                          }));
-                        }}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
-                      >
-                        <option value="">Seleccionar...</option>
-                        <option value="Si">Sí</option>
-                        <option value="No">No</option>
-                      </select>
-                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
-                    </div>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Deportes / Ejercicios que prácticas *</label>
-                    <input 
-                      type="text" 
-                      name="sports_practiced" 
-                      required={formData.likes_sports === 'Si'} 
-                      disabled={formData.likes_sports === 'No'} 
-                      placeholder={formData.likes_sports === 'No' ? 'No aplica' : 'Ej: Gimnasio, correr, fútbol'} 
-                      value={formData.sports_practiced} 
-                      onChange={handleChange} 
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: formData.likes_sports === 'No' ? 'rgba(255,255,255,0.05)' : '#090d16', color: formData.likes_sports === 'No' ? '#64748b' : 'white', fontSize: '14px', outline: 'none' }} 
-                    />
-                  </div>
-                </div>
 
                 <div>
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Por qué medio te enteraste de la oferta? *</label>
@@ -940,96 +982,111 @@ export default function ApplyPage() {
                   </div>
                 </div>
 
-                {/* 2. Certificado Antecedentes Penales - Recomendado */}
+                {/* 2. Cédula Obligatoria */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '8px', marginLeft: '4px' }}>Certificado de Antecedentes Penales (Formato PDF) (Recomendado)</label>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '8px', marginLeft: '4px' }}>Cargar Copia de Cédula (Formato PDF) *</label>
                   <div 
-                    onClick={() => document.getElementById('record-upload')?.click()}
+                    onClick={() => document.getElementById('cedula-upload')?.click()}
                     style={{ 
                       border: '2px dashed #334155', 
                       borderRadius: '12px', 
                       padding: '20px', 
                       textAlign: 'center', 
                       cursor: 'pointer', 
-                      background: recordFile ? 'rgba(34, 197, 94, 0.08)' : '#090d16',
-                      borderColor: recordFile ? '#22c55e' : '#334155',
+                      background: cedulaFile ? 'rgba(34, 197, 94, 0.08)' : '#090d16',
+                      borderColor: cedulaFile ? '#22c55e' : '#334155',
                       transition: 'all 0.2s',
                       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
                     }}
                   >
-                    <input type="file" id="record-upload" accept=".pdf" style={{ display: 'none' }} onChange={(e) => setRecordFile(e.target.files?.[0] || null)} />
-                    <UploadCloud size={28} color={recordFile ? '#22c55e' : '#64748b'} style={{ marginBottom: '8px', margin: '0 auto 8px' }} />
-                    {recordFile ? (
-                      <p style={{ margin: 0, fontWeight: '700', color: '#4ade80', fontSize: '14px' }}>{recordFile.name}</p>
+                    <input type="file" id="cedula-upload" accept=".pdf" style={{ display: 'none' }} onChange={(e) => setCedulaFile(e.target.files?.[0] || null)} />
+                    <UploadCloud size={28} color={cedulaFile ? '#22c55e' : '#64748b'} style={{ marginBottom: '8px', margin: '0 auto 8px' }} />
+                    {cedulaFile ? (
+                      <p style={{ margin: 0, fontWeight: '700', color: '#4ade80', fontSize: '14px' }}>{cedulaFile.name}</p>
                     ) : (
-                      <>
-                        <p style={{ margin: '0 0 4px', fontWeight: '700', color: '#cbd5e1', fontSize: '13px' }}>Haz clic para seleccionar el PDF de antecedentes penales</p>
-                      </>
+                      <p style={{ margin: '0 0 4px', fontWeight: '700', color: '#cbd5e1', fontSize: '13px' }}>Haz clic para seleccionar el PDF de tu cédula</p>
                     )}
                   </div>
                 </div>
 
-                {/* 3. Certificado Curso de Guardia (120H) */}
-                {formData.guard_course === 'Sí' && (
-                  <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '8px', marginLeft: '4px' }}>Certificado de Curso de Guardia 120 Horas (Formato PDF)</label>
-                    <div 
-                      onClick={() => document.getElementById('course-upload')?.click()}
-                      style={{ 
-                        border: '2px dashed #334155', 
-                        borderRadius: '12px', 
-                        padding: '20px', 
-                        textAlign: 'center', 
-                        cursor: 'pointer', 
-                        background: courseFile ? 'rgba(34, 197, 94, 0.08)' : '#090d16',
-                        borderColor: courseFile ? '#22c55e' : '#334155',
-                        transition: 'all 0.2s',
-                        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-                      }}
-                    >
-                      <input type="file" id="course-upload" accept=".pdf" style={{ display: 'none' }} onChange={(e) => setCourseFile(e.target.files?.[0] || null)} />
-                      <UploadCloud size={28} color={courseFile ? '#22c55e' : '#64748b'} style={{ marginBottom: '8px', margin: '0 auto 8px' }} />
-                      {courseFile ? (
-                        <p style={{ margin: 0, fontWeight: '700', color: '#4ade80', fontSize: '14px' }}>{courseFile.name}</p>
-                      ) : (
-                        <>
-                          <p style={{ margin: '0 0 4px', fontWeight: '700', color: '#cbd5e1', fontSize: '13px' }}>Haz clic para seleccionar el PDF del curso de guardia</p>
-                        </>
-                      )}
-                    </div>
+                {/* 3. Historial Laboral Obligatorio */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '8px', marginLeft: '4px' }}>Cargar Historial Laboral (Por Empleador) Actualizado *</label>
+                  <div 
+                    onClick={() => document.getElementById('historial-upload')?.click()}
+                    style={{ 
+                      border: '2px dashed #334155', 
+                      borderRadius: '12px', 
+                      padding: '20px', 
+                      textAlign: 'center', 
+                      cursor: 'pointer', 
+                      background: historialLaboralFile ? 'rgba(34, 197, 94, 0.08)' : '#090d16',
+                      borderColor: historialLaboralFile ? '#22c55e' : '#334155',
+                      transition: 'all 0.2s',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                    }}
+                  >
+                    <input type="file" id="historial-upload" accept=".pdf" style={{ display: 'none' }} onChange={(e) => setHistorialLaboralFile(e.target.files?.[0] || null)} />
+                    <UploadCloud size={28} color={historialLaboralFile ? '#22c55e' : '#64748b'} style={{ marginBottom: '8px', margin: '0 auto 8px' }} />
+                    {historialLaboralFile ? (
+                      <p style={{ margin: 0, fontWeight: '700', color: '#4ade80', fontSize: '14px' }}>{historialLaboralFile.name}</p>
+                    ) : (
+                      <p style={{ margin: '0 0 4px', fontWeight: '700', color: '#cbd5e1', fontSize: '13px' }}>Haz clic para seleccionar el PDF de tu historial laboral</p>
+                    )}
                   </div>
-                )}
+                </div>
 
-                {/* 4. Copia de Licencia */}
-                {formData.driving_license && formData.driving_license !== 'No posee' && (
-                  <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '8px', marginLeft: '4px' }}>Copia de Licencia de Conducir / Historial Antt (Formato PDF)</label>
-                    <div 
-                      onClick={() => document.getElementById('driver-upload')?.click()}
-                      style={{ 
-                        border: '2px dashed #334155', 
-                        borderRadius: '12px', 
-                        padding: '20px', 
-                        textAlign: 'center', 
-                        cursor: 'pointer', 
-                        background: driverFile ? 'rgba(34, 197, 94, 0.08)' : '#090d16',
-                        borderColor: driverFile ? '#22c55e' : '#334155',
-                        transition: 'all 0.2s',
-                        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-                      }}
-                    >
-                      <input type="file" id="driver-upload" accept=".pdf" style={{ display: 'none' }} onChange={(e) => setDriverFile(e.target.files?.[0] || null)} />
-                      <UploadCloud size={28} color={driverFile ? '#22c55e' : '#64748b'} style={{ marginBottom: '8px', margin: '0 auto 8px' }} />
-                      {driverFile ? (
-                        <p style={{ margin: 0, fontWeight: '700', color: '#4ade80', fontSize: '14px' }}>{driverFile.name}</p>
-                      ) : (
-                        <>
-                          <p style={{ margin: '0 0 4px', fontWeight: '700', color: '#cbd5e1', fontSize: '13px' }}>Haz clic para seleccionar el PDF de tu licencia / registro</p>
-                        </>
-                      )}
-                    </div>
+                {/* 4. Diploma 120H (Opcional/Condicional) */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '8px', marginLeft: '4px' }}>Cargar Diploma de 120 horas</label>
+                  <div 
+                    onClick={() => document.getElementById('diploma120-upload')?.click()}
+                    style={{ border: '2px dashed #334155', borderRadius: '12px', padding: '20px', textAlign: 'center', cursor: 'pointer', background: diploma120hFile ? 'rgba(34, 197, 94, 0.08)' : '#090d16', borderColor: diploma120hFile ? '#22c55e' : '#334155' }}
+                  >
+                    <input type="file" id="diploma120-upload" accept=".pdf" style={{ display: 'none' }} onChange={(e) => setDiploma120hFile(e.target.files?.[0] || null)} />
+                    <UploadCloud size={28} color={diploma120hFile ? '#22c55e' : '#64748b'} style={{ marginBottom: '8px', margin: '0 auto 8px' }} />
+                    {diploma120hFile ? <p style={{ margin: 0, fontWeight: '700', color: '#4ade80', fontSize: '14px' }}>{diploma120hFile.name}</p> : <p style={{ margin: '0 0 4px', fontWeight: '700', color: '#cbd5e1', fontSize: '13px' }}>Haz clic para seleccionar el PDF del diploma</p>}
                   </div>
-                )}
+                </div>
+
+                {/* 5. Diploma Nivel II (Opcional/Condicional) */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '8px', marginLeft: '4px' }}>Cargar Diploma Nivel II</label>
+                  <div 
+                    onClick={() => document.getElementById('diplomaNivel2-upload')?.click()}
+                    style={{ border: '2px dashed #334155', borderRadius: '12px', padding: '20px', textAlign: 'center', cursor: 'pointer', background: diplomaNivel2File ? 'rgba(34, 197, 94, 0.08)' : '#090d16', borderColor: diplomaNivel2File ? '#22c55e' : '#334155' }}
+                  >
+                    <input type="file" id="diplomaNivel2-upload" accept=".pdf" style={{ display: 'none' }} onChange={(e) => setDiplomaNivel2File(e.target.files?.[0] || null)} />
+                    <UploadCloud size={28} color={diplomaNivel2File ? '#22c55e' : '#64748b'} style={{ marginBottom: '8px', margin: '0 auto 8px' }} />
+                    {diplomaNivel2File ? <p style={{ margin: 0, fontWeight: '700', color: '#4ade80', fontSize: '14px' }}>{diplomaNivel2File.name}</p> : <p style={{ margin: '0 0 4px', fontWeight: '700', color: '#cbd5e1', fontSize: '13px' }}>Haz clic para seleccionar el PDF del diploma</p>}
+                  </div>
+                </div>
+
+                {/* 6. Diploma Reentrenamiento (Opcional/Condicional) */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '8px', marginLeft: '4px' }}>Cargar Diploma de Reentrenamiento</label>
+                  <div 
+                    onClick={() => document.getElementById('diplomaReentrenamiento-upload')?.click()}
+                    style={{ border: '2px dashed #334155', borderRadius: '12px', padding: '20px', textAlign: 'center', cursor: 'pointer', background: diplomaReentrenamientoFile ? 'rgba(34, 197, 94, 0.08)' : '#090d16', borderColor: diplomaReentrenamientoFile ? '#22c55e' : '#334155' }}
+                  >
+                    <input type="file" id="diplomaReentrenamiento-upload" accept=".pdf" style={{ display: 'none' }} onChange={(e) => setDiplomaReentrenamientoFile(e.target.files?.[0] || null)} />
+                    <UploadCloud size={28} color={diplomaReentrenamientoFile ? '#22c55e' : '#64748b'} style={{ marginBottom: '8px', margin: '0 auto 8px' }} />
+                    {diplomaReentrenamientoFile ? <p style={{ margin: 0, fontWeight: '700', color: '#4ade80', fontSize: '14px' }}>{diplomaReentrenamientoFile.name}</p> : <p style={{ margin: '0 0 4px', fontWeight: '700', color: '#cbd5e1', fontSize: '13px' }}>Haz clic para seleccionar el PDF del diploma</p>}
+                  </div>
+                </div>
+
+                {/* 7. Certificados de Trabajo (Opcional) */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '8px', marginLeft: '4px' }}>Cargar Certificados de Trabajo</label>
+                  <div 
+                    onClick={() => document.getElementById('certificados-upload')?.click()}
+                    style={{ border: '2px dashed #334155', borderRadius: '12px', padding: '20px', textAlign: 'center', cursor: 'pointer', background: certificadosFile ? 'rgba(34, 197, 94, 0.08)' : '#090d16', borderColor: certificadosFile ? '#22c55e' : '#334155' }}
+                  >
+                    <input type="file" id="certificados-upload" accept=".pdf" style={{ display: 'none' }} onChange={(e) => setCertificadosFile(e.target.files?.[0] || null)} />
+                    <UploadCloud size={28} color={certificadosFile ? '#22c55e' : '#64748b'} style={{ marginBottom: '8px', margin: '0 auto 8px' }} />
+                    {certificadosFile ? <p style={{ margin: 0, fontWeight: '700', color: '#4ade80', fontSize: '14px' }}>{certificadosFile.name}</p> : <p style={{ margin: '0 0 4px', fontWeight: '700', color: '#cbd5e1', fontSize: '13px' }}>Haz clic para seleccionar el PDF con los certificados</p>}
+                  </div>
+                </div>
               </div>
             </div>
 
