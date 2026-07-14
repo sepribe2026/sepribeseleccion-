@@ -2533,7 +2533,6 @@ export default function CandidatesAdmin() {
                 <label className="ranking-label">🚀 Link Onboarding (Nuevos Ingresos)</label>
                 <input type="text" value={portalUrl} onChange={e => setPortalUrl(e.target.value)} className="qr-input" />
               </div>
-              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(portalUrl)}`} alt="QR Onboarding" style={{ width: '64px', height: '64px', borderRadius: '8px' }} />
             </div>
 
             {/* SEPARADOR */}
@@ -2551,11 +2550,6 @@ export default function CandidatesAdmin() {
                   style={{ background: '#f8fafc', color: '#475569', cursor: 'default' }}
                 />
               </div>
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`https://uneteanuestroequipo.ec.aseyco.com/${user?.company_slug || 'sepribe'}/postular`)}`}
-                alt="QR Postulación"
-                style={{ width: '64px', height: '64px', borderRadius: '8px' }}
-              />
             </div>
 
             {/* SEPARADOR */}

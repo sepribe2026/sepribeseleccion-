@@ -85,7 +85,8 @@ export default function ApplyPage() {
     driving_license: '',
     supervisor_course: '',
     console_course: '',
-    vip_course: ''
+    vip_course: '',
+    nivel_ii_course: ''
   })
 
   useEffect(() => {
@@ -304,6 +305,7 @@ export default function ApplyPage() {
         
         // Campos específicos de reclutamiento de seguridad
         guard_course: formData.guard_course || null,
+        nivel_ii_course: formData.nivel_ii_course || null,
         estatura: formData.estatura ? parseInt(formData.estatura) : null,
         driving_license: formData.driving_license || null,
         reentrenamiento_vigente: formData.reentrenamiento_vigente || null,
@@ -702,7 +704,7 @@ export default function ApplyPage() {
               <div style={{ display: 'grid', gap: '20px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Curso de Guardia Nivel II? *</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Curso de Guardia 120 Horas? *</label>
                     <div style={{ position: 'relative' }}>
                       <select 
                         name="guard_course"
@@ -712,13 +714,33 @@ export default function ApplyPage() {
                         style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
-                        <option value="Sí">Sí</option>
-                        <option value="No">No</option>
+                        <option value="Sí">Sí, aprobado y registrado</option>
+                        <option value="No">No, no poseo el curso</option>
                       </select>
                       <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
                     </div>
                   </div>
-                  
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Curso de Guardia Nivel II? *</label>
+                    <div style={{ position: 'relative' }}>
+                      <select 
+                        name="nivel_ii_course"
+                        required 
+                        value={formData.nivel_ii_course}
+                        onChange={handleChange}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                      >
+                        <option value="">Seleccionar...</option>
+                        <option value="Sí">Sí, aprobado y registrado</option>
+                        <option value="No">No, no poseo el curso</option>
+                      </select>
+                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Curso de reentrenamiento vigente? *</label>
                     <div style={{ position: 'relative' }}>
@@ -730,8 +752,8 @@ export default function ApplyPage() {
                         style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
-                        <option value="Sí">Sí</option>
-                        <option value="No">No</option>
+                        <option value="Sí">Sí, aprobado y registrado</option>
+                        <option value="No">No, no poseo el curso</option>
                       </select>
                       <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
                     </div>
@@ -816,8 +838,8 @@ export default function ApplyPage() {
                         style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
-                        <option value="Sí">Sí</option>
-                        <option value="No">No</option>
+                        <option value="Sí">Sí, aprobado y registrado</option>
+                        <option value="No">No, no poseo el curso</option>
                       </select>
                       <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
                     </div>
@@ -832,8 +854,8 @@ export default function ApplyPage() {
                         style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
-                        <option value="Sí">Sí</option>
-                        <option value="No">No</option>
+                        <option value="Sí">Sí, aprobado y registrado</option>
+                        <option value="No">No, no poseo el curso</option>
                       </select>
                       <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
                     </div>
@@ -851,8 +873,8 @@ export default function ApplyPage() {
                         style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
-                        <option value="Sí">Sí</option>
-                        <option value="No">No</option>
+                        <option value="Sí">Sí, aprobado y registrado</option>
+                        <option value="No">No, no poseo el curso</option>
                       </select>
                       <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
                     </div>
