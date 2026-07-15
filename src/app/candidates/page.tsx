@@ -2285,6 +2285,7 @@ export default function CandidatesAdmin() {
                   <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Género</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.gender || '—'}</span></div>
                   <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Estado Civil</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.civil_status || '—'}</span></div>
                   <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Medio de Contacto</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.heard_from || '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Contacto Adicional</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.contacto_adicional || '—'}</span></div>
                 </div>
               </section>
 
@@ -2306,16 +2307,19 @@ export default function CandidatesAdmin() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13.5px' }}>
                   <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Cargo al que Postula</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.position || '—'}</span></div>
                   <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Años de Experiencia</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.experience_years ? `${viewingFormData.experience_years} años` : '—'}</span></div>
-                  {viewingFormData.skills && (
-                    <div style={{ gridColumn: '1 / -1' }}>
-                      <span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px' }}>Habilidades / Skills</span>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                        {viewingFormData.skills.split(',').map((s: string, i: number) => (
-                          <span key={i} style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', padding: '2px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>{s.trim()}</span>
-                        ))}
-                      </div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>¿Laboró en SEPRIBE?</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.worked_in_sepribe || '—'}</span></div>
+                  <div style={{ gridColumn: '1 / -1', marginTop: '4px' }}>
+                    <span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>Cursos y Licencias</span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                      {viewingFormData.guard_course?.includes('Sí') && <span style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>C. 120H</span>}
+                      {viewingFormData.nivel_ii_course?.includes('Sí') && <span style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>C. Nivel II</span>}
+                      {viewingFormData.reentrenamiento_vigente?.includes('Sí') && <span style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>Reentrenamiento</span>}
+                      {viewingFormData.supervisor_course?.includes('Sí') && <span style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>C. Supervisor</span>}
+                      {viewingFormData.console_course?.includes('Sí') && <span style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>C. Consola</span>}
+                      {viewingFormData.vip_course?.includes('Sí') && <span style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>C. VIP</span>}
+                      {viewingFormData.skills && viewingFormData.skills.includes('Licencia') && <span style={{ background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>{viewingFormData.skills.split(',').find((s: string) => s.includes('Licencia'))?.trim()}</span>}
                     </div>
-                  )}
+                  </div>
                 </div>
               </section>
 
@@ -2330,12 +2334,12 @@ export default function CandidatesAdmin() {
               </section>
 
               {/* Datos adicionales */}
-              {(viewingFormData.likes_sports || viewingFormData.work_culture_motivation) && (
+              {(viewingFormData.own_transport || viewingFormData.work_culture_motivation) && (
                 <section>
                   <h3 style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>✨ Información Adicional</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13.5px' }}>
-                    {viewingFormData.likes_sports && (
-                      <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>¿Le gusta el deporte?</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.likes_sports === 'Si' ? `Sí, practica: ${viewingFormData.sports_practiced || '—'}` : 'No'}</span></div>
+                    {viewingFormData.own_transport && (
+                      <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>¿Movilidad Propia?</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.own_transport}</span></div>
                     )}
                     {viewingFormData.work_culture_motivation && (
                       <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Motivación Laboral</span><span style={{ color: '#1e293b', fontWeight: 600, lineHeight: 1.5, display: 'block' }}>{viewingFormData.work_culture_motivation}</span></div>
@@ -2695,19 +2699,7 @@ export default function CandidatesAdmin() {
                   />
                 </div>
               </div>
-              <div style={{ width: '180px' }}>
-                <label className="form-label">Cargo</label>
-                <div className="filter-input" style={{ background: '#f8fafc', marginTop: '4px' }}>
-                  <Briefcase size={18} color="#6b7280" />
-                  <input 
-                    type="text" 
-                    placeholder="Ej: Cajero..." 
-                    value={inboxCargo}
-                    onChange={(e) => setInboxCargo(e.target.value)}
-                    style={{ background: 'transparent' }}
-                  />
-                </div>
-              </div>
+
               <div style={{ width: '150px' }}>
                 <label className="form-label">Ciudad</label>
                 <div className="filter-input" style={{ background: '#f8fafc', marginTop: '4px' }}>
@@ -2888,11 +2880,24 @@ export default function CandidatesAdmin() {
                                     {r.education_level && (
                                       <p style={{ margin: 0, gridColumn: '1 / -1' }}><strong>Estudios:</strong> {r.education_level} {r.education_institution ? `en ${r.education_institution}` : ''} {r.education_title ? ` - Título: ${r.education_title}` : ''}</p>
                                     )}
-                                    {r.likes_sports && (
-                                      <p style={{ margin: 0, gridColumn: '1 / -1' }}><strong>¿Le gusta el deporte?:</strong> {r.likes_sports === 'Si' ? `Sí, practica: ${r.sports_practiced || '—'}` : 'No'}</p>
+                                    {r.experience_years && (
+                                      <p style={{ margin: 0 }}><strong>Años de Experiencia:</strong> {r.experience_years}</p>
+                                    )}
+                                    {r.worked_in_sepribe && (
+                                      <p style={{ margin: 0 }}><strong>Laboró en SEPRIBE:</strong> {r.worked_in_sepribe}</p>
+                                    )}
+                                    {(r.guard_course || r.nivel_ii_course || r.reentrenamiento_vigente || r.supervisor_course || r.console_course || r.vip_course) && (
+                                      <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', background: '#f8fafc', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', marginTop: '4px' }}>
+                                        <p style={{ margin: 0 }}><strong>C. 120H:</strong> {r.guard_course?.includes('Sí') ? 'SÍ' : 'NO'}</p>
+                                        <p style={{ margin: 0 }}><strong>C. Nivel II:</strong> {r.nivel_ii_course?.includes('Sí') ? 'SÍ' : 'NO'}</p>
+                                        <p style={{ margin: 0 }}><strong>Reentrenamiento:</strong> {r.reentrenamiento_vigente?.includes('Sí') ? 'SÍ' : 'NO'}</p>
+                                        <p style={{ margin: 0 }}><strong>C. Supervisor:</strong> {r.supervisor_course?.includes('Sí') ? 'SÍ' : 'NO'}</p>
+                                        <p style={{ margin: 0 }}><strong>C. Consola:</strong> {r.console_course?.includes('Sí') ? 'SÍ' : 'NO'}</p>
+                                        <p style={{ margin: 0 }}><strong>C. VIP:</strong> {r.vip_course?.includes('Sí') ? 'SÍ' : 'NO'}</p>
+                                      </div>
                                     )}
                                     {r.work_culture_motivation && (
-                                      <p style={{ margin: 0, gridColumn: '1 / -1' }}><strong>Motivación Laboral:</strong> {r.work_culture_motivation}</p>
+                                      <p style={{ margin: 0, gridColumn: '1 / -1', marginTop: '4px' }}><strong>Motivación Laboral:</strong> {r.work_culture_motivation}</p>
                                     )}
                                   </div>
                                 )}

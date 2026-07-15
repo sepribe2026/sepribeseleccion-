@@ -288,7 +288,7 @@ export default function ApplyPage() {
         experience_years: formData.experiencia,
         age: formData.edad,
         skills: `${formData.guard_course === 'Sí' ? 'Curso de Guardia 120H' : ''}${formData.driving_license && formData.driving_license !== 'No posee' ? `, Licencia ${formData.driving_license}` : ''}`,
-        ai_summary: `CED: ${formData.cedula} | TEL: ${formData.celular} | ESTATURA: ${formData.estatura} cm | CURSO 120H: ${formData.guard_course} | LICENCIA: ${formData.driving_license} | CONSENTIMIENTO LOPDP: ACEPTADO`,
+        ai_summary: `CED: ${formData.cedula} | TEL: ${formData.celular} | EXP: ${formData.experiencia} años | ESTATURA: ${formData.estatura} cm | C. 120H: ${formData.guard_course?.includes('Sí') ? 'SÍ' : 'NO'} | C. NIVEL II: ${formData.nivel_ii_course?.includes('Sí') ? 'SÍ' : 'NO'} | REENTRENAMIENTO: ${formData.reentrenamiento_vigente?.includes('Sí') ? 'SÍ' : 'NO'} | C. SUPERVISOR: ${formData.supervisor_course?.includes('Sí') ? 'SÍ' : 'NO'} | C. CONSOLA: ${formData.console_course?.includes('Sí') ? 'SÍ' : 'NO'} | C. VIP: ${formData.vip_course?.includes('Sí') ? 'SÍ' : 'NO'} | LICENCIA: ${formData.driving_license} | LOPDP: ACEPTADO`,
         company_slug: companySlug,
         birth_date: formData.birth_date || null,
         civil_status: formData.civil_status || null,
