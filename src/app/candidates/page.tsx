@@ -2356,12 +2356,47 @@ export default function CandidatesAdmin() {
                 </section>
               )}
 
-              {/* CV */}
-              {viewingFormData.pdf_url && (
-                <a href={viewingFormData.pdf_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '12px 16px', borderRadius: '10px', fontWeight: 700, fontSize: '13.5px', textDecoration: 'none' }}>
-                  <FileText size={16} /> Ver CV Adjunto
-                </a>
-              )}
+              {/* Documentos Adjuntos */}
+              <section style={{ marginTop: '16px' }}>
+                <h3 style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>📎 Documentos Adjuntos</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  {viewingFormData.pdf_url && (
+                    <a href={viewingFormData.pdf_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '10px 14px', borderRadius: '8px', fontWeight: 700, fontSize: '12.5px', textDecoration: 'none' }}>
+                      <FileText size={14} /> Hoja de Vida
+                    </a>
+                  )}
+                  {viewingFormData.cedula_pdf_url && (
+                    <a href={viewingFormData.cedula_pdf_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', color: '#334155', border: '1px solid #cbd5e1', padding: '10px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '12.5px', textDecoration: 'none' }}>
+                      <FileText size={14} /> Cédula de Identidad
+                    </a>
+                  )}
+                  {viewingFormData.historial_laboral_url && (
+                    <a href={viewingFormData.historial_laboral_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', color: '#334155', border: '1px solid #cbd5e1', padding: '10px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '12.5px', textDecoration: 'none' }}>
+                      <FileText size={14} /> Historial Laboral
+                    </a>
+                  )}
+                  {viewingFormData.diploma_120h_url && (
+                    <a href={viewingFormData.diploma_120h_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', color: '#334155', border: '1px solid #cbd5e1', padding: '10px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '12.5px', textDecoration: 'none' }}>
+                      <FileText size={14} /> Curso 120H
+                    </a>
+                  )}
+                  {viewingFormData.diploma_nivel_ii_url && (
+                    <a href={viewingFormData.diploma_nivel_ii_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', color: '#334155', border: '1px solid #cbd5e1', padding: '10px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '12.5px', textDecoration: 'none' }}>
+                      <FileText size={14} /> Curso Nivel II
+                    </a>
+                  )}
+                  {viewingFormData.diploma_reentrenamiento_url && (
+                    <a href={viewingFormData.diploma_reentrenamiento_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', color: '#334155', border: '1px solid #cbd5e1', padding: '10px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '12.5px', textDecoration: 'none' }}>
+                      <FileText size={14} /> Reentrenamiento
+                    </a>
+                  )}
+                  {viewingFormData.certificados_trabajo_url && (
+                    <a href={viewingFormData.certificados_trabajo_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', color: '#334155', border: '1px solid #cbd5e1', padding: '10px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '12.5px', textDecoration: 'none' }}>
+                      <FileText size={14} /> Cert. Trabajo / Honorabilidad
+                    </a>
+                  )}
+                </div>
+              </section>
             </div>
           </div>
         </div>
@@ -2901,6 +2936,36 @@ export default function CandidatesAdmin() {
                                     )}
                                   </div>
                                 )}
+                                
+                                {/* Resultados de Pruebas */}
+                                {(() => {
+                                  const psychTest = psychometricTests.find(t => t.resume_id === r.id);
+                                  if (!psychTest) return null;
+                                  return (
+                                    <div style={{
+                                      marginTop: '8px',
+                                      padding: '12px', 
+                                      background: '#f0f9ff', 
+                                      borderRadius: '10px', 
+                                      border: '1px solid #bae6fd',
+                                      fontSize: '12px',
+                                      color: '#0f172a'
+                                    }}>
+                                      <div style={{ borderBottom: '1px solid #bfdbfe', paddingBottom: '4px', marginBottom: '8px', fontWeight: '800', color: '#0369a1', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                        🧠 Pruebas Psicométricas
+                                      </div>
+                                      {psychTest.ethics_score !== undefined && psychTest.ethics_score !== null && (
+                                        <p style={{ margin: '0 0 6px 0' }}><strong>Ética y Confidencialidad:</strong> {psychTest.ethics_score}/100</p>
+                                      )}
+                                      {psychTest.kudert_disc && (
+                                        <p style={{ margin: 0 }}>
+                                          <strong>Perfil DISC:</strong> Decisión ({psychTest.kudert_disc.D}%) | Interacción ({psychTest.kudert_disc.I}%) | Serenidad ({psychTest.kudert_disc.S}%) | Cumplimiento ({psychTest.kudert_disc.C}%)
+                                        </p>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
+
                                 {/* Botón de IA extra por si quieren profundizar aunque ya tengan datos básicos */}
                                 {r.classification_status !== 'REVIEWED' && (
                                   <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
