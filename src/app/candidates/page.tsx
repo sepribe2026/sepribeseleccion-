@@ -2527,33 +2527,7 @@ export default function CandidatesAdmin() {
         </header>
         <div className="admin-container">
           <div className="qr-card" style={{ gap: '32px', flexWrap: 'wrap' }}>
-            {/* LINK ONBOARDING */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div>
-                <label className="ranking-label">🚀 Link Onboarding (Nuevos Ingresos)</label>
-                <input type="text" value={portalUrl} onChange={e => setPortalUrl(e.target.value)} className="qr-input" />
-              </div>
-            </div>
 
-            {/* SEPARADOR */}
-            <div style={{ width: '1px', background: '#e2e8f0', alignSelf: 'stretch' }} />
-
-            {/* LINK POSTULACIÓN */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div>
-                <label className="ranking-label">📋 Link Postulación (Candidatos)</label>
-                <input
-                  type="text"
-                  value={`https://uneteanuestroequipo.ec.aseyco.com/${user?.company_slug || 'sepribe'}/postular`}
-                  readOnly
-                  className="qr-input"
-                  style={{ background: '#f8fafc', color: '#475569', cursor: 'default' }}
-                />
-              </div>
-            </div>
-
-            {/* SEPARADOR */}
-            <div style={{ width: '1px', background: '#e2e8f0', alignSelf: 'stretch' }} />
 
             {/* ACTIVACIÓN DE POSTULACIÓN POR COMPAÑÍA */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '220px' }}>
