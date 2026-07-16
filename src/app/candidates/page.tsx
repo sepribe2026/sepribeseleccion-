@@ -2966,15 +2966,7 @@ export default function CandidatesAdmin() {
                                   );
                                 })()}
 
-                                {/* Botón de IA extra por si quieren profundizar aunque ya tengan datos básicos */}
-                                {r.classification_status !== 'REVIEWED' && (
-                                  <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                                    <button className="ai-btn" style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }} onClick={() => handleAnalyzeResume(r.id)} disabled={analyzingId === r.id}>
-                                      {analyzingId === r.id ? 'Analizando...' : 'Profundizar con IA'}
-                                    </button>
-                                    {/* Oculto: Aceptar Directo (Sin IA) */}
-                                  </div>
-                                )}
+
                               </div>
                             ) : (
                               <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
