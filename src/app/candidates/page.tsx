@@ -968,16 +968,16 @@ export default function CandidatesAdmin() {
 
     rankingResults.forEach(r => {
       unifiedList.push({
-        id: r.id,
-        name: r.name || r.sender_name || 'Sin Nombre',
-        city: r.city || r.ciudad || '',
-        score: r.score || 0,
-        justification: r.justification || 'Evaluado por IA',
-        pdf_url: r.pdf_url || '',
-        position: r.position || '',
-        experience: r.experience || '',
-        sender_phone: r.sender_phone || '',
-        sender_email: r.sender_email || r.email || ''
+        id: String(r.id),
+        name: String(r.name || r.sender_name || 'Sin Nombre'),
+        city: typeof r.city === 'string' ? r.city : typeof r.ciudad === 'string' ? r.ciudad : String(r.city || r.ciudad || ''),
+        score: Number(r.score) || 0,
+        justification: String(r.justification || 'Evaluado por IA'),
+        pdf_url: String(r.pdf_url || ''),
+        position: String(r.position || ''),
+        experience: String(r.experience || ''),
+        sender_phone: String(r.sender_phone || ''),
+        sender_email: String(r.sender_email || r.email || '')
       });
     });
 
@@ -986,16 +986,16 @@ export default function CandidatesAdmin() {
         const resume = resumes.find(res => res.id === resumeId);
         if (resume) {
           unifiedList.push({
-            id: resume.id,
-            name: resume.sender_name || 'Sin Nombre',
-            city: resume.city || '',
+            id: String(resume.id),
+            name: String(resume.sender_name || 'Sin Nombre'),
+            city: String(resume.city || ''),
             score: 0,
             justification: 'Candidato asignado directamente al cargo.',
-            pdf_url: resume.pdf_url || '',
-            position: resume.position || '',
-            experience: resume.experience_years || '',
-            sender_phone: resume.sender_phone || '',
-            sender_email: resume.sender_email || ''
+            pdf_url: String(resume.pdf_url || ''),
+            position: String(resume.position || ''),
+            experience: String(resume.experience_years || ''),
+            sender_phone: String(resume.sender_phone || ''),
+            sender_email: String(resume.sender_email || '')
           });
         }
       }
