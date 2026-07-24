@@ -97,6 +97,10 @@ export default function ApplyPage() {
     noAceptoConsentimiento: false,
     birth_date: '',
     civil_status: '',
+    ref1_nombre: '',
+    ref1_telefono: '',
+    ref2_nombre: '',
+    ref2_telefono: '',
     home_address: '',
     sector: '',
     education_level: '',
@@ -229,6 +233,7 @@ export default function ApplyPage() {
     e.preventDefault()
     if (!cedulaFile) { setError('Por favor, adjunta la copia de tu cédula.'); return }
     if (!historialLaboralFile) { setError('Por favor, adjunta tu historial laboral.'); return }
+    if (!formData.ref1_nombre || !formData.ref1_telefono || !formData.ref2_nombre || !formData.ref2_telefono) { setError('Por favor, ingresa 2 referencias personales con nombre y teléfono.'); return }
     if (!formData.consentimiento) { setError('Debes aceptar el tratamiento de datos personales para postularte.'); return }
     if (formData.cedula.length < 10) { setError('La cédula debe tener al menos 10 dígitos.'); return }
     if (parseInt(formData.experiencia) > 15) { setError('Los años de experiencia no pueden superar los 15 años.'); return }
@@ -329,7 +334,7 @@ export default function ApplyPage() {
         heard_from: formData.heard_from || null,
         gender: formData.genero || null,
         work_culture_motivation: formData.work_culture_motivation || null,
-        contacto_adicional: formData.contacto_adicional || null,
+        contacto_adicional: `${formData.contacto_adicional ? `[Contacto Adic: ${formData.contacto_adicional}] ` : ''}[Ref1: ${formData.ref1_nombre} - ${formData.ref1_telefono}] [Ref2: ${formData.ref2_nombre} - ${formData.ref2_telefono}]`,
         worked_in_sepribe: formData.worked_in_sepribe || null,
         
         // Campos específicos de reclutamiento de seguridad
@@ -528,6 +533,28 @@ export default function ApplyPage() {
                       <Clock size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
                       <input type="text" name="contacto_adicional" placeholder="Ej: 0987654322 (Hermano)" value={formData.contacto_adicional} onChange={handleChange} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                     </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Nombre Referencia 1 *</label>
+                    <input type="text" name="ref1_nombre" required placeholder="Ej: María Gómez" value={formData.ref1_nombre} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Teléfono Referencia 1 *</label>
+                    <input type="text" name="ref1_telefono" required placeholder="Ej: 0981234567" value={formData.ref1_telefono} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Nombre Referencia 2 *</label>
+                    <input type="text" name="ref2_nombre" required placeholder="Ej: Carlos Silva" value={formData.ref2_nombre} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Teléfono Referencia 2 *</label>
+                    <input type="text" name="ref2_telefono" required placeholder="Ej: 0998765432" value={formData.ref2_telefono} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                   </div>
                 </div>
 
