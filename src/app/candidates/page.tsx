@@ -295,6 +295,7 @@ export default function CandidatesAdmin() {
   const [rankingFilterGenero, setRankingFilterGenero] = useState('ALL')
   const [showJobMaintenance, setShowJobMaintenance] = useState(false)
   const [editingPositionId, setEditingPositionId] = useState<string | null>(null)
+  const [testConfig, setTestConfig] = useState({ etica: false, disc: false })
 
   // === SEGUIMIENTO DE CANDIDATOS ===
   const [trackingMap, setTrackingMap] = useState<Record<string, any>>({})
@@ -1353,7 +1354,7 @@ export default function CandidatesAdmin() {
   const handleSavePosition = async () => {
     if (!rankingCargo || !rankingFunciones || !user) return
     setSavingPosition(true)
-    const payload = { cargo: rankingCargo, ciudad: rankingCiudad, funciones: rankingFunciones, created_by_cedula: user.cedula, company_slug: user.company_slug }
+    const payload = { cargo: rankingCargo, ciudad: rankingCiudad, funciones: rankingFunciones, test_config: testConfig, created_by_cedula: user.cedula, company_slug: user.company_slug }
     let errorObj = null;
     if (editingPositionId) {
       const { error } = await supabase.from('job_positions').update(payload).eq('id', editingPositionId)
@@ -1383,6 +1384,7 @@ export default function CandidatesAdmin() {
       setEditingPositionId(null)
       setRankingCargo('')
       setRankingFunciones('')
+      setTestConfig({ etica: false, disc: false })
       await fetchJobPositions()
       setShowJobMaintenance(false)
     }
@@ -1394,6 +1396,7 @@ export default function CandidatesAdmin() {
     setRankingCargo(pos.cargo)
     setRankingCiudad(pos.ciudad || '')
     setRankingFunciones(pos.funciones)
+    setTestConfig(pos.test_config || { etica: false, disc: false })
     setRankingResults([]) // Limpiar evaluaciones previas
     if (pos.cargo) {
       fetchTracking(pos.cargo)
@@ -1565,6 +1568,11 @@ export default function CandidatesAdmin() {
         setViewingFormData({ ...viewingFormData, sender_name: newName });
       }
     }
+  }
+
+  const handleViewFormData = async (r: any) => {
+    const { data, error } = await supabase.from('candidate_evaluations').select('*').eq('resume_id', r.id);
+    setViewingFormData({ ...r, evaluations: data || [] });
   }
 
   const handleSendContactEmail = async (email: string, name: string, cargo: string, interviewDate?: string, notes?: string) => {
@@ -2174,12 +2182,27 @@ export default function CandidatesAdmin() {
               <button onClick={() => setShowJobMaintenance(false)} style={{ background: 'none', border: 'none' }}><X /></button>
             </div>
             {editingPositionId && (
-              <button onClick={() => { setEditingPositionId(null); setRankingCargo(''); setRankingFunciones(''); }} style={{ marginBottom: '16px', fontSize: '12px', color: '#2563eb', border: 'none', background: 'none' }}>+ Crear nuevo</button>
+              <button onClick={() => { setEditingPositionId(null); setRankingCargo(''); setRankingFunciones(''); setTestConfig({ etica: false, disc: false }); }} style={{ marginBottom: '16px', fontSize: '12px', color: '#2563eb', border: 'none', background: 'none' }}>+ Crear nuevo</button>
             )}
             <label className="ranking-label">Cargo</label>
             <input className="ranking-input" value={rankingCargo} onChange={e => setRankingCargo(e.target.value)} />
             <label className="ranking-label">Funciones</label>
             <textarea className="ranking-textarea" style={{ minHeight: '180px' }} value={rankingFunciones} onChange={e => setRankingFunciones(e.target.value)} />
+            
+            <div style={{ marginTop: '16px', marginBottom: '24px', padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+              <h4 style={{ margin: '0 0 12px', fontSize: '13px', color: '#334155' }}>🧠 Evaluaciones Psicológicas Habilitadas</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={testConfig.etica} onChange={e => setTestConfig(prev => ({ ...prev, etica: e.target.checked }))} style={{ width: '16px', height: '16px' }} />
+                  Prueba de Ética y Confidencialidad
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={testConfig.disc} onChange={e => setTestConfig(prev => ({ ...prev, disc: e.target.checked }))} style={{ width: '16px', height: '16px' }} />
+                  Test Perfil DISC
+                </label>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', gap: '10px' }}>
               <button className="ranking-btn-primary" onClick={() => { handleSavePosition(); setShowJobMaintenance(false); }}>Guardar</button>
               {editingPositionId && <button onClick={handleDeletePosition} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '10px', borderRadius: '8px' }}><Trash2 size={16}/></button>}
@@ -2353,6 +2376,38 @@ export default function CandidatesAdmin() {
                 <section style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
                   <h3 style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>🤖 Resumen de Perfil (IA)</h3>
                   <p style={{ margin: 0, fontSize: '13.5px', color: '#475569', lineHeight: 1.6, fontStyle: 'italic' }}>"{viewingFormData.ai_summary}"</p>
+                </section>
+              )}
+
+              {/* Evaluaciones Psicológicas */}
+              {viewingFormData.evaluations && viewingFormData.evaluations.length > 0 && (
+                <section style={{ marginTop: '16px', background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <h3 style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    🧠 Evaluaciones Psicométricas
+                  </h3>
+                  {viewingFormData.evaluations.map((evalRecord: any) => (
+                    <div key={evalRecord.id} style={{ marginBottom: '12px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13.5px' }}>
+                        {evalRecord.score?.etica !== undefined && (
+                          <div style={{ background: 'white', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                            <span style={{ color: '#64748b', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Ética y Confidencialidad</span>
+                            <span style={{ color: '#0f172a', fontWeight: 800, fontSize: '18px' }}>{evalRecord.score.etica} pts</span>
+                          </div>
+                        )}
+                        {evalRecord.score?.disc && (
+                          <div style={{ background: 'white', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                            <span style={{ color: '#64748b', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Perfil DISC</span>
+                            <div style={{ display: 'flex', gap: '8px', fontWeight: 700, color: '#0f172a' }}>
+                              <span>D:{evalRecord.score.disc.D || 0}</span>
+                              <span>I:{evalRecord.score.disc.I || 0}</span>
+                              <span>S:{evalRecord.score.disc.S || 0}</span>
+                              <span>C:{evalRecord.score.disc.C || 0}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </section>
               )}
 
@@ -2813,7 +2868,7 @@ export default function CandidatesAdmin() {
                         <div className="user-cell" style={{ alignItems: 'flex-start' }}>
                           <div
                             className="user-avatar"
-                            onClick={() => r.email_uid?.startsWith('WEB') ? setViewingFormData(r) : undefined}
+                            onClick={() => r.email_uid?.startsWith('WEB') ? handleViewFormData(r) : undefined}
                             title={r.email_uid?.startsWith('WEB') ? 'Ver formulario completo' : ''}
                             style={{ 
                               background: r.email_uid?.startsWith('WEB') ? '#eff6ff' : (r.classification_status === 'REVIEWED' ? '#f0fdf4' : '#f3e8ff'), 

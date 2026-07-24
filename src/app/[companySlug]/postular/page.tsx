@@ -400,6 +400,9 @@ export default function ApplyPage() {
   }
 
   if (isSuccess) {
+    const matchedJob = jobPositions.find(j => j.cargo === formData.cargo);
+    const requiresTests = matchedJob?.test_config && (matchedJob.test_config.etica || matchedJob.test_config.disc);
+
     return (
       <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at top, #0b0f19 0%, #020617 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'system-ui, sans-serif' }}>
         <div style={{ background: 'rgba(30, 41, 59, 0.45)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '48px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', textAlign: 'center', maxWidth: '550px', width: '100%' }}>
@@ -411,33 +414,38 @@ export default function ApplyPage() {
             Gracias <strong>{formData.nombre}</strong>, hemos registrado tu postulación de forma exitosa.
           </p>
           
-          <div style={{ background: 'rgba(251, 191, 36, 0.05)', border: '1px solid rgba(251, 191, 36, 0.15)', padding: '20px', borderRadius: '16px', marginBottom: '32px', textAlign: 'left' }}>
-            <h4 style={{ color: '#fbbf24', fontSize: '15px', fontWeight: '800', margin: '0 0 8px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Shield size={16} /> Paso Obligatorio Siguiente
-            </h4>
-            <p style={{ color: '#cbd5e1', fontSize: '13px', lineHeight: '1.5', margin: 0 }}>
-              Como empresa de seguridad privada, requerimos que todos nuestros aspirantes completen una evaluación de aptitudes psicológicas y de comportamiento. Puedes iniciar la evaluación ahora mismo haciendo clic en el botón de abajo.
-            </p>
-          </div>
+          {requiresTests && (
+            <>
+              <div style={{ background: 'rgba(251, 191, 36, 0.05)', border: '1px solid rgba(251, 191, 36, 0.15)', padding: '20px', borderRadius: '16px', marginBottom: '32px', textAlign: 'left' }}>
+                <h4 style={{ color: '#fbbf24', fontSize: '15px', fontWeight: '800', margin: '0 0 8px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Shield size={16} /> Paso Obligatorio Siguiente
+                </h4>
+                <p style={{ color: '#cbd5e1', fontSize: '13px', lineHeight: '1.5', margin: 0 }}>
+                  Como empresa de seguridad privada, requerimos que todos nuestros aspirantes completen una evaluación de aptitudes psicológicas y de comportamiento. Puedes iniciar la evaluación ahora mismo haciendo clic en el botón de abajo.
+                </p>
+              </div>
 
-          <div style={{ display: 'grid', gap: '12px' }}>
-            <a 
-              href={`/evaluacion/${insertedId}`}
-              style={{ 
-                background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', 
-                color: '#0f172a', 
-                padding: '16px 32px', 
-                borderRadius: '12px', 
-                fontWeight: '900', 
-                fontSize: '15px',
-                textDecoration: 'none',
-                display: 'inline-block',
-                boxShadow: '0 10px 15px -3px rgba(251, 191, 36, 0.3)',
-                transition: 'all 0.2s'
-              }}
-            >
-              INICIAR EVALUACIÓN PSICOMÉTRICA
-            </a>
+              <div style={{ display: 'grid', gap: '12px', marginBottom: '16px' }}>
+                <a 
+                  href={`/${companySlug}/evaluacion/${insertedId}`}
+                  style={{ 
+                    background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', 
+                    color: '#0f172a', 
+                    padding: '16px 32px', 
+                    borderRadius: '12px', 
+                    fontWeight: '900', 
+                    fontSize: '15px',
+                    textDecoration: 'none',
+                    display: 'inline-block',
+                    boxShadow: '0 10px 15px -3px rgba(251, 191, 36, 0.3)',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  INICIAR EVALUACIÓN PSICOMÉTRICA
+                </a>
+              </div>
+            </>
+          )}
             
             <button 
               onClick={() => window.location.reload()} 
