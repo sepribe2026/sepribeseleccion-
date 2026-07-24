@@ -3266,7 +3266,7 @@ export default function CandidatesAdmin() {
                                     {/* Panel de Seguimiento Completo */}
                                     {r.sender_phone && status === 'MENSAJE_ENVIADO' && (
                                       <a 
-                                        href={`https://wa.me/${r.sender_phone.replace(/\D/g, '').replace(/^0/, '593')}?text=${encodeURIComponent('Estimado candidato, hemos recibido su CV para el cargo de ' + rankingCargo + ', ¿podemos agendar una reunión para la entrevista?')}`} 
+                                        href={`https://wa.me/${String(r.sender_phone).replace(/\D/g, '').replace(/^0/, '593')}?text=${encodeURIComponent('Estimado candidato, hemos recibido su CV para el cargo de ' + rankingCargo + ', ¿podemos agendar una reunión para la entrevista?')}`} 
                                         target="_blank" 
                                         className="wa-link"
                                       >
@@ -3790,7 +3790,7 @@ export default function CandidatesAdmin() {
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             {p.candidate?.sender_phone && (
                               <a 
-                                href={p.status === 'PENDIENTE' ? '#' : `https://wa.me/${p.candidate.sender_phone.replace(/\D/g, '').replace(/^0/, '593')}?text=${encodeURIComponent(
+                                href={p.status === 'PENDIENTE' ? '#' : `https://wa.me/${String(p.candidate.sender_phone).replace(/\D/g, '').replace(/^0/, '593')}?text=${encodeURIComponent(
                                   p.status === 'ENTREVISTA_PROGRAMADA' 
                                   ? `Hola ${p.candidate?.sender_name || 'candidat@'}, nos complace informarte que has pasado la primera etapa de nuestro proceso de selección para SEPRIBE CIA.LTDA. Para la siguiente fase, deberás asistir a una entrevista presencial y/o virtual.\n\nTe enviamos los detalles para que puedas asistir:\n📅Fecha: ${p.interview_date ? new Date(p.interview_date.split(' ')[0] + 'T12:00:00').toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long' }) : '—'}\n⏰Hora: ${p.interview_date?.split(' ')[1] || '09:00'}\n📍Lugar: Galo Plaza Lasso 13205 y de los Cerezos.`
                                   : `Hola ${p.candidate?.sender_name || 'candidat@'}, te saludamos de RRHH de SEPRIBE CIA.LTDA. Estamos revisando tu perfil para el cargo de ${p.cargo} y nos gustaría agendar una entrevista.`
