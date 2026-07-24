@@ -1003,11 +1003,11 @@ export default function CandidatesAdmin() {
 
     // Filtros solicitados por el usuario
     return unifiedList.filter(item => {
-      const email = (item.sender_email || '').toLowerCase().trim();
+      const email = String(item.sender_email || '').toLowerCase().trim();
       if (!email) return true;
 
       // 1. Ya se les envió mail de onboarding
-      const inOnboarding = candidates.some((c: any) => (c.email || '').toLowerCase().trim() === email);
+      const inOnboarding = candidates.some((c: any) => String(c.email || '').toLowerCase().trim() === email);
       if (inOnboarding) return false;
 
       // 2. Se rechazó (tracking status === 'RECHAZADO')
@@ -1499,6 +1499,8 @@ export default function CandidatesAdmin() {
       if (status === 'ENTREVISTA_APROBADA') handleSendApprovalEmail(resume_id)
       // Marcar como revisado para que pase a Resumen como "Procesado"
       handleMarkAsReviewed(resume_id)
+      // Actualizar el pipeline para que desaparezca inmediatamente del Ranking y pase al Resumen
+      fetchPipeline()
     }
     setTrackingUpdating(null)
   }
@@ -1887,8 +1889,8 @@ export default function CandidatesAdmin() {
         .status-pending { background-color: #fff7ed; color: #9a3412; border: 1px solid #ffedd5; }
         .action-btn { background: none; border: none; color: #eab308; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
         .action-btn:hover { color: #854d0e; transform: translateX(2px); }
-        .ai-btn { background: linear-gradient(135deg, #fbbf24, #fbbf24); color: white; border: none; font-size: 12px; font-weight: 700; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.2); transition: all 0.2s; }
-        .ai-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(139, 92, 246, 0.3); }
+        .ai-btn { background: #111111; color: #fbbf24; border: 1px solid #fbbf24; border: none; font-size: 12px; font-weight: 700; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(251, 191, 36, 0.15); transition: all 0.2s; }
+        .ai-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(251, 191, 36, 0.2); background: #000000; }
         .ai-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 6px; border: 1px solid #e2e8f0; }
         .filter-bar { display: flex; gap: 16px; margin-bottom: 24px; background: white; padding: 12px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
         .filter-input { flex: 1; display: flex; align-items: center; gap: 10px; border: 1px solid #f1f5f9; background: #f8fafc; padding: 10px 14px; border-radius: 10px; transition: all 0.2s; }
@@ -1899,16 +1901,16 @@ export default function CandidatesAdmin() {
         .ranking-label { display: block; font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
         .ranking-input, .ranking-select { width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; padding: 11px 14px; font-size: 14px; margin-bottom: 16px; background: #f8fafc; transition: all 0.2s; }
         .ranking-textarea { width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; padding: 11px 14px; font-size: 14px; min-height: 160px; margin-bottom: 16px; background: #f8fafc; line-height: 1.6; }
-        .ranking-btn-primary { width: 100%; background: linear-gradient(135deg, #fbbf24, #eab308); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.3); transition: all 0.2s; }
-        .ranking-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(124, 58, 237, 0.4); }
+        .ranking-btn-primary { width: 100%; background: #111111; color: #fbbf24; border: 1px solid #fbbf24; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 10px 15px -3px rgba(251, 191, 36, 0.15); transition: all 0.2s; }
+        .ranking-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(251, 191, 36, 0.25); background: #000000; }
         .score-bar-wrap { background: #f1f5f9; border-radius: 9999px; height: 10px; width: 140px; overflow: hidden; display: inline-block; vertical-align: middle; border: 1px solid #e2e8f0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
         .score-bar-fill { height: 100%; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 9999px; }
         .medal-badge { font-size: 26px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); display: inline-block; }
         .rank-number { width: 50px; text-align: center; font-size: 15px; font-weight: 800; color: #94a3b8; }
         .rank-row { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         .rank-row:hover { background: #f8fafc; transform: scale(1.005); box-shadow: inset 4px 0 0 #fbbf24, 0 10px 15px -3px rgba(0,0,0,0.05); }
-        .ai-btn-accept { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; font-size: 13px; font-weight: 800; padding: 10px 20px; border-radius: 10px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
-        .ai-btn-accept:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 10px 15px rgba(16, 185, 129, 0.3); }
+        .ai-btn-accept { background: #111111; color: #fbbf24; border: 1px solid #fbbf24; font-size: 13px; font-weight: 800; padding: 10px 20px; border-radius: 10px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.15); }
+        .ai-btn-accept:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 10px 15px rgba(251, 191, 36, 0.25); background: #000000; }
         .pipeline-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; padding: 5px 14px; border-radius: 9999px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); }
         .wa-link { color: #15803d; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; background: #f0fdf4; padding: 4px 10px; border-radius: 6px; border: 1px solid #bbf7d0; transition: all 0.2s; }
         .wa-link:hover { background: #dcfce7; transform: translateY(-1px); }
@@ -2023,7 +2025,7 @@ export default function CandidatesAdmin() {
                     <button 
                       onClick={handleCopyPhones}
                       className="ranking-btn-primary" 
-                      style={{ width: 'auto', background: 'linear-gradient(135deg, #10b981, #059669)', fontSize: '12.5px', padding: '8px 16px', borderRadius: '8px' }}
+                      style={{ width: 'auto', background: '#111111', color: '#fbbf24', border: '1px solid #fbbf24', fontSize: '12.5px', padding: '8px 16px', borderRadius: '8px' }}
                       disabled={activeSessionCandidates.length === 0}
                     >
                       📋 Copiar todos los teléfonos
@@ -3137,12 +3139,9 @@ export default function CandidatesAdmin() {
                     <select className="ranking-select" style={{ marginBottom: 0, padding: '8px 12px' }} value={rankingFilterSector} onChange={e => setRankingFilterSector(e.target.value)}>
                       <option value="ALL">Todos los Sectores</option>
                       <option value="Norte">Norte</option>
-                      <option value="Centro">Centro</option>
                       <option value="Sur">Sur</option>
-                      <option value="Cumbayá">Cumbayá</option>
-                      <option value="Valle de los Chillos">Valle de los Chillos</option>
-                      <option value="Via la Costa">Via la Costa</option>
-                      <option value="Samborondon">Samborondon</option>
+                      <option value="Centro">Centro</option>
+                      <option value="Valles">Valles</option>
                     </select>
                   </div>
 
@@ -4156,14 +4155,14 @@ export default function CandidatesAdmin() {
                   <button 
                     onClick={() => setShowMassCitationModal(true)} 
                     className="ranking-btn-primary" 
-                    style={{ width: 'auto', background: 'linear-gradient(135deg, #fbbf24, #1d4ed8)', padding: '10px 20px', borderRadius: '10px', fontSize: '13px' }}
+                    style={{ width: 'auto', background: '#111111', color: '#fbbf24', border: '1px solid #fbbf24', padding: '10px 20px', borderRadius: '10px', fontSize: '13px' }}
                   >
                     📅 Citar Grupo ({formativeSessionFilter === 'ALL' ? formativeCandidates.length : formativeCandidates.filter(c => c.session_title === formativeSessionFilter).length})
                   </button>
                   <button 
                     onClick={() => setShowWhatsAppModal(true)} 
                     className="ranking-btn-primary" 
-                    style={{ width: 'auto', background: 'linear-gradient(135deg, #10b981, #059669)', padding: '10px 20px', borderRadius: '10px', fontSize: '13px' }}
+                    style={{ width: 'auto', background: '#111111', color: '#fbbf24', border: '1px solid #fbbf24', padding: '10px 20px', borderRadius: '10px', fontSize: '13px' }}
                   >
                     💬 WhatsApp Grupal ({formativeSessionFilter === 'ALL' ? formativeCandidates.length : formativeCandidates.filter(c => c.session_title === formativeSessionFilter).length})
                   </button>
@@ -4171,7 +4170,7 @@ export default function CandidatesAdmin() {
                   <button
                     onClick={() => handleBulkEvaluating(true)}
                     className="ranking-btn-primary"
-                    style={{ width: 'auto', background: 'linear-gradient(135deg, #fbbf24, #6d28d9)', padding: '10px 20px', borderRadius: '10px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                    style={{ width: 'auto', background: '#111111', color: '#fbbf24', border: '1px solid #fbbf24', padding: '10px 20px', borderRadius: '10px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
                   >
                     🎯 Iniciar Evaluación Grupal
                     {(() => { const n = (formativeSessionFilter === 'ALL' ? formativeCandidates : formativeCandidates.filter(c => c.session_title === formativeSessionFilter)).length; return n > 0 ? <span style={{ background: 'rgba(255,255,255,0.2)', borderRadius: '999px', padding: '1px 7px', fontWeight: 900 }}>{n}</span> : null })()}
@@ -4186,7 +4185,7 @@ export default function CandidatesAdmin() {
                   <button 
                     onClick={handleCleanupNonAttendees} 
                     className="ranking-btn-primary" 
-                    style={{ width: 'auto', background: 'linear-gradient(135deg, #ef4444, #dc2626)', padding: '10px 20px', borderRadius: '10px', fontSize: '13px' }}
+                    style={{ width: 'auto', background: '#111111', color: '#fbbf24', border: '1px solid #fbbf24', padding: '10px 20px', borderRadius: '10px', fontSize: '13px' }}
                   >
                     🧹 Depurar
                   </button>
@@ -4679,7 +4678,7 @@ export default function CandidatesAdmin() {
                                       }
                                     }}
                                     style={{
-                                      background: 'linear-gradient(135deg, #fbbf24, #6d28d9)',
+                                      background: '#111111', color: '#fbbf24', border: '1px solid #fbbf24',
                                       color: 'white',
                                       border: 'none',
                                       borderRadius: '8px',
@@ -4733,7 +4732,7 @@ export default function CandidatesAdmin() {
                         onClick={() => handleSendBulkOnboarding(ranked)}
                         disabled={sendingBulkOnboarding || ranked.length === 0}
                         style={{
-                          background: 'linear-gradient(135deg, #10b981, #059669)',
+                          background: '#111111', color: '#fbbf24', border: '1px solid #fbbf24',
                           color: 'white',
                           border: 'none',
                           borderRadius: '10px',
@@ -4817,7 +4816,7 @@ export default function CandidatesAdmin() {
                                     <button
                                       onClick={() => handleSendApprovalEmail(c.resume_id)}
                                       style={{
-                                        background: 'linear-gradient(135deg, #10b981, #059669)',
+                                        background: '#111111', color: '#fbbf24', border: '1px solid #fbbf24',
                                         color: 'white',
                                         border: 'none',
                                         borderRadius: '8px',
