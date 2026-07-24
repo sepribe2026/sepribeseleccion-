@@ -227,7 +227,6 @@ export default function ApplyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!file) { setError('Por favor, adjunta tu hoja de vida en PDF.'); return }
     if (!cedulaFile) { setError('Por favor, adjunta la copia de tu cédula.'); return }
     if (!historialLaboralFile) { setError('Por favor, adjunta tu historial laboral.'); return }
     if (!formData.consentimiento) { setError('Debes aceptar el tratamiento de datos personales para postularte.'); return }
@@ -276,8 +275,11 @@ export default function ApplyPage() {
         return publicUrl
       }
 
-      // Subida de CV obligatoria
-      const publicUrl = await uploadDocument(file, 'resume')
+      // Subida de CV opcional
+      let publicUrl = null;
+      if (file) {
+        publicUrl = await uploadDocument(file, 'resume')
+      }
 
       // Subidas adicionales condicionales u opcionales
       let cedulaPdfUrl = null
@@ -306,7 +308,7 @@ export default function ApplyPage() {
         cedula: formData.cedula,
         subject: `Postulación Web: ${formData.cargo}`,
         received_date: new Date().toISOString(),
-        file_name: file.name,
+        file_name: file ? file.name : 'Sin CV',
         pdf_url: publicUrl,
         sender_phone: formData.celular,
         classification_status: 'PENDING',
@@ -909,6 +911,7 @@ export default function ApplyPage() {
                       style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                     >
                       <option value="">Seleccionar...</option>
+                      <option value="Ciclo Básico">Ciclo Básico</option>
                       <option value="Bachiller">Bachiller</option>
                       <option value="Instrucción técnica completa">Instrucción técnica completa</option>
                       <option value="Instrucción técnica incompleta">Instrucción técnica incompleta</option>
@@ -919,10 +922,10 @@ export default function ApplyPage() {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div style={{ display: 'none', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Institución Educativa *</label>
-                    <input type="text" name="education_institution" required placeholder="Nombre de la institución" value={formData.education_institution} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Institución Educativa</label>
+                    <input type="text" name="education_institution" placeholder="Nombre de la institución" value={formData.education_institution} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Título Obtenido</label>
@@ -962,10 +965,9 @@ export default function ApplyPage() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Qué te motiva de pertenecer a una empresa de seguridad como {companyInfo.name}? *</label>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>¿Qué te motiva de pertenecer a una empresa de seguridad como {companyInfo.name}?</label>
                   <textarea 
                     name="work_culture_motivation" 
-                    required 
                     placeholder="Describe brevemente tus expectativas, principios y motivación" 
                     value={formData.work_culture_motivation} 
                     onChange={handleChange} 
@@ -982,9 +984,9 @@ export default function ApplyPage() {
               </h3>
               
               <div style={{ display: 'grid', gap: '20px' }}>
-                {/* 1. CV Obligatorio */}
+                {/* 1. CV Opcional */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '8px', marginLeft: '4px' }}>Cargar Hoja de Vida (Formato PDF) *</label>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '8px', marginLeft: '4px' }}>Cargar Hoja de Vida (Formato PDF)</label>
                   <div 
                     onClick={() => document.getElementById('cv-upload')?.click()}
                     style={{ 
