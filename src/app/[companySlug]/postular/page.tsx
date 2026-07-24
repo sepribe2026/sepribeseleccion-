@@ -15,6 +15,33 @@ function getPrivacyEmail(slug: string): string {
   return map[slug?.toLowerCase()] || `privacidad@${slug}.com.ec`
 }
 
+const PROVINCIAS_CIUDADES: Record<string, string[]> = {
+  "Azuay": ["Cuenca", "Gualaceo", "Paute", "Sigsig", "Girón", "San Fernando", "Santa Isabel", "Pucará", "Nabón", "Oña", "Chordeleg", "El Pan", "Sevilla de Oro", "Guachapala", "Camilo Ponce Enríquez"],
+  "Bolívar": ["Guaranda", "Chillanes", "Chimbo", "Echeandía", "San Miguel", "Caluma", "Las Naves"],
+  "Cañar": ["Azogues", "Biblián", "Cañar", "La Troncal", "El Tambo", "Déleg", "Suscal"],
+  "Carchi": ["Tulcán", "Bolívar", "Espejo", "Mira", "Montúfar", "San Pedro de Huaca"],
+  "Chimborazo": ["Riobamba", "Alausí", "Colta", "Chambo", "Chunchi", "Guamote", "Guano", "Pallatanga", "Penipe", "Cumandá"],
+  "Cotopaxi": ["Latacunga", "La Maná", "Pangua", "Pujilí", "Salcedo", "Saquisilí", "Sigchos"],
+  "El Oro": ["Machala", "Arenillas", "Atahualpa", "Balsas", "Chilla", "El Guabo", "Huaquillas", "Marcabelí", "Pasaje", "Piñas", "Portovelo", "Santa Rosa", "Zaruma", "Las Lajas"],
+  "Esmeraldas": ["Esmeraldas", "Eloy Alfaro", "Muisne", "Quinindé", "San Lorenzo", "Atacames", "Rioverde"],
+  "Galápagos": ["Puerto Baquerizo Moreno", "Puerto Ayora", "Puerto Villamil"],
+  "Guayas": ["Guayaquil", "Daule", "Durán", "Empalme", "Milagro", "Naranjal", "Naranjito", "Playas", "Samborondón", "Santa Lucía", "Salitre", "Yaguachi", "Balao", "Balzar", "Colimes", "Coronel Marcelino Maridueña", "El Triunfo", "General Antonio Elizalde (Bucay)", "Isidro Ayora", "Lomas de Sargentillo", "Nobol", "Palestina", "Pedro Carbo", "Simón Bolívar"],
+  "Imbabura": ["Ibarra", "Antonio Ante", "Cotacachi", "Otavalo", "Pimampiro", "San Miguel de Urcuquí"],
+  "Loja": ["Loja", "Calvas", "Catamayo", "Celica", "Chaguarpamba", "Espíndola", "Gonzanamá", "Macará", "Paltas", "Puyango", "Saraguro", "Sozoranga", "Zapotillo", "Pindal", "Quilanga", "Olmedo"],
+  "Los Ríos": ["Babahoyo", "Baba", "Montalvo", "Puebloviejo", "Quevedo", "Urdaneta", "Ventanas", "Vinces", "Palenque", "Buena Fe", "Valencia", "Mocache", "Quinsaloma"],
+  "Manabí": ["Portoviejo", "Manta", "Chone", "El Carmen", "Flavio Alfaro", "Jipijapa", "Junín", "Montecristi", "Paján", "Pichincha", "Rocafuerte", "Santa Ana", "Sucre", "Tosagua", "24 de Mayo", "Pedernales", "Olmedo", "Puerto López", "Jama", "San Vicente"],
+  "Morona Santiago": ["Macas", "Gualaquiza", "Limón Indanza", "Palora", "Santiago", "Sucúa", "Huamboya", "San Juan Bosco", "Taisha", "Logroño", "Pablo Sexto", "Tiwintza"],
+  "Napo": ["Tena", "Archidona", "El Chaco", "Quijos", "Carlos Julio Arosemena Tola"],
+  "Orellana": ["Francisco de Orellana (Coca)", "Aguarico", "La Joya de los Sachas", "Loreto"],
+  "Pastaza": ["Puyo", "Arajuno", "Mera", "Santa Clara"],
+  "Pichincha": ["Quito", "Cayambe", "Mejía", "Pedro Moncayo", "Rumiñahui", "San Miguel de los Bancos", "Pedro Vicente Maldonado", "Puerto Quito"],
+  "Santa Elena": ["Santa Elena", "La Libertad", "Salinas"],
+  "Santo Domingo de los Tsáchilas": ["Santo Domingo", "La Concordia"],
+  "Sucumbíos": ["Nueva Loja (Lago Agrio)", "Cascales", "Cuyabeno", "Gonzalo Pizarro", "Putumayo", "Shushufindi", "Sucumbíos"],
+  "Tungurahua": ["Ambato", "Baños", "Cevallos", "Mocha", "Patate", "Quero", "San Pedro de Pelileo", "Santiago de Píllaro", "Tisaleo"],
+  "Zamora Chinchipe": ["Zamora", "Chinchipe", "Nangaritza", "Yacuambi", "Yantzaza", "El Pangui", "Centinela del Cóndor", "Palanda", "Paquisha"]
+};
+
 const CONSENT_TEXT = (companyName: string, privacyEmail: string) => `CONSENTIMIENTO INFORMADO PARA EL TRATAMIENTO DE DATOS PERSONALES DE POSTULANTES
 
 Al registrar mis datos y cargar mi hoja de vida en la presente plataforma, declaro que he sido informado/a de forma clara, previa, expresa y suficiente sobre el tratamiento de mis datos personales por parte de ${companyName}, en calidad de Responsable del Tratamiento, conforme a la Ley Orgánica de Protección de Datos Personales y su Reglamento.
@@ -570,7 +597,7 @@ export default function ApplyPage() {
               <div style={{ display: 'grid', gap: '20px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Ciudad de Residencia *</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Provincia de Residencia *</label>
                     <div style={{ position: 'relative' }}>
                       <select 
                         name="ciudad"
@@ -583,23 +610,15 @@ export default function ApplyPage() {
                         style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
-                        <option value="Quito">Quito</option>
-                        <option value="Guayaquil">Guayaquil</option>
-                        <option value="Cuenca">Cuenca</option>
-                        <option value="Manta">Manta</option>
-                        <option value="Portoviejo">Portoviejo</option>
-                        <option value="Machala">Machala</option>
-                        <option value="Loja">Loja</option>
-                        <option value="Ambato">Ambato</option>
-                        <option value="Santo Domingo">Santo Domingo</option>
-                        <option value="Ibarra">Ibarra</option>
-                        <option value="Otra">Otra / Provincia</option>
+                        {Object.keys(PROVINCIAS_CIUDADES).map(prov => (
+                          <option key={prov} value={prov}>{prov}</option>
+                        ))}
                       </select>
                       <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
                     </div>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Sector *</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Ciudad *</label>
                     <div style={{ position: 'relative' }}>
                       <select 
                         name="sector"
@@ -607,23 +626,12 @@ export default function ApplyPage() {
                         value={formData.sector}
                         onChange={handleChange}
                         style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                        disabled={!formData.ciudad}
                       >
                         <option value="">Seleccionar...</option>
-                        <option value="Norte">Norte</option>
-                        <option value="Centro">Centro</option>
-                        <option value="Sur">Sur</option>
-                        {formData.ciudad === 'Quito' && (
-                          <>
-                            <option value="Cumbayá">Cumbayá</option>
-                            <option value="Valle de los Chillos">Valle de los Chillos</option>
-                          </>
-                        )}
-                        {formData.ciudad === 'Guayaquil' && (
-                          <>
-                            <option value="Samborondón">Samborondón</option>
-                            <option value="Vía a la Costa">Vía a la Costa</option>
-                          </>
-                        )}
+                        {formData.ciudad && PROVINCIAS_CIUDADES[formData.ciudad] && PROVINCIAS_CIUDADES[formData.ciudad].map(city => (
+                          <option key={city} value={city}>{city}</option>
+                        ))}
                       </select>
                       <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
                     </div>
