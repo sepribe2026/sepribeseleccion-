@@ -465,7 +465,6 @@ export default function ApplyPage() {
             >
               Volver al inicio / Enviar otra
             </button>
-          </div>
         </div>
       </div>
     )
