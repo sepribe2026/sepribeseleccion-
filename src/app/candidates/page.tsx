@@ -964,20 +964,31 @@ export default function CandidatesAdmin() {
       aiResultsMap.set(r.id, r);
     });
 
+    const safeString = (val: any, fallback = '') => {
+      if (typeof val === 'string') return val;
+      if (typeof val === 'number') return String(val);
+      if (typeof val === 'object' && val !== null) {
+        const vals = Object.values(val);
+        if (vals.length > 0 && typeof vals[0] === 'string') return vals[0];
+        return JSON.stringify(val);
+      }
+      return fallback;
+    };
+
     const unifiedList: any[] = [];
 
     rankingResults.forEach(r => {
       unifiedList.push({
-        id: String(r.id),
-        name: String(r.name || r.sender_name || 'Sin Nombre'),
-        city: typeof r.city === 'string' ? r.city : typeof r.ciudad === 'string' ? r.ciudad : String(r.city || r.ciudad || ''),
+        id: safeString(r.id),
+        name: safeString(r.name || r.sender_name || 'Sin Nombre'),
+        city: safeString(r.city || r.ciudad || ''),
         score: Number(r.score) || 0,
-        justification: String(r.justification || 'Evaluado por IA'),
-        pdf_url: String(r.pdf_url || ''),
-        position: String(r.position || ''),
-        experience: String(r.experience || ''),
-        sender_phone: String(r.sender_phone || ''),
-        sender_email: String(r.sender_email || r.email || '')
+        justification: safeString(r.justification || 'Evaluado por IA'),
+        pdf_url: safeString(r.pdf_url || ''),
+        position: safeString(r.position || ''),
+        experience: safeString(r.experience || ''),
+        sender_phone: safeString(r.sender_phone || ''),
+        sender_email: safeString(r.sender_email || r.email || '')
       });
     });
 
@@ -986,16 +997,16 @@ export default function CandidatesAdmin() {
         const resume = resumes.find(res => res.id === resumeId);
         if (resume) {
           unifiedList.push({
-            id: String(resume.id),
-            name: String(resume.sender_name || 'Sin Nombre'),
-            city: String(resume.city || ''),
+            id: safeString(resume.id),
+            name: safeString(resume.sender_name || 'Sin Nombre'),
+            city: safeString(resume.city || ''),
             score: 0,
             justification: 'Candidato asignado directamente al cargo.',
-            pdf_url: String(resume.pdf_url || ''),
-            position: String(resume.position || ''),
-            experience: String(resume.experience_years || ''),
-            sender_phone: String(resume.sender_phone || ''),
-            sender_email: String(resume.sender_email || '')
+            pdf_url: safeString(resume.pdf_url || ''),
+            position: safeString(resume.position || ''),
+            experience: safeString(resume.experience_years || ''),
+            sender_phone: safeString(resume.sender_phone || ''),
+            sender_email: safeString(resume.sender_email || '')
           });
         }
       }

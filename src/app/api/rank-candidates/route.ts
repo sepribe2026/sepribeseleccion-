@@ -170,7 +170,8 @@ export async function POST(req: NextRequest) {
           pdf_url: resume?.pdf_url || '',
           position: resume?.position || '',
           experience: resume?.experience_years || '',
-          sender_phone: resume?.sender_phone || ''
+          sender_phone: resume?.sender_phone || '',
+          city: resume?.city || ''
         };
       })
       .sort((a, b) => (b.score || 0) - (a.score || 0));
