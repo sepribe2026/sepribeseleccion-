@@ -4679,8 +4679,6 @@ export default function CandidatesAdmin() {
                                     }}
                                     style={{
                                       background: '#111111', color: '#fbbf24', border: '1px solid #fbbf24',
-                                      color: 'white',
-                                      border: 'none',
                                       borderRadius: '8px',
                                       padding: '5px 12px',
                                       fontSize: '11.5px',
@@ -4733,8 +4731,6 @@ export default function CandidatesAdmin() {
                         disabled={sendingBulkOnboarding || ranked.length === 0}
                         style={{
                           background: '#111111', color: '#fbbf24', border: '1px solid #fbbf24',
-                          color: 'white',
-                          border: 'none',
                           borderRadius: '10px',
                           padding: '10px 20px',
                           fontSize: '13px',
@@ -4817,8 +4813,6 @@ export default function CandidatesAdmin() {
                                       onClick={() => handleSendApprovalEmail(c.resume_id)}
                                       style={{
                                         background: '#111111', color: '#fbbf24', border: '1px solid #fbbf24',
-                                        color: 'white',
-                                        border: 'none',
                                         borderRadius: '8px',
                                         padding: '6px 14px',
                                         fontSize: '12px',
