@@ -96,12 +96,12 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             {/* Sidebar Navigation */}
             <aside style={{
                 width: '260px',
-                backgroundColor: '#1e293b',
+                backgroundColor: '#171717',
                 display: 'flex',
                 flexDirection: 'column',
-                borderRight: '1px solid #334155'
+                borderRight: '1px solid #27272a'
             }}>
-                <div style={{ padding: '2rem 1.5rem', borderBottom: '1px solid #334155' }}>
+                <div style={{ padding: '2rem 1.5rem', borderBottom: '1px solid #27272a' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'white' }}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
@@ -127,7 +127,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
                         <div style={{
                             marginTop: '1rem',
                             padding: '0.75rem',
-                            backgroundColor: '#334155',
+                            backgroundColor: '#27272a',
                             borderRadius: '8px'
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
@@ -171,7 +171,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
                     )}
                 </nav>
 
-                <div style={{ padding: '1.5rem', borderTop: '1px solid #334155' }}>
+                <div style={{ padding: '1.5rem', borderTop: '1px solid #27272a' }}>
                     <button
                         type="button"
                         onClick={handleLogout}

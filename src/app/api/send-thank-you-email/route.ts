@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     const htmlMessage = `
       <div style="font-family: sans-serif; line-height: 1.7; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
         
-        <div style="background: #0f172a; padding: 24px; text-align: center;">
+        <div style="background: #111111; padding: 24px; text-align: center;">
           <h2 style="color: white; margin: 0; font-size: 20px;">Proceso de Selección</h2>
           <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px;">SEPRIBE CIA.LTDA.</p>
         </div>
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
           <p>Tras revisar cuidadosamente tu perfil, te informamos que en esta ocasión no continuaremos con tu proceso, ya que estamos buscando una especialización técnica específica para los retos de este rol.</p>
 
-          <div style="background: #f8fafc; border-left: 4px solid #3b82f6; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 24px 0;">
+          <div style="background: #f8fafc; border-left: 4px solid #fbbf24; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 24px 0;">
             <p style="margin: 0; color: #475569; font-size: 14px;">
               💼 Tu perfil permanecerá en nuestra base de datos para <strong>futuras oportunidades</strong> que se alineen con tu experiencia.
             </p>

@@ -58,7 +58,7 @@ function DashboardContent() {
                     }}>
                         <Activity size={40} color="white" />
                     </div>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#0f172a', marginBottom: '0.75rem' }}>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111111', marginBottom: '0.75rem' }}>
                         Sistema Inactivo
                     </h2>
                     <p style={{ fontSize: '1rem', color: '#64748b', marginBottom: '2.5rem', maxWidth: '500px', margin: '0 auto 2.5rem' }}>
@@ -174,7 +174,7 @@ function DashboardContent() {
                             }}>
                                 <Clock size={22} color="white" />
                             </div>
-                            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#0f172a' }}>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111111' }}>
                                 Actividad Reciente
                             </h2>
                         </div>
@@ -250,7 +250,7 @@ function StatCard({
                     <p style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         {title}
                     </p>
-                    <h3 style={{ fontSize: '2.25rem', fontWeight: 'bold', color: '#0f172a' }}>
+                    <h3 style={{ fontSize: '2.25rem', fontWeight: 'bold', color: '#111111' }}>
                         {value}
                     </h3>
                 </div>

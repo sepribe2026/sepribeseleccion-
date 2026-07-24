@@ -9,7 +9,7 @@ const requestTypes = {
         icon: FileSearch,
         label: 'Acceso',
         description: 'Ver mis datos personales almacenados',
-        color: '#3b82f6'
+        color: '#fbbf24'
     },
     rectify: {
         icon: Edit,
@@ -27,7 +27,7 @@ const requestTypes = {
         icon: Ban,
         label: 'Oposición',
         description: 'Negarme al tratamiento de mis datos',
-        color: '#8b5cf6'
+        color: '#fbbf24'
     },
     export: {
         icon: Download,
@@ -127,7 +127,7 @@ export default function ARCOPortalPage() {
                     }}>
                         <CheckCircle size={48} color="white" />
                     </div>
-                    <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#0f172a', marginBottom: '1rem' }}>
+                    <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#111111', marginBottom: '1rem' }}>
                         ¡Solicitud Enviada!
                     </h2>
                     <p style={{ fontSize: '1.1rem', color: '#64748b', marginBottom: '2rem' }}>
@@ -192,7 +192,7 @@ export default function ARCOPortalPage() {
                     marginBottom: '2rem',
                     boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
                 }}>
-                    <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#0f172a', marginBottom: '0.5rem' }}>
+                    <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#111111', marginBottom: '0.5rem' }}>
                         Portal de Derechos ARCO
                     </h1>
                     <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>
@@ -236,7 +236,7 @@ export default function ARCOPortalPage() {
                     <div style={{
                         marginTop: '1.5rem',
                         padding: '1rem',
-                        backgroundColor: '#eff6ff',
+                        backgroundColor: '#fef9c3',
                         borderRadius: '8px',
                         fontSize: '0.875rem',
                         color: '#475569'
@@ -262,7 +262,7 @@ export default function ARCOPortalPage() {
                                 onClick={() => setSelectedType(key)}
                                 style={{
                                     backgroundColor: isSelected ? type.color : 'white',
-                                    color: isSelected ? 'white' : '#0f172a',
+                                    color: isSelected ? 'white' : '#111111',
                                     border: `2px solid ${isSelected ? type.color : '#e2e8f0'}`,
                                     borderRadius: '12px',
                                     padding: '1.5rem',
@@ -292,7 +292,7 @@ export default function ARCOPortalPage() {
                         padding: '2rem',
                         boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
                     }}>
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#0f172a', marginBottom: '1.5rem' }}>
+                        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111111', marginBottom: '1.5rem' }}>
                             Solicitud de {requestTypes[selectedType as keyof typeof requestTypes].label}
                         </h2>
 

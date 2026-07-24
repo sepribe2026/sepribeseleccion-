@@ -49,7 +49,7 @@ export default function ConsentTestPage() {
                 borderRadius: '12px',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
             }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#0f172a', marginBottom: '1rem' }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#111111', marginBottom: '1rem' }}>
                     Página de Prueba - Formulario de Consentimiento
                 </h3>
                 <p style={{ color: '#64748b', marginBottom: '1rem' }}>

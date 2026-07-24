@@ -374,8 +374,8 @@ export default function OnboardingTabs() {
         
         .actions-bar { margin-top: 40px; display: flex; justify-content: flex-end; }
         
-        .req-box { background-color: #eff6ff; border: 1px solid #bfdbfe; padding: 24px; border-radius: 8px; margin-bottom: 32px; }
-        .req-title { color: #1e3a8a; font-weight: bold; margin: 0 0 16px; display: flex; align-items: center; gap: 8px; }
+        .req-box { background-color: #fef9c3; border: 1px solid #bfdbfe; padding: 24px; border-radius: 8px; margin-bottom: 32px; }
+        .req-title { color: #09090b; font-weight: bold; margin: 0 0 16px; display: flex; align-items: center; gap: 8px; }
         
         .upload-area { border: 2px dashed #d1d5db; border-radius: 8px; padding: 48px; text-align: center; cursor: pointer; background-color: #f9fafb; transition: all 0.2s; }
         .upload-area:hover { background-color: #f3f4f6; border-color: #9ca3af; }
@@ -387,7 +387,7 @@ export default function OnboardingTabs() {
         .consent-option { display: flex; gap: 12px; alignItems: center; cursor: pointer; padding: 12px; border-radius: 8px; transition: all 0.2s; border: 1px solid transparent; }
         .consent-option.accepted { background-color: #f0fdf4; border-color: #22c55e; }
         .consent-option.rejected { background-color: #fef2f2; border-color: #ef4444; }
-        .consent-option-text { font-size: 13px; color: #1e293b; font-weight: 500; }
+        .consent-option-text { font-size: 13px; color: #171717; font-weight: 500; }
       `}</style>
 
       <div className="onboarding-container">
@@ -401,7 +401,7 @@ export default function OnboardingTabs() {
             style={{ 
               background: '#f0f7ff', 
               border: '1px solid #cce3ff', 
-              color: '#2563eb', 
+              color: '#fbbf24', 
               padding: '10px 24px', 
               borderRadius: '12px', 
               cursor: 'pointer',
@@ -444,8 +444,8 @@ export default function OnboardingTabs() {
 
                   <div className="req-box">
                     <div className="req-title"><FileCheck size={20} /> Requisitos Obligatorios</div>
-                    <p style={{ color: '#1e40af', fontSize: '14px', marginBottom: '16px' }}>Deberás subir cada uno de los siguientes documentos en la pestaña final:</p>
-                    <div className="grid-2" style={{ color: '#1e3a8a', fontSize: '13px' }}>
+                    <p style={{ color: '#171717', fontSize: '14px', marginBottom: '16px' }}>Deberás subir cada uno de los siguientes documentos en la pestaña final:</p>
+                    <div className="grid-2" style={{ color: '#09090b', fontSize: '13px' }}>
                       {getDynamicDocs().map((doc, i) => <div key={i}>• {doc}</div>)}
                     </div>
                   </div>
@@ -506,7 +506,7 @@ export default function OnboardingTabs() {
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e5e7eb', paddingBottom: '8px', marginBottom: '24px' }}>
                     <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0, color: '#111827' }}>Hijos Registrados ({hijos.length})</h2>
-                    <button onClick={() => setHijos([...hijos, { nombres: '', apellidos: '', fecha_nacimiento: '', nacionalidad: 'Ecuador', ciudad_nacimiento: '', cedula: '' }])} style={{ background: '#eff6ff', color: '#1d4ed8', border: 'none', padding: '6px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}><Plus size={16} /> Agregar</button>
+                    <button onClick={() => setHijos([...hijos, { nombres: '', apellidos: '', fecha_nacimiento: '', nacionalidad: 'Ecuador', ciudad_nacimiento: '', cedula: '' }])} style={{ background: '#fef9c3', color: '#1d4ed8', border: 'none', padding: '6px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}><Plus size={16} /> Agregar</button>
                   </div>
 
                   {hijos.length === 0 ? (
@@ -594,9 +594,9 @@ export default function OnboardingTabs() {
                                 style={{ 
                                   padding: '6px', 
                                   borderRadius: '4px', 
-                                  border: '1px solid #3b82f6', 
-                                  background: '#eff6ff', 
-                                  color: '#3b82f6',
+                                  border: '1px solid #fbbf24', 
+                                  background: '#fef9c3', 
+                                  color: '#fbbf24',
                                   cursor: 'pointer',
                                   display: 'flex',
                                   alignItems: 'center'

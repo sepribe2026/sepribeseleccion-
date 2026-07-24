@@ -200,9 +200,9 @@ export default function CandidatePsychometricPortal() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'sans-serif' }}>
+      <div style={{ minHeight: '100vh', background: '#111111', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'sans-serif' }}>
         <div style={{ textAlign: 'center' }}>
-          <div className="animate-spin" style={{ width: '48px', height: '48px', border: '4px solid #3b82f6', borderTopColor: 'transparent', borderRadius: '50%', margin: '0 auto 16px' }} />
+          <div className="animate-spin" style={{ width: '48px', height: '48px', border: '4px solid #fbbf24', borderTopColor: 'transparent', borderRadius: '50%', margin: '0 auto 16px' }} />
           <p style={{ color: '#94a3b8' }}>Cargando portal de evaluación...</p>
         </div>
       </div>
@@ -211,12 +211,12 @@ export default function CandidatePsychometricPortal() {
 
   if (errorMsg) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'sans-serif' }}>
-        <div style={{ background: '#1e293b', border: '1px solid #ef4444', padding: '32px', borderRadius: '16px', maxWidth: '450px', textAlign: 'center' }}>
+      <div style={{ minHeight: '100vh', background: '#111111', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'sans-serif' }}>
+        <div style={{ background: '#171717', border: '1px solid #ef4444', padding: '32px', borderRadius: '16px', maxWidth: '450px', textAlign: 'center' }}>
           <AlertTriangle size={48} color="#ef4444" style={{ margin: '0 auto 16px' }} />
           <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 12px' }}>Acceso Restringido</h2>
           <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>{errorMsg}</p>
-          <button onClick={() => window.location.reload()} style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>Reintentar</button>
+          <button onClick={() => window.location.reload()} style={{ background: '#fbbf24', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>Reintentar</button>
         </div>
       </div>
     );
@@ -226,17 +226,17 @@ export default function CandidatePsychometricPortal() {
   if (activeSection && showInstructions) {
     const detail = SECTION_DETAILS[activeSection];
     return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: 'white', padding: '24px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'sans-serif' }}>
-        <div style={{ background: '#1e293b', width: '100%', maxWidth: '650px', borderRadius: '20px', border: '1px solid #334155', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)' }}>
-          <div style={{ padding: '24px', background: 'linear-gradient(135deg, #1e3a8a, #0f172a)', borderBottom: '1px solid #334155' }}>
-            <span style={{ background: '#3b82f6', color: 'white', fontSize: '11px', fontWeight: 800, padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase' }}>Instrucciones</span>
+      <div style={{ minHeight: '100vh', background: '#111111', color: 'white', padding: '24px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'sans-serif' }}>
+        <div style={{ background: '#171717', width: '100%', maxWidth: '650px', borderRadius: '20px', border: '1px solid #27272a', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)' }}>
+          <div style={{ padding: '24px', background: 'linear-gradient(135deg, #09090b, #111111)', borderBottom: '1px solid #27272a' }}>
+            <span style={{ background: '#fbbf24', color: 'white', fontSize: '11px', fontWeight: 800, padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase' }}>Instrucciones</span>
             <h2 style={{ margin: '8px 0 0', fontSize: '22px', fontWeight: 800 }}>{detail.title}</h2>
           </div>
           <div style={{ padding: '24px' }}>
             <p style={{ color: '#cbd5e1', fontSize: '15px', lineHeight: '1.6', margin: '0 0 20px' }}>{detail.rules}</p>
             
-            <div style={{ display: 'flex', gap: '16px', background: '#0f172a', padding: '16px', borderRadius: '12px', marginBottom: '24px', border: '1px solid #1e293b' }}>
-              <Clock size={24} color="#3b82f6" style={{ flexShrink: 0 }} />
+            <div style={{ display: 'flex', gap: '16px', background: '#111111', padding: '16px', borderRadius: '12px', marginBottom: '24px', border: '1px solid #171717' }}>
+              <Clock size={24} color="#fbbf24" style={{ flexShrink: 0 }} />
               <div>
                 <p style={{ margin: 0, fontWeight: 'bold', fontSize: '14px' }}>Tiempo asignado:</p>
                 <p style={{ margin: '2px 0 0', color: '#94a3b8', fontSize: '13px' }}>
@@ -245,7 +245,7 @@ export default function CandidatePsychometricPortal() {
               </div>
             </div>
 
-            <label style={{ display: 'flex', gap: '12px', cursor: 'pointer', background: '#1e293b', padding: '14px', borderRadius: '8px', border: '1px solid #475569', marginBottom: '28px' }}>
+            <label style={{ display: 'flex', gap: '12px', cursor: 'pointer', background: '#171717', padding: '14px', borderRadius: '8px', border: '1px solid #475569', marginBottom: '28px' }}>
               <input type="checkbox" checked={checkboxAccepted} onChange={e => setCheckboxAccepted(e.target.checked)} style={{ width: '18px', height: '18px', cursor: 'pointer' }} />
               <span style={{ fontSize: '13px', color: '#e2e8f0', userSelect: 'none' }}>He comprendido las reglas y estoy listo para comenzar la prueba.</span>
             </label>
@@ -256,7 +256,7 @@ export default function CandidatePsychometricPortal() {
                 onClick={handleBeginTest} 
                 disabled={!checkboxAccepted}
                 style={{ 
-                  background: checkboxAccepted ? '#3b82f6' : '#1e293b', 
+                  background: checkboxAccepted ? '#fbbf24' : '#171717', 
                   color: checkboxAccepted ? 'white' : '#64748b', 
                   border: 'none', 
                   padding: '12px 24px', 
@@ -284,14 +284,14 @@ export default function CandidatePsychometricPortal() {
     const isTimerWarning = detail.time > 0 && timeLeft < 60;
 
     return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: 'white', fontFamily: 'sans-serif' }}>
+      <div style={{ minHeight: '100vh', background: '#111111', color: 'white', fontFamily: 'sans-serif' }}>
         {/* Cabecera persistente del test con temporizador */}
         <div style={{ 
           position: 'sticky', 
           top: 0, 
-          background: 'rgba(15, 23, 42, 0.9)', 
+          background: 'rgba(17, 17, 17, 0.9)', 
           backdropFilter: 'blur(8px)', 
-          borderBottom: '1px solid #1e293b', 
+          borderBottom: '1px solid #171717', 
           padding: '16px 20px', 
           zIndex: 50,
           display: 'flex', 
@@ -311,15 +311,15 @@ export default function CandidatePsychometricPortal() {
               background: isTimerWarning ? 'rgba(239, 68, 68, 0.2)' : 'rgba(59, 130, 246, 0.1)', 
               padding: '8px 16px', 
               borderRadius: '20px',
-              border: `1px solid ${isTimerWarning ? '#ef4444' : '#3b82f6'}`
+              border: `1px solid ${isTimerWarning ? '#ef4444' : '#fbbf24'}`
             }}>
-              <Clock size={16} className={isTimerWarning ? 'animate-pulse' : ''} color={isTimerWarning ? '#ef4444' : '#3b82f6'} />
+              <Clock size={16} className={isTimerWarning ? 'animate-pulse' : ''} color={isTimerWarning ? '#ef4444' : '#fbbf24'} />
               <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '18px', color: isTimerWarning ? '#f87171' : '#60a5fa' }}>
                 {formatTime(timeLeft)}
               </span>
             </div>
           ) : (
-            <span style={{ fontSize: '11px', background: '#334155', padding: '6px 12px', borderRadius: '12px', color: '#cbd5e1' }}>Sin Límite</span>
+            <span style={{ fontSize: '11px', background: '#27272a', padding: '6px 12px', borderRadius: '12px', color: '#cbd5e1' }}>Sin Límite</span>
           )}
         </div>
 
@@ -330,9 +330,9 @@ export default function CandidatePsychometricPortal() {
               const selectedValue = answers[q.id];
 
               return (
-                <div key={q.id} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                <div key={q.id} style={{ background: '#171717', border: '1px solid #27272a', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
                   <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-                    <span style={{ background: '#334155', color: '#94a3b8', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 'bold', flexShrink: 0 }}>
+                    <span style={{ background: '#27272a', color: '#94a3b8', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 'bold', flexShrink: 0 }}>
                       {idx + 1}
                     </span>
                     <p style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#f1f5f9', lineHeight: '1.5' }}>
@@ -343,7 +343,7 @@ export default function CandidatePsychometricPortal() {
                   {/* Renderizar sección espacial (rotación de figura modelo) */}
                   {q.type === 'espacial' && q.baseSvg && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', margin: '20px 0' }}>
-                      <div style={{ background: '#0f172a', padding: '16px', borderRadius: '12px', border: '1px solid #1e293b', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <div style={{ background: '#111111', padding: '16px', borderRadius: '12px', border: '1px solid #171717', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <p style={{ margin: '0 0 8px', fontSize: '11px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700 }}>Modelo Original</p>
                         <svg width="100" height="100" viewBox="0 0 100 100" style={{ color: 'white' }} dangerouslySetInnerHTML={{ __html: q.baseSvg }} />
                       </div>
@@ -356,8 +356,8 @@ export default function CandidatePsychometricPortal() {
                               key={opt.id}
                               onClick={() => handleSelectOption(q.id, opt.id)}
                               style={{ 
-                                background: isSelected ? 'rgba(59, 130, 246, 0.2)' : '#0f172a', 
-                                border: `2px solid ${isSelected ? '#3b82f6' : '#334155'}`, 
+                                background: isSelected ? 'rgba(59, 130, 246, 0.2)' : '#111111', 
+                                border: `2px solid ${isSelected ? '#fbbf24' : '#27272a'}`, 
                                 borderRadius: '12px', 
                                 padding: '16px 8px', 
                                 cursor: 'pointer',
@@ -388,21 +388,21 @@ export default function CandidatePsychometricPortal() {
                   {/* Renderizar sección abstracto (secuencia geométrica) */}
                   {q.type === 'abstracto' && q.sequenceSvgs && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', margin: '20px 0' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', flexWrap: 'wrap', background: '#0f172a', padding: '16px', borderRadius: '12px', border: '1px solid #1e293b' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', flexWrap: 'wrap', background: '#111111', padding: '16px', borderRadius: '12px', border: '1px solid #171717' }}>
                         {q.sequenceSvgs.map((svgContent, seqIdx) => (
                           <React.Fragment key={seqIdx}>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                               <span style={{ fontSize: '10px', color: '#64748b', marginBottom: '4px', fontWeight: 'bold' }}>Paso {seqIdx + 1}</span>
-                              <svg width="80" height="80" viewBox="0 0 100 100" style={{ color: 'white', border: '1px solid #334155', borderRadius: '8px', padding: '4px', background: '#1e293b' }} dangerouslySetInnerHTML={{ __html: svgContent }} />
+                              <svg width="80" height="80" viewBox="0 0 100 100" style={{ color: 'white', border: '1px solid #27272a', borderRadius: '8px', padding: '4px', background: '#171717' }} dangerouslySetInnerHTML={{ __html: svgContent }} />
                             </div>
                             {seqIdx < 2 && <ChevronRight size={18} color="#475569" />}
                           </React.Fragment>
                         ))}
                         <ChevronRight size={18} color="#475569" />
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                          <span style={{ fontSize: '10px', color: '#3b82f6', marginBottom: '4px', fontWeight: 'bold' }}>Paso 4</span>
-                          <div style={{ width: '80px', height: '80px', border: '2px dashed #3b82f6', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(59,130,246,0.05)' }}>
-                            <HelpCircle size={28} color="#3b82f6" />
+                          <span style={{ fontSize: '10px', color: '#fbbf24', marginBottom: '4px', fontWeight: 'bold' }}>Paso 4</span>
+                          <div style={{ width: '80px', height: '80px', border: '2px dashed #fbbf24', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(59,130,246,0.05)' }}>
+                            <HelpCircle size={28} color="#fbbf24" />
                           </div>
                         </div>
                       </div>
@@ -415,8 +415,8 @@ export default function CandidatePsychometricPortal() {
                               key={opt.id}
                               onClick={() => handleSelectOption(q.id, opt.id)}
                               style={{ 
-                                background: isSelected ? 'rgba(59, 130, 246, 0.2)' : '#0f172a', 
-                                border: `2px solid ${isSelected ? '#3b82f6' : '#334155'}`, 
+                                background: isSelected ? 'rgba(59, 130, 246, 0.2)' : '#111111', 
+                                border: `2px solid ${isSelected ? '#fbbf24' : '#27272a'}`, 
                                 borderRadius: '12px', 
                                 padding: '16px 8px', 
                                 cursor: 'pointer',
@@ -447,7 +447,7 @@ export default function CandidatePsychometricPortal() {
                             onClick={() => handleSelectOption(q.id, opt.id)}
                             style={{
                               background: isSelected ? 'rgba(59,130,246,0.15)' : 'transparent',
-                              border: `1px solid ${isSelected ? '#3b82f6' : '#334155'}`,
+                              border: `1px solid ${isSelected ? '#fbbf24' : '#27272a'}`,
                               borderRadius: '10px',
                               padding: '14px 18px',
                               textAlign: 'left',
@@ -464,7 +464,7 @@ export default function CandidatePsychometricPortal() {
                               width: '24px',
                               height: '24px',
                               borderRadius: '50%',
-                              background: isSelected ? '#3b82f6' : '#334155',
+                              background: isSelected ? '#fbbf24' : '#27272a',
                               color: isSelected ? 'white' : '#94a3b8',
                               display: 'flex',
                               alignItems: 'center',
@@ -493,8 +493,8 @@ export default function CandidatePsychometricPortal() {
                               key={val}
                               onClick={() => handleSelectOption(q.id, val.toString())}
                               style={{
-                                background: isSelected ? '#3b82f6' : '#0f172a',
-                                border: `2px solid ${isSelected ? '#60a5fa' : '#334155'}`,
+                                background: isSelected ? '#fbbf24' : '#111111',
+                                border: `2px solid ${isSelected ? '#60a5fa' : '#27272a'}`,
                                 borderRadius: '10px',
                                 padding: '12px 6px',
                                 display: 'flex',
@@ -529,8 +529,8 @@ export default function CandidatePsychometricPortal() {
             bottom: 0, 
             left: 0, 
             width: '100%', 
-            background: '#0f172a', 
-            borderTop: '1px solid #1e293b', 
+            background: '#111111', 
+            borderTop: '1px solid #171717', 
             padding: '16px 20px', 
             zIndex: 40,
             display: 'flex',
@@ -568,15 +568,15 @@ export default function CandidatePsychometricPortal() {
   // 3. Vista de examen completado totalmente
   if (test && test.status === 'COMPLETADO') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'sans-serif' }}>
-        <div style={{ background: '#1e293b', border: '1px solid #10b981', padding: '40px 32px', borderRadius: '24px', maxWidth: '500px', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)' }}>
+      <div style={{ minHeight: '100vh', background: '#111111', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'sans-serif' }}>
+        <div style={{ background: '#171717', border: '1px solid #10b981', padding: '40px 32px', borderRadius: '24px', maxWidth: '500px', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)' }}>
           <div style={{ background: 'rgba(16, 185, 129, 0.1)', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
             <Award size={48} color="#10b981" />
           </div>
           <h2 style={{ fontSize: '24px', fontWeight: 800, margin: '0 0 12px', color: '#10b981' }}>¡Evaluación Completada!</h2>
           <p style={{ color: '#f1f5f9', fontWeight: 600, fontSize: '15px', margin: '0 0 8px' }}>Muchas gracias, {candidate.sender_name}.</p>
           <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.6', marginBottom: '28px' }}>Has finalizado con éxito todas las pruebas psicométricas del proceso de selección para la vacante de <strong>{candidate.position}</strong>. Tus resultados han sido enviados automáticamente al departamento de selección corporativa.</p>
-          <span style={{ fontSize: '12px', background: '#334155', padding: '8px 16px', borderRadius: '16px', color: '#cbd5e1' }}>Puedes cerrar esta ventana de forma segura.</span>
+          <span style={{ fontSize: '12px', background: '#27272a', padding: '8px 16px', borderRadius: '16px', color: '#cbd5e1' }}>Puedes cerrar esta ventana de forma segura.</span>
         </div>
       </div>
     );
@@ -584,13 +584,13 @@ export default function CandidatePsychometricPortal() {
 
   // 4. Vista menú principal (Home de Evaluaciones)
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: 'white', fontFamily: 'sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#111111', color: 'white', fontFamily: 'sans-serif' }}>
       {/* Header corporativo */}
-      <div style={{ background: 'linear-gradient(135deg, #1e3a8a, #0f172a)', borderBottom: '1px solid #1e293b', padding: '40px 24px 32px' }}>
+      <div style={{ background: 'linear-gradient(135deg, #09090b, #111111)', borderBottom: '1px solid #171717', padding: '40px 24px 32px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
             <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '8px', borderRadius: '8px' }}>
-              <Brain size={24} color="#3b82f6" />
+              <Brain size={24} color="#fbbf24" />
             </div>
             <span style={{ textTransform: 'uppercase', fontSize: '12px', fontWeight: 800, letterSpacing: '1px', color: '#60a5fa' }}>Portal del Candidato</span>
           </div>
@@ -603,7 +603,7 @@ export default function CandidatePsychometricPortal() {
 
       {/* Lista de sub-tests */}
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 16px 80px' }}>
-        <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', border: '1px solid #334155', marginBottom: '32px', fontSize: '14px', lineHeight: '1.6', color: '#cbd5e1' }}>
+        <div style={{ background: '#171717', padding: '20px', borderRadius: '12px', border: '1px solid #27272a', marginBottom: '32px', fontSize: '14px', lineHeight: '1.6', color: '#cbd5e1' }}>
           ℹ️ <strong>Información general:</strong> Debes completar las 7 evaluaciones listadas a continuación. Puedes tomarlas en el orden que prefieras, pero una vez que inicies un test, no podrás pausarlo. Al finalizar el último test, tus resultados se sincronizarán con el reclutador automáticamente.
         </div>
 
@@ -618,8 +618,8 @@ export default function CandidatePsychometricPortal() {
               <div 
                 key={key} 
                 style={{ 
-                  background: isCompleted ? 'rgba(30, 41, 59, 0.5)' : '#1e293b', 
-                  border: `1px solid ${isCompleted ? '#1e293b' : '#334155'}`, 
+                  background: isCompleted ? 'rgba(23, 23, 23, 0.5)' : '#171717', 
+                  border: `1px solid ${isCompleted ? '#171717' : '#27272a'}`, 
                   borderRadius: '16px', 
                   padding: '20px', 
                   display: 'flex', 
@@ -634,7 +634,7 @@ export default function CandidatePsychometricPortal() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                     <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: isCompleted ? '#94a3b8' : 'white' }}>{detail.title}</h4>
                     {detail.time > 0 && (
-                      <span style={{ fontSize: '11px', color: '#94a3b8', background: '#334155', padding: '2px 8px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ fontSize: '11px', color: '#94a3b8', background: '#27272a', padding: '2px 8px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Clock size={10} /> {detail.time / 60} min
                       </span>
                     )}
@@ -651,7 +651,7 @@ export default function CandidatePsychometricPortal() {
                     <button
                       onClick={() => handleStartSectionClick(key)}
                       style={{
-                        background: '#3b82f6',
+                        background: '#fbbf24',
                         color: 'white',
                         border: 'none',
                         padding: '10px 18px',

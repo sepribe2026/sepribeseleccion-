@@ -36,7 +36,7 @@ export default function EmployeeDetailPage() {
         return (
             <div style={{ textAlign: 'center', padding: '4rem' }}>
                 <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#64748b' }}>Empleado no encontrado</h2>
-                <Link href="/zero-paper/admin/employees" style={{ color: '#3b82f6', marginTop: '1rem', display: 'inline-block' }}>
+                <Link href="/zero-paper/admin/employees" style={{ color: '#fbbf24', marginTop: '1rem', display: 'inline-block' }}>
                     Volver al directorio
                 </Link>
             </div>
@@ -239,12 +239,12 @@ export default function EmployeeDetailPage() {
                 boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#0f172a' }}>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111111' }}>
                         Documentos Digitalizados
                     </h2>
                     <div style={{
-                        backgroundColor: '#eff6ff',
-                        color: '#1e40af',
+                        backgroundColor: '#fef9c3',
+                        color: '#171717',
                         padding: '0.5rem 1rem',
                         borderRadius: '999px',
                         fontSize: '0.875rem',
@@ -349,7 +349,7 @@ export default function EmployeeDetailPage() {
                                 <div style={{ padding: '1.25rem' }}>
                                     <div style={{
                                         fontWeight: '600',
-                                        color: '#0f172a',
+                                        color: '#111111',
                                         fontSize: '0.9rem',
                                         marginBottom: '0.5rem',
                                         whiteSpace: 'nowrap',
@@ -379,7 +379,7 @@ export default function EmployeeDetailPage() {
                                                 border: 'none',
                                                 padding: '0.25rem',
                                                 cursor: 'pointer',
-                                                color: '#3b82f6',
+                                                color: '#fbbf24',
                                                 transition: 'transform 0.2s'
                                             }}
                                             onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}

@@ -17,13 +17,13 @@ export default function Home() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: '#0f172a'
+      backgroundColor: '#111111'
     }}>
       <div style={{ textAlign: 'center', color: 'white' }}>
         <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Redirigiendo a Zero Paper...</h1>
         <div style={{ fontSize: '1rem', opacity: 0.7 }}>
           Si no eres redirigido automáticamente,{' '}
-          <a href="/zero-paper" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
+          <a href="/zero-paper" style={{ color: '#fbbf24', textDecoration: 'underline' }}>
             haz clic aquí
           </a>
         </div>

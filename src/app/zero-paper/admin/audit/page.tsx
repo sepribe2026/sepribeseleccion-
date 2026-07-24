@@ -15,9 +15,9 @@ export default function AuditLogPage() {
     const getActionBadge = (action: string) => {
         const styles: Record<string, { bg: string, color: string, label: string, gradient: string }> = {
             'CREATE': { bg: '#dcfce7', color: '#166534', label: 'Crear', gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
-            'UPDATE': { bg: '#dbeafe', color: '#1e40af', label: 'Actualizar', gradient: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' },
+            'UPDATE': { bg: '#dbeafe', color: '#171717', label: 'Actualizar', gradient: 'linear-gradient(135deg, #fbbf24 0%, #fbbf24 100%)' },
             'DELETE': { bg: '#fee2e2', color: '#991b1b', label: 'Eliminar', gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
-            'IMPORT': { bg: '#e0e7ff', color: '#3730a3', label: 'Importar', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+            'IMPORT': { bg: '#e0e7ff', color: '#854d0e', label: 'Importar', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
             'MASS_DELETE': { bg: '#fef2f2', color: '#7c2d12', label: 'Eliminación Masiva', gradient: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)' },
             'ADD_DOCUMENT': { bg: '#fef3c7', color: '#78350f', label: 'Agregar Documento', gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
             'RESET': { bg: '#fce7f3', color: '#831843', label: 'Resetear Sistema', gradient: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)' }
@@ -102,13 +102,13 @@ export default function AuditLogPage() {
                                     paddingRight: '0.5rem'
                                 }}
                             >
-                                <option value="ALL" style={{ color: '#0f172a' }}>Todas las acciones</option>
-                                <option value="CREATE" style={{ color: '#0f172a' }}>Crear</option>
-                                <option value="IMPORT" style={{ color: '#0f172a' }}>Importar</option>
-                                <option value="ADD_DOCUMENT" style={{ color: '#0f172a' }}>Agregar Documento</option>
-                                <option value="MASS_DELETE" style={{ color: '#0f172a' }}>Eliminación Masiva</option>
-                                <option value="DELETE" style={{ color: '#0f172a' }}>Eliminar</option>
-                                <option value="RESET" style={{ color: '#0f172a' }}>Resetear</option>
+                                <option value="ALL" style={{ color: '#111111' }}>Todas las acciones</option>
+                                <option value="CREATE" style={{ color: '#111111' }}>Crear</option>
+                                <option value="IMPORT" style={{ color: '#111111' }}>Importar</option>
+                                <option value="ADD_DOCUMENT" style={{ color: '#111111' }}>Agregar Documento</option>
+                                <option value="MASS_DELETE" style={{ color: '#111111' }}>Eliminación Masiva</option>
+                                <option value="DELETE" style={{ color: '#111111' }}>Eliminar</option>
+                                <option value="RESET" style={{ color: '#111111' }}>Resetear</option>
                             </select>
                         </div>
                     </div>
@@ -137,14 +137,14 @@ export default function AuditLogPage() {
                         left: 0,
                         right: 0,
                         height: '4px',
-                        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+                        background: 'linear-gradient(135deg, #fbbf24 0%, #fbbf24 100%)'
                     }} />
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                         <div>
                             <p style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                 Total de Operaciones
                             </p>
-                            <h3 style={{ fontSize: '2.25rem', fontWeight: 'bold', color: '#0f172a' }}>
+                            <h3 style={{ fontSize: '2.25rem', fontWeight: 'bold', color: '#111111' }}>
                                 {auditLogs.length}
                             </h3>
                         </div>
@@ -152,7 +152,7 @@ export default function AuditLogPage() {
                             padding: '0.875rem',
                             backgroundColor: 'rgba(59, 130, 246, 0.15)',
                             borderRadius: '12px',
-                            color: '#3b82f6'
+                            color: '#fbbf24'
                         }}>
                             <Activity size={28} />
                         </div>
@@ -187,7 +187,7 @@ export default function AuditLogPage() {
                             <p style={{ color: '#64748b', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                 Resultados Filtrados
                             </p>
-                            <h3 style={{ fontSize: '2.25rem', fontWeight: 'bold', color: '#0f172a' }}>
+                            <h3 style={{ fontSize: '2.25rem', fontWeight: 'bold', color: '#111111' }}>
                                 {filteredLogs.length}
                             </h3>
                         </div>

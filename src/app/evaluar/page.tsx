@@ -227,13 +227,13 @@ export default function SupervisorPortal() {
 
   // ─────────────────────────────────────────────────────────────────────
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', fontFamily: "'Inter', sans-serif", padding: '16px' }}>
+    <div style={{ minHeight: '100vh', background: '#111111', color: '#f8fafc', fontFamily: "'Inter', sans-serif", padding: '16px' }}>
 
       {/* HEADER */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', maxWidth: '1400px', margin: '0 auto 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Star style={{ color: '#7c3aed', fill: '#7c3aed' }} size={22} />
-          <h1 style={{ fontSize: '18px', fontWeight: 800, margin: 0, background: 'linear-gradient(90deg, #a78bfa, #7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          <Star style={{ color: '#fbbf24', fill: '#fbbf24' }} size={22} />
+          <h1 style={{ fontSize: '18px', fontWeight: 800, margin: 0, background: 'linear-gradient(90deg, #a78bfa, #fbbf24)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             Evaluaciones Formativas
           </h1>
         </div>
@@ -254,26 +254,26 @@ export default function SupervisorPortal() {
         {/* LOADING */}
         {checkingActive ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '64px' }}>
-            <RefreshCw className="animate-spin" style={{ color: '#7c3aed' }} size={32} />
+            <RefreshCw className="animate-spin" style={{ color: '#fbbf24' }} size={32} />
             <p style={{ color: '#94a3b8' }}>Iniciando...</p>
           </div>
 
         /* LOGIN */
         ) : !supervisor ? (
-          <div style={{ maxWidth: '420px', margin: '0 auto', background: 'rgba(30,41,59,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '24px', padding: '36px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
+          <div style={{ maxWidth: '420px', margin: '0 auto', background: 'rgba(23, 23, 23,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '24px', padding: '36px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
             <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-              <Star style={{ color: '#7c3aed', fill: '#7c3aed', margin: '0 auto 12px' }} size={32} />
+              <Star style={{ color: '#fbbf24', fill: '#fbbf24', margin: '0 auto 12px' }} size={32} />
               <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 6px' }}>Acceso Supervisor</h2>
               <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>Ingresa con tu usuario y contraseña de Windows.</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Usuario</label>
-                <input type="text" value={username} onChange={e => setUsername(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()} placeholder="ej: jsoto" style={{ width: '100%', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '11px 14px', color: '#f8fafc', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
+                <input type="text" value={username} onChange={e => setUsername(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()} placeholder="ej: jsoto" style={{ width: '100%', background: '#111111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '11px 14px', color: '#f8fafc', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Contraseña</label>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()} placeholder="••••••••" style={{ width: '100%', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '11px 14px', color: '#f8fafc', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()} placeholder="••••••••" style={{ width: '100%', background: '#111111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '11px 14px', color: '#f8fafc', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
               </div>
               {errorMessage && (
                 <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '10px', padding: '10px 14px', display: 'flex', gap: '8px' }}>
@@ -281,7 +281,7 @@ export default function SupervisorPortal() {
                   <p style={{ margin: 0, fontSize: '12.5px', color: '#fca5a5', lineHeight: 1.4 }}>{errorMessage}</p>
                 </div>
               )}
-              <button onClick={handleLogin} disabled={loading || !username.trim() || !password.trim()} style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: 'white', border: 'none', borderRadius: '10px', padding: '13px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', opacity: (loading || !username.trim() || !password.trim()) ? 0.6 : 1 }}>
+              <button onClick={handleLogin} disabled={loading || !username.trim() || !password.trim()} style={{ background: 'linear-gradient(135deg, #fbbf24, #6d28d9)', color: 'white', border: 'none', borderRadius: '10px', padding: '13px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', opacity: (loading || !username.trim() || !password.trim()) ? 0.6 : 1 }}>
                 {loading ? 'Ingresando...' : 'Ingresar'}
               </button>
             </div>
@@ -306,8 +306,8 @@ export default function SupervisorPortal() {
 
             {activeCandidates.length === 0 ? (
               /* Sin candidatos */
-              <div style={{ background: 'rgba(30,41,59,0.7)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '20px', padding: '64px 32px', textAlign: 'center' }}>
-                <RefreshCw className="animate-pulse" style={{ color: '#7c3aed', margin: '0 auto 16px' }} size={36} />
+              <div style={{ background: 'rgba(23, 23, 23,0.7)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '20px', padding: '64px 32px', textAlign: 'center' }}>
+                <RefreshCw className="animate-pulse" style={{ color: '#fbbf24', margin: '0 auto 16px' }} size={36} />
                 <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 8px' }}>Esperando candidatos</h3>
                 <p style={{ color: '#94a3b8', fontSize: '13.5px', margin: 0, lineHeight: 1.5 }}>
                   El reclutador debe hacer clic en <strong>&quot;🎯 Evaluar&quot;</strong> o <strong>&quot;Iniciar Evaluación Grupal&quot;</strong> en el panel de Formativas para que los candidatos aparezcan aquí.
@@ -315,13 +315,13 @@ export default function SupervisorPortal() {
               </div>
             ) : (
               /* ─── MATRIX TABLE ─── */
-              <div style={{ background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', overflow: 'hidden' }}>
+              <div style={{ background: 'rgba(23, 23, 23,0.6)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', overflow: 'hidden' }}>
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: `${220 + activeCandidates.length * 170}px` }}>
                     <thead>
                       <tr style={{ background: 'rgba(124,58,237,0.15)' }}>
                         {/* Sticky criteria column header */}
-                        <th style={{ position: 'sticky', left: 0, zIndex: 2, background: 'rgba(15,23,42,0.98)', padding: '16px 20px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', minWidth: '220px', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+                        <th style={{ position: 'sticky', left: 0, zIndex: 2, background: 'rgba(17, 17, 17,0.98)', padding: '16px 20px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', minWidth: '220px', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
                           Criterio de Evaluación
                         </th>
                         {activeCandidates.map(c => (
@@ -354,9 +354,9 @@ export default function SupervisorPortal() {
 
                           {/* Option rows */}
                           {opts.map((opt, idx) => (
-                            <tr key={opt.id} style={{ background: idx % 2 === 0 ? 'rgba(15,23,42,0.3)' : 'transparent' }}>
+                            <tr key={opt.id} style={{ background: idx % 2 === 0 ? 'rgba(17, 17, 17,0.3)' : 'transparent' }}>
                               {/* Sticky label */}
-                              <td style={{ position: 'sticky', left: 0, zIndex: 1, background: idx % 2 === 0 ? 'rgba(15,23,42,0.98)' : 'rgba(15,23,42,0.92)', padding: '10px 20px', fontSize: '12.5px', color: '#cbd5e1', borderRight: '1px solid rgba(255,255,255,0.06)', lineHeight: 1.4 }}>
+                              <td style={{ position: 'sticky', left: 0, zIndex: 1, background: idx % 2 === 0 ? 'rgba(17, 17, 17,0.98)' : 'rgba(17, 17, 17,0.92)', padding: '10px 20px', fontSize: '12.5px', color: '#cbd5e1', borderRight: '1px solid rgba(255,255,255,0.06)', lineHeight: 1.4 }}>
                                 <span style={{ fontWeight: 500 }}>{opt.label}</span>
                                 <span style={{ display: 'block', fontSize: '10px', color: '#475569', marginTop: '1px' }}>máx {opt.weight} pts</span>
                               </td>
@@ -389,7 +389,7 @@ export default function SupervisorPortal() {
                                           border: `1.5px solid ${isSubmitted
                                             ? 'rgba(255,255,255,0.06)'
                                             : hasVal
-                                              ? isFull ? '#7c3aed' : 'rgba(245,158,11,0.6)'
+                                              ? isFull ? '#fbbf24' : 'rgba(245,158,11,0.6)'
                                               : 'rgba(255,255,255,0.1)'}`,
                                           borderRadius: '7px',
                                           padding: '5px 6px',
@@ -405,7 +405,7 @@ export default function SupervisorPortal() {
                                       {/* Barra de progreso */}
                                       {!isSubmitted && opt.weight > 0 && (
                                         <div style={{ width: '62px', height: '3px', background: 'rgba(255,255,255,0.06)', borderRadius: '999px', overflow: 'hidden' }}>
-                                          <div style={{ height: '100%', width: `${(numVal / opt.weight) * 100}%`, background: isFull ? '#7c3aed' : '#f59e0b', borderRadius: '999px', transition: 'width 0.2s' }} />
+                                          <div style={{ height: '100%', width: `${(numVal / opt.weight) * 100}%`, background: isFull ? '#fbbf24' : '#f59e0b', borderRadius: '999px', transition: 'width 0.2s' }} />
                                         </div>
                                       )}
                                     </div>
@@ -419,7 +419,7 @@ export default function SupervisorPortal() {
 
                       {/* Score row — puntaje calculado + input inline para modificar */}
                       <tr style={{ background: 'rgba(124,58,237,0.1)', borderTop: '2px solid rgba(124,58,237,0.3)' }}>
-                        <td style={{ position: 'sticky', left: 0, zIndex: 1, background: 'rgba(15,23,42,0.98)', padding: '12px 20px', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+                        <td style={{ position: 'sticky', left: 0, zIndex: 1, background: 'rgba(17, 17, 17,0.98)', padding: '12px 20px', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
                           <span style={{ fontSize: '12px', fontWeight: 800, color: '#a78bfa', display: 'block' }}>Puntaje</span>
                           <span style={{ fontSize: '10px', color: '#64748b' }}>Auto · edita si deseas</span>
                         </td>
@@ -472,8 +472,8 @@ export default function SupervisorPortal() {
                       </tr>
 
                       {/* Submit row */}
-                      <tr style={{ background: 'rgba(15,23,42,0.5)' }}>
-                        <td style={{ position: 'sticky', left: 0, zIndex: 1, background: 'rgba(15,23,42,0.98)', padding: '14px 20px', fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+                      <tr style={{ background: 'rgba(17, 17, 17,0.5)' }}>
+                        <td style={{ position: 'sticky', left: 0, zIndex: 1, background: 'rgba(17, 17, 17,0.98)', padding: '14px 20px', fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
                           Acción
                         </td>
                         {activeCandidates.map(c => {
@@ -496,7 +496,7 @@ export default function SupervisorPortal() {
                                   disabled={isSubmitting || !canSubmit}
                                   style={{
                                     background: canSubmit
-                                      ? 'linear-gradient(135deg, #7c3aed, #6d28d9)'
+                                      ? 'linear-gradient(135deg, #fbbf24, #6d28d9)'
                                       : 'rgba(255,255,255,0.05)',
                                     color: canSubmit ? 'white' : '#475569',
                                     border: 'none',

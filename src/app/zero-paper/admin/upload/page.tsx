@@ -170,7 +170,7 @@ export default function MassUploadPage() {
                         gap: '0.5rem',
                         padding: '0.875rem 1.75rem',
                         borderRadius: '12px',
-                        background: mode === 'sync' ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' : 'transparent',
+                        background: mode === 'sync' ? 'linear-gradient(135deg, #fbbf24 0%, #fbbf24 100%)' : 'transparent',
                         color: mode === 'sync' ? 'white' : '#64748b',
                         border: 'none',
                         cursor: 'pointer',
@@ -214,7 +214,7 @@ export default function MassUploadPage() {
                                 <FileText size={24} />
                             </div>
                         </div>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#1e293b', marginBottom: '0.5rem' }}>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#171717', marginBottom: '0.5rem' }}>
                             Carga de Documentos
                         </h3>
                         <p style={{ fontSize: '0.875rem', color: '#64748b' }}>
@@ -238,7 +238,7 @@ export default function MassUploadPage() {
                             border: '2px dashed #cbd5e1',
                             marginBottom: '2rem'
                         }}>
-                            <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#0f172a', marginBottom: '1rem' }}>
+                            <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#111111', marginBottom: '1rem' }}>
                                 Carga los documentos
                             </h3>
                             <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '1.5rem' }}>
@@ -286,7 +286,7 @@ export default function MassUploadPage() {
 
                         {files.length > 0 && (
                             <div style={{ marginBottom: '1.5rem' }}>
-                                <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: '#0f172a', marginBottom: '1rem' }}>
+                                <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: '#111111', marginBottom: '1rem' }}>
                                     Archivos seleccionados ({files.length})
                                 </h4>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto', padding: '0.5rem' }}>
@@ -347,7 +347,7 @@ export default function MassUploadPage() {
                                 borderRadius: '12px',
                                 border: '1px solid #e2e8f0'
                             }}>
-                                <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: '#0f172a', marginBottom: '1rem' }}>
+                                <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: '#111111', marginBottom: '1rem' }}>
                                     Resultado del proceso
                                 </h4>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '300px', overflowY: 'auto' }}>
@@ -382,7 +382,7 @@ export default function MassUploadPage() {
                     <div style={{
                         width: '80px',
                         height: '80px',
-                        background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                        background: 'linear-gradient(135deg, #fbbf24 0%, #fbbf24 100%)',
                         borderRadius: '20px',
                         display: 'flex',
                         alignItems: 'center',
@@ -393,7 +393,7 @@ export default function MassUploadPage() {
                         <Sparkles size={40} color="white" />
                     </div>
 
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#0f172a', marginBottom: '1rem' }}>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111111', marginBottom: '1rem' }}>
                         Sincronización Automática con RRHH
                     </h2>
 
@@ -418,7 +418,7 @@ export default function MassUploadPage() {
                             alignItems: 'center',
                             gap: '0.75rem',
                             padding: '1rem 2.5rem',
-                            background: isSyncing ? '#94a3b8' : 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                            background: isSyncing ? '#94a3b8' : 'linear-gradient(135deg, #fbbf24 0%, #fbbf24 100%)',
                             color: 'white',
                             borderRadius: '12px',
                             fontWeight: '600',
@@ -441,11 +441,11 @@ export default function MassUploadPage() {
                         color: '#64748b',
                         textAlign: 'left'
                     }}>
-                        <h4 style={{ fontWeight: '600', color: '#0f172a', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <h4 style={{ fontWeight: '600', color: '#111111', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <AlertCircle size={16} /> Reglas de sincronización:
                         </h4>
                         <ul style={{ margin: 0, paddingLeft: '1.5rem' }}>
-                            <li>Solo se importan empleados con <code style={{ color: '#8b5cf6' }}>estado = 1</code> (Activos).</li>
+                            <li>Solo se importan empleados con <code style={{ color: '#fbbf24' }}>estado = 1</code> (Activos).</li>
                             <li><strong>Bajas Automáticas:</strong> Los empleados que no estén en el origen serán marcados como <code style={{ color: '#ef4444' }}>Inactivos</code> automáticamente.</li>
                             <li>Se sincroniza: Nombre, Cargo, Fecha Ingreso, Empresa y Ubicación (Unidad de Negocio).</li>
                             <li>Si el empleado ya existe, se actualizarán sus datos actuales.</li>

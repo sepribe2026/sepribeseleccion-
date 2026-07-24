@@ -55,7 +55,7 @@ export default function PrivacyPolicyPage() {
                             <Shield size={32} color="white" />
                         </div>
                         <div>
-                            <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#0f172a', margin: 0 }}>
+                            <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#111111', margin: 0 }}>
                                 {policy.title}
                             </h1>
                             <p style={{ color: '#64748b', margin: '0.5rem 0 0 0' }}>
@@ -138,7 +138,7 @@ export default function PrivacyPolicyPage() {
                         <h2 style={{
                             fontSize: '1.5rem',
                             fontWeight: 'bold',
-                            color: '#0f172a',
+                            color: '#111111',
                             marginBottom: '1rem',
                             display: 'flex',
                             alignItems: 'center',
@@ -160,7 +160,7 @@ export default function PrivacyPolicyPage() {
 
                 {/* Contact Footer */}
                 <div style={{
-                    backgroundColor: '#1e293b',
+                    backgroundColor: '#171717',
                     color: 'white',
                     borderRadius: '12px',
                     padding: '2rem',

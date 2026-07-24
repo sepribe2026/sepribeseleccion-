@@ -38,8 +38,8 @@ export async function POST(req: NextRequest) {
     const testUrl = `${protocol}://${host}/evaluacion/${candidateId}`;
 
     const htmlMessage = `
-      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-        <div style="background: linear-gradient(135deg, #0f172a, #1e293b); padding: 32px 24px; text-align: center;">
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #171717; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <div style="background: linear-gradient(135deg, #111111, #171717); padding: 32px 24px; text-align: center;">
           <h2 style="color: white; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">Evaluación Psicométrica</h2>
           <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500;">Proceso de Selección - SEPRIBE CIA.LTDA.</p>
         </div>
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
           <p style="font-size: 15px; color: #475569;">Para continuar con tu postulación al cargo de <strong>${cargo || 'nuestra vacante disponible'}</strong>, solicitamos que completes las siguientes evaluaciones psicométricas obligatorias:</p>
           
           <div style="background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin: 24px 0;">
-            <h4 style="margin: 0 0 12px; color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">📋 Secciones de Evaluación:</h4>
+            <h4 style="margin: 0 0 12px; color: #111111; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">📋 Secciones de Evaluación:</h4>
             <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #475569;">
               <li style="margin-bottom: 6px;"><strong>Verbal:</strong> Prueba de sinónimos y léxico (5 Minutos).</li>
               <li style="margin-bottom: 6px;"><strong>Espacial:</strong> Rotación y orientación de figuras (5 Minutos).</li>
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
           </div>
           
           <p style="text-align: center; margin: 32px 0 20px;">
-            <a href="${testUrl}" target="_blank" style="background: #2563eb; color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 700; font-size: 15px; display: inline-block; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);">
+            <a href="${testUrl}" target="_blank" style="background: #fbbf24; color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 700; font-size: 15px; display: inline-block; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);">
               Iniciar Evaluación en Línea
             </a>
           </p>
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
           </div>
  
           <p style="font-size: 14px; color: #475569; margin-bottom: 0;">Atentamente,</p>
-          <p style="font-size: 14px; font-weight: 700; color: #0f172a; margin-top: 4px;">Departamento de Selección y Desarrollo de Talentos<br/>SEPRIBE CIA.LTDA.</p>
+          <p style="font-size: 14px; font-weight: 700; color: #111111; margin-top: 4px;">Departamento de Selección y Desarrollo de Talentos<br/>SEPRIBE CIA.LTDA.</p>
         </div>
       </div>
     `;

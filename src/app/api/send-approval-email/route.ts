@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
             </p>
             <img src="cid:qr_onboarding" alt="QR Onboarding" style="width: 200px; height: 200px;" />
             <p style="font-size: 12px; color: #6b7280; margin: 12px 0 0;">
-              O ingresa directamente en: <a href="${onboardingUrl}" style="color: #2563eb;">${onboardingUrl}</a>
+              O ingresa directamente en: <a href="${onboardingUrl}" style="color: #fbbf24;">${onboardingUrl}</a>
             </p>
           </div>
 

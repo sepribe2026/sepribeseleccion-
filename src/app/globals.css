@@ -1,33 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Professional Corporate Palette - Deep Blues & Clean Grays */
-  --primary: #0f172a;
-  /* Slate 900 */
-  --primary-hover: #1e293b;
-  /* Slate 800 */
-  --secondary: #3b82f6;
-  /* Blue 500 */
+  /* Professional Corporate Palette - Black & Yellow */
+  --primary: #09090b; /* Deep Black */
+  --primary-hover: #171717; /* Dark Gray */
+  --secondary: #fbbf24; /* Corporate Yellow */
 
-  --background: #f8fafc;
-  /* Slate 50 */
+  --background: #f4f4f5; /* Zinc 100 */
   --surface: #ffffff;
-  --surface-hover: #f1f5f9;
-  /* Slate 100 */
+  --surface-hover: #fafafa; /* Zinc 50 */
 
-  --foreground: #334155;
-  /* Slate 700 */
-  --muted: #64748b;
-  /* Slate 500 */
-  --border: #e2e8f0;
-  /* Slate 200 */
+  --foreground: #27272a; /* Zinc 800 */
+  --muted: #71717a; /* Zinc 500 */
+  --border: #e4e4e7; /* Zinc 200 */
 
-  --success: #10b981;
-  /* Emerald 500 */
-  --warning: #f59e0b;
-  /* Amber 500 */
-  --error: #ef4444;
-  /* Red 500 */
+  --success: #10b981; /* Emerald 500 */
+  --warning: #fbbf24; /* Yellow 500 */
+  --error: #ef4444; /* Red 500 */
 
   --radius: 8px;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);

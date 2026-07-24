@@ -70,7 +70,7 @@ export default function LoginPage() {
                     }}>
                         <FileText size={40} color="white" />
                     </div>
-                    <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#0f172a', marginBottom: '0.5rem' }}>
+                    <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#111111', marginBottom: '0.5rem' }}>
                         Zero Paper
                     </h1>
                     <p style={{ color: '#64748b', fontSize: '0.95rem' }}>

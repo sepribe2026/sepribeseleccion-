@@ -99,7 +99,7 @@ export default function EmployeesListPage() {
                                     width: '300px',
                                     outline: 'none',
                                     backgroundColor: 'rgba(255,255,255,0.95)',
-                                    color: '#0f172a',
+                                    color: '#111111',
                                     fontSize: '0.875rem',
                                     fontWeight: '500'
                                 }}
@@ -204,7 +204,7 @@ export default function EmployeesListPage() {
                                     <h3 style={{
                                         fontSize: '1.25rem',
                                         fontWeight: 'bold',
-                                        color: '#0f172a',
+                                        color: '#111111',
                                         marginBottom: '0.25rem'
                                     }}>
                                         {emp.name} {emp.apellido}
@@ -235,14 +235,14 @@ export default function EmployeesListPage() {
                                             <div style={{
                                                 width: '36px',
                                                 height: '36px',
-                                                backgroundColor: '#eff6ff',
+                                                backgroundColor: '#fef9c3',
                                                 borderRadius: '8px',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
                                                 flexShrink: 0
                                             }}>
-                                                <Briefcase size={18} color="#3b82f6" />
+                                                <Briefcase size={18} color="#fbbf24" />
                                             </div>
                                             <div>
                                                 <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginBottom: '0.1rem' }}>

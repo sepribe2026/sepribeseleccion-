@@ -159,7 +159,7 @@ export default function EvaluationPage() {
   if (isSuccess || questions.length === 0) {
     return (
       <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at top, #0b0f19 0%, #020617 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'system-ui, sans-serif' }}>
-        <div style={{ background: 'rgba(30, 41, 59, 0.45)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '48px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', textAlign: 'center', maxWidth: '550px', width: '100%' }}>
+        <div style={{ background: 'rgba(23, 23, 23, 0.45)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '48px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', textAlign: 'center', maxWidth: '550px', width: '100%' }}>
           <div style={{ background: 'rgba(34, 197, 94, 0.1)', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
             <CheckCircle2 size={48} color="#22c55e" />
           </div>
@@ -171,7 +171,7 @@ export default function EvaluationPage() {
             onClick={() => router.push(`/${companySlug}/postular`)}
             style={{ 
               background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', 
-              color: '#0f172a', 
+              color: '#111111', 
               border: 'none',
               padding: '16px 32px', 
               borderRadius: '12px', 
@@ -199,7 +199,7 @@ export default function EvaluationPage() {
           <p style={{ color: '#94a3b8', fontSize: '15px', margin: 0 }}>Candidato: <strong>{candidate?.sender_name}</strong></p>
         </div>
 
-        <div style={{ background: 'rgba(30, 41, 59, 0.45)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '40px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+        <div style={{ background: 'rgba(23, 23, 23, 0.45)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '40px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
           
           {error && (
             <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#fca5a5', padding: '16px', borderRadius: '12px', marginBottom: '24px', display: 'flex', gap: '12px', alignItems: 'center', fontSize: '14px' }}>
@@ -212,7 +212,7 @@ export default function EvaluationPage() {
             {questions.map((q, index) => {
               const selectedOpt = responses[q.id]
               return (
-                <div key={q.id} style={{ background: 'rgba(15, 23, 42, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                <div key={q.id} style={{ background: 'rgba(17, 17, 17, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
                   <h3 style={{ margin: '0 0 20px', color: 'white', fontSize: '16px', fontWeight: '600', lineHeight: '1.5' }}>
                     <span style={{ color: '#fbbf24', marginRight: '8px' }}>{index + 1}.</span> {q.question_text}
                   </h3>
@@ -229,8 +229,8 @@ export default function EvaluationPage() {
                             gap: '12px', 
                             padding: '16px', 
                             borderRadius: '12px', 
-                            background: isSelected ? 'rgba(59, 130, 246, 0.15)' : 'rgba(15, 23, 42, 0.6)', 
-                            border: `1px solid ${isSelected ? '#3b82f6' : 'rgba(255,255,255,0.05)'}`,
+                            background: isSelected ? 'rgba(59, 130, 246, 0.15)' : 'rgba(17, 17, 17, 0.6)', 
+                            border: `1px solid ${isSelected ? '#fbbf24' : 'rgba(255,255,255,0.05)'}`,
                             cursor: 'pointer',
                             transition: 'all 0.2s'
                           }}
@@ -240,9 +240,9 @@ export default function EvaluationPage() {
                             name={`question_${q.id}`} 
                             checked={isSelected}
                             onChange={() => handleOptionSelect(q.id, opt)}
-                            style={{ width: '18px', height: '18px', accentColor: '#3b82f6' }}
+                            style={{ width: '18px', height: '18px', accentColor: '#fbbf24' }}
                           />
-                          <span style={{ color: isSelected ? '#eff6ff' : '#cbd5e1', fontSize: '14px' }}>{opt.text}</span>
+                          <span style={{ color: isSelected ? '#fef9c3' : '#cbd5e1', fontSize: '14px' }}>{opt.text}</span>
                         </label>
                       )
                     })}
@@ -258,7 +258,7 @@ export default function EvaluationPage() {
               disabled={submitting}
               style={{ 
                 background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', 
-                color: '#0f172a', 
+                color: '#111111', 
                 border: 'none',
                 padding: '16px 32px', 
                 borderRadius: '12px', 

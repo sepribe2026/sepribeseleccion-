@@ -181,14 +181,14 @@ export default function ApprovalsPage() {
                                 <div style={{ flex: 1 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
                                         <User size={24} color="#667eea" />
-                                        <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#0f172a' }}>
+                                        <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111111' }}>
                                             {employee.name} {employee.apellido}
                                         </h3>
                                         <span style={{
                                             padding: '0.375rem 1rem',
                                             borderRadius: '999px',
-                                            backgroundColor: '#eff6ff',
-                                            color: '#1e40af',
+                                            backgroundColor: '#fef9c3',
+                                            color: '#171717',
                                             fontSize: '0.875rem',
                                             fontWeight: '700',
                                             border: '2px solid #93c5fd'
@@ -249,7 +249,7 @@ export default function ApprovalsPage() {
                                             transition: 'all 0.2s'
                                         }}
                                         onMouseEnter={(e) => {
-                                            e.currentTarget.style.backgroundColor = '#eff6ff';
+                                            e.currentTarget.style.backgroundColor = '#fef9c3';
                                             e.currentTarget.style.borderColor = '#93c5fd';
                                         }}
                                         onMouseLeave={(e) => {
@@ -260,7 +260,7 @@ export default function ApprovalsPage() {
                                         <div style={{ flex: 1 }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.375rem' }}>
                                                 <FileText size={18} color="#667eea" />
-                                                <span style={{ fontWeight: '600', color: '#0f172a', fontSize: '0.95rem' }}>{document.fileName}</span>
+                                                <span style={{ fontWeight: '600', color: '#111111', fontSize: '0.95rem' }}>{document.fileName}</span>
                                                 <span style={{
                                                     padding: '0.125rem 0.5rem',
                                                     borderRadius: '999px',
@@ -405,7 +405,7 @@ export default function ApprovalsPage() {
                                     ) : (
                                         <div style={{ textAlign: 'center', color: '#64748b', padding: '3rem' }}>
                                             <FileText size={64} style={{ margin: '0 auto 1rem', opacity: 0.5, color: '#ef4444' }} />
-                                            <h4 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#0f172a', marginBottom: '0.5rem' }}>
+                                            <h4 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#111111', marginBottom: '0.5rem' }}>
                                                 Descifrando documento...
                                             </h4>
                                             <p style={{ fontSize: '0.875rem', marginBottom: '1rem' }}>

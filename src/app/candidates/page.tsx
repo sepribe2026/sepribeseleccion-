@@ -89,13 +89,13 @@ const DiscLineChart = ({ D, I, S, C }: { D: number; I: number; S: number; C: num
             <stop offset="0%" stopColor="#ef4444" />
             <stop offset="33%" stopColor="#f59e0b" />
             <stop offset="66%" stopColor="#10b981" />
-            <stop offset="100%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#fbbf24" />
           </linearGradient>
         </defs>
 
         {points.map((val, i) => {
           const labels = ['D', 'I', 'S', 'C'];
-          const colors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6'];
+          const colors = ['#ef4444', '#f59e0b', '#10b981', '#fbbf24'];
           return (
             <g key={i}>
               <circle 
@@ -107,7 +107,7 @@ const DiscLineChart = ({ D, I, S, C }: { D: number; I: number; S: number; C: num
                 strokeWidth="2.5" 
                 style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.2))' }}
               />
-              <text x={xCoords[i]} y={getY(val) - 12} textAnchor="middle" fontSize="11" fontWeight="800" fill="#1e293b">
+              <text x={xCoords[i]} y={getY(val) - 12} textAnchor="middle" fontSize="11" fontWeight="800" fill="#171717">
                 {val}%
               </text>
               <text x={xCoords[i]} y={paddingTop + chartHeight + 20} textAnchor="middle" fontSize="14" fontWeight="900" fill={colors[i]}>
@@ -170,8 +170,8 @@ const CognitiveFlowRow = ({ letter, name, desc, score }: { letter: string; name:
           width: '32px', 
           height: '32px', 
           borderRadius: '50%', 
-          background: '#eff6ff', 
-          color: '#2563eb', 
+          background: '#fef9c3', 
+          color: '#fbbf24', 
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'center', 
@@ -183,7 +183,7 @@ const CognitiveFlowRow = ({ letter, name, desc, score }: { letter: string; name:
           {letter}
         </div>
         <div>
-          <h4 style={{ margin: 0, fontSize: '12px', fontWeight: 800, color: '#1e293b' }}>{name}</h4>
+          <h4 style={{ margin: 0, fontSize: '12px', fontWeight: 800, color: '#171717' }}>{name}</h4>
           <span style={{ fontSize: '9px', color: '#94a3b8', display: 'block', fontWeight: 500, lineHeight: 1.2 }}>{desc}</span>
         </div>
       </div>
@@ -200,7 +200,7 @@ const CognitiveFlowRow = ({ letter, name, desc, score }: { letter: string; name:
           left: 0, 
           height: '10px', 
           width: `${score}%`, 
-          background: 'linear-gradient(90deg, #3b82f6 0%, #6366f1 100%)', 
+          background: 'linear-gradient(90deg, #fbbf24 0%, #fbbf24 100%)', 
           borderRadius: '9999px 0 0 9999px',
           pointerEvents: 'none' 
         }} />
@@ -241,7 +241,7 @@ const CognitiveFlowRow = ({ letter, name, desc, score }: { letter: string; name:
         </div>
       </div>
 
-      <div style={{ textAlign: 'right', fontWeight: 900, fontSize: '16px', color: '#1e293b' }}>
+      <div style={{ textAlign: 'right', fontWeight: 900, fontSize: '16px', color: '#171717' }}>
         {score}
         <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700 }}>/100</span>
       </div>
@@ -1831,18 +1831,18 @@ export default function CandidatesAdmin() {
   return (
     <>
       <style>{`
-        .admin-main { min-height: 100vh; background: #f8fafc; font-family: 'Inter', system-ui, sans-serif; color: #0f172a; }
+        .admin-main { min-height: 100vh; background: #f8fafc; font-family: 'Inter', system-ui, sans-serif; color: #111111; }
         .admin-container { padding: 32px; max-width: 1600px; margin: 0 auto; }
         .admin-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; flex-wrap: wrap; gap: 20px; }
-        .admin-title { font-size: 28px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.02em; background: linear-gradient(90deg, #0f172a, #334155); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .admin-title { font-size: 28px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.02em; background: linear-gradient(90deg, #111111, #27272a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .admin-subtitle { color: #64748b; font-size: 15px; font-weight: 500; margin: 0; }
         .qr-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid rgba(226, 232, 240, 0.8); display: flex; align-items: center; gap: 24px; }
         .qr-input { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; font-size: 14px; width: 280px; transition: all 0.2s; }
-        .qr-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); outline: none; }
+        .qr-input:focus { border-color: #fbbf24; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); outline: none; }
         .tabs-nav { display: flex; border-bottom: 1px solid #e2e8f0; margin-bottom: 28px; gap: 8px; }
         .tab-btn { padding: 12px 20px; background: none; border: none; font-size: 14px; font-weight: 700; color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 8px 8px 0 0; }
-        .tab-btn:hover { color: #0f172a; background: rgba(241, 245, 249, 0.8); }
-        .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; background: rgba(37, 99, 235, 0.05); }
+        .tab-btn:hover { color: #111111; background: rgba(241, 245, 249, 0.8); }
+        .tab-btn.active { color: #fbbf24; border-bottom-color: #fbbf24; background: rgba(251, 191, 36, 0.05); }
         .table-container { background: white; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; overflow: hidden; }
         table { width: 100%; border-collapse: collapse; text-align: left; }
         th { background-color: #f8fafc; color: #475569; font-size: 12px; font-weight: 700; text-transform: uppercase; padding: 16px 24px; border-bottom: 1px solid #e2e8f0; letter-spacing: 0.05em; }
@@ -1880,33 +1880,33 @@ export default function CandidatesAdmin() {
           text-transform: uppercase; 
           letter-spacing: 0.05em; 
         }
-        .user-name { font-size: 15px; font-weight: 700; color: #1e293b; margin: 0 0 2px; }
+        .user-name { font-size: 15px; font-weight: 700; color: #171717; margin: 0 0 2px; }
         .user-email { font-size: 13px; color: #64748b; margin: 0; }
         .status-badge { display: inline-flex; padding: 4px 12px; border-radius: 9999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
         .status-synced { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
         .status-pending { background-color: #fff7ed; color: #9a3412; border: 1px solid #ffedd5; }
-        .action-btn { background: none; border: none; color: #4f46e5; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
-        .action-btn:hover { color: #3730a3; transform: translateX(2px); }
-        .ai-btn { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border: none; font-size: 12px; font-weight: 700; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.2); transition: all 0.2s; }
+        .action-btn { background: none; border: none; color: #eab308; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
+        .action-btn:hover { color: #854d0e; transform: translateX(2px); }
+        .ai-btn { background: linear-gradient(135deg, #fbbf24, #fbbf24); color: white; border: none; font-size: 12px; font-weight: 700; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.2); transition: all 0.2s; }
         .ai-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(139, 92, 246, 0.3); }
         .ai-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 6px; border: 1px solid #e2e8f0; }
         .filter-bar { display: flex; gap: 16px; margin-bottom: 24px; background: white; padding: 12px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
         .filter-input { flex: 1; display: flex; align-items: center; gap: 10px; border: 1px solid #f1f5f9; background: #f8fafc; padding: 10px 14px; border-radius: 10px; transition: all 0.2s; }
-        .filter-input:focus-within { background: white; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.05); }
+        .filter-input:focus-within { background: white; border-color: #fbbf24; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.05); }
         .filter-input input { border: none; outline: none; width: 100%; font-size: 14px; background: transparent; font-weight: 500; }
         .ranking-layout { display: grid; grid-template-columns: 360px 1fr; gap: 32px; align-items: flex-start; }
         .ranking-form-card { background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 28px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.05); position: sticky; top: 32px; }
         .ranking-label { display: block; font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
         .ranking-input, .ranking-select { width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; padding: 11px 14px; font-size: 14px; margin-bottom: 16px; background: #f8fafc; transition: all 0.2s; }
         .ranking-textarea { width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; padding: 11px 14px; font-size: 14px; min-height: 160px; margin-bottom: 16px; background: #f8fafc; line-height: 1.6; }
-        .ranking-btn-primary { width: 100%; background: linear-gradient(135deg, #7c3aed, #4f46e5); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.3); transition: all 0.2s; }
+        .ranking-btn-primary { width: 100%; background: linear-gradient(135deg, #fbbf24, #eab308); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.3); transition: all 0.2s; }
         .ranking-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(124, 58, 237, 0.4); }
         .score-bar-wrap { background: #f1f5f9; border-radius: 9999px; height: 10px; width: 140px; overflow: hidden; display: inline-block; vertical-align: middle; border: 1px solid #e2e8f0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
         .score-bar-fill { height: 100%; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 9999px; }
         .medal-badge { font-size: 26px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); display: inline-block; }
         .rank-number { width: 50px; text-align: center; font-size: 15px; font-weight: 800; color: #94a3b8; }
         .rank-row { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        .rank-row:hover { background: #f8fafc; transform: scale(1.005); box-shadow: inset 4px 0 0 #7c3aed, 0 10px 15px -3px rgba(0,0,0,0.05); }
+        .rank-row:hover { background: #f8fafc; transform: scale(1.005); box-shadow: inset 4px 0 0 #fbbf24, 0 10px 15px -3px rgba(0,0,0,0.05); }
         .ai-btn-accept { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; font-size: 13px; font-weight: 800; padding: 10px 20px; border-radius: 10px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
         .ai-btn-accept:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 10px 15px rgba(16, 185, 129, 0.3); }
         .pipeline-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; padding: 5px 14px; border-radius: 9999px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); }
@@ -1914,12 +1914,12 @@ export default function CandidatesAdmin() {
         .wa-link:hover { background: #dcfce7; transform: translateY(-1px); }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-top: 20px; }
         .calendar-day { background: white; border-radius: 12px; border: 1px solid #e2e8f0; min-height: 150px; padding: 12px; transition: all 0.2s; }
-        .calendar-day:hover { border-color: #3b82f6; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
-        .calendar-day.today { background: #f0f9ff; border-color: #3b82f6; border-width: 2px; }
+        .calendar-day:hover { border-color: #fbbf24; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+        .calendar-day.today { background: #f0f9ff; border-color: #fbbf24; border-width: 2px; }
         .calendar-date { font-size: 13px; font-weight: 800; color: #64748b; margin-bottom: 10px; display: flex; justify-content: space-between; }
-        .event-card { background: #eff6ff; border-left: 3px solid #3b82f6; padding: 6px 10px; border-radius: 4px; margin-bottom: 6px; font-size: 11px; }
-        .event-time { font-weight: 800; color: #1e40af; margin-right: 4px; }
-        .event-title { font-weight: 600; color: #1e3a8a; }
+        .event-card { background: #fef9c3; border-left: 3px solid #fbbf24; padding: 6px 10px; border-radius: 4px; margin-bottom: 6px; font-size: 11px; }
+        .event-time { font-weight: 800; color: #171717; margin-right: 4px; }
+        .event-title { font-weight: 600; color: #09090b; }
       `}</style>
 
       {/* MODALES */}
@@ -1962,7 +1962,7 @@ export default function CandidatesAdmin() {
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '90%', maxWidth: '650px', maxHeight: '90vh', overflow: 'auto', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: '#111111', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 💬 Envío masivo de WhatsApp y Gestión de Grupo
               </h3>
               <button onClick={() => setShowWhatsAppModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X /></button>
@@ -1987,7 +1987,7 @@ export default function CandidatesAdmin() {
               <textarea 
                 value={whatsappTemplateText}
                 onChange={e => setWhatsappTemplateText(e.target.value)}
-                style={{ width: '100%', height: '150px', padding: '12px', borderRadius: '12px', border: '1.5px solid #cbd5e1', fontSize: '13.5px', color: '#334155', fontFamily: 'inherit', resize: 'vertical', outline: 'none' }}
+                style={{ width: '100%', height: '150px', padding: '12px', borderRadius: '12px', border: '1.5px solid #cbd5e1', fontSize: '13.5px', color: '#27272a', fontFamily: 'inherit', resize: 'vertical', outline: 'none' }}
               />
             </div>
 
@@ -2017,7 +2017,7 @@ export default function CandidatesAdmin() {
               return (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#334155' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#27272a' }}>
                       Candidatos en la sesión ({activeSessionCandidates.length})
                     </span>
                     <button 
@@ -2158,7 +2158,7 @@ export default function CandidatesAdmin() {
               {formativeOptions.map(opt => (
                 <div key={opt.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', padding: '10px 14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
                   <div style={{ flex: 1, paddingRight: '12px' }}>
-                    <p style={{ margin: 0, fontSize: '13px', fontWeight: 'bold', color: '#1e293b' }}>{opt.label}</p>
+                    <p style={{ margin: 0, fontSize: '13px', fontWeight: 'bold', color: '#171717' }}>{opt.label}</p>
                     <span style={{ fontSize: '11px', color: '#64748b', marginTop: '2px', display: 'inline-block' }}>
                       {opt.category} • Peso: <strong style={{ color: opt.weight >= 0 ? '#166534' : '#991b1b' }}>{opt.weight >= 0 ? `+${opt.weight}` : opt.weight}</strong>
                     </span>
@@ -2184,7 +2184,7 @@ export default function CandidatesAdmin() {
               <button onClick={() => setShowJobMaintenance(false)} style={{ background: 'none', border: 'none' }}><X /></button>
             </div>
             {editingPositionId && (
-              <button onClick={() => { setEditingPositionId(null); setRankingCargo(''); setRankingFunciones(''); setTestConfig({ etica: false, disc: false }); }} style={{ marginBottom: '16px', fontSize: '12px', color: '#2563eb', border: 'none', background: 'none' }}>+ Crear nuevo</button>
+              <button onClick={() => { setEditingPositionId(null); setRankingCargo(''); setRankingFunciones(''); setTestConfig({ etica: false, disc: false }); }} style={{ marginBottom: '16px', fontSize: '12px', color: '#fbbf24', border: 'none', background: 'none' }}>+ Crear nuevo</button>
             )}
             <label className="ranking-label">Cargo</label>
             <input className="ranking-input" value={rankingCargo} onChange={e => setRankingCargo(e.target.value)} />
@@ -2192,7 +2192,7 @@ export default function CandidatesAdmin() {
             <textarea className="ranking-textarea" style={{ minHeight: '180px' }} value={rankingFunciones} onChange={e => setRankingFunciones(e.target.value)} />
             
             <div style={{ marginTop: '16px', marginBottom: '24px', padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-              <h4 style={{ margin: '0 0 12px', fontSize: '13px', color: '#334155' }}>🧠 Evaluaciones Psicológicas Habilitadas</h4>
+              <h4 style={{ margin: '0 0 12px', fontSize: '13px', color: '#27272a' }}>🧠 Evaluaciones Psicológicas Habilitadas</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}>
                   <input type="checkbox" checked={testConfig.etica} onChange={e => setTestConfig(prev => ({ ...prev, etica: e.target.checked }))} style={{ width: '16px', height: '16px' }} />
@@ -2246,7 +2246,7 @@ export default function CandidatesAdmin() {
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}
-            <div style={{ background: 'linear-gradient(135deg, #0f172a, #1e3a5f)', padding: '24px 28px', borderRadius: '20px 20px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ background: 'linear-gradient(135deg, #111111, #1e3a5f)', padding: '24px 28px', borderRadius: '20px 20px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(59,130,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <UploadCloud size={20} style={{ color: '#60a5fa' }} />
@@ -2269,7 +2269,7 @@ export default function CandidatesAdmin() {
                   <div>
                     <span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Nombre Completo</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.sender_name || '—'}</span>
+                      <span style={{ color: '#171717', fontWeight: 600 }}>{viewingFormData.sender_name || '—'}</span>
                       <button 
                         onClick={() => handleUpdateName(viewingFormData.id, viewingFormData.sender_name || '')} 
                         style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '2px' }}
@@ -2282,7 +2282,7 @@ export default function CandidatesAdmin() {
                   <div>
                     <span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Email</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.sender_email || '—'}</span>
+                      <span style={{ color: '#171717', fontWeight: 600 }}>{viewingFormData.sender_email || '—'}</span>
                       <button 
                         onClick={() => handleUpdateEmail(viewingFormData.id, viewingFormData.sender_email || '')} 
                         style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '2px' }}
@@ -2295,7 +2295,7 @@ export default function CandidatesAdmin() {
                   <div>
                     <span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Teléfono</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.sender_phone || '—'}</span>
+                      <span style={{ color: '#171717', fontWeight: 600 }}>{viewingFormData.sender_phone || '—'}</span>
                       <button 
                         onClick={() => handleUpdatePhone(viewingFormData.id, viewingFormData.sender_phone || '')} 
                         style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '2px' }}
@@ -2305,12 +2305,12 @@ export default function CandidatesAdmin() {
                       </button>
                     </div>
                   </div>
-                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Fecha de Nacimiento</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.birth_date ? new Date(viewingFormData.birth_date + 'T12:00:00').toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}</span></div>
-                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Edad</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.age ? `${viewingFormData.age} años` : '—'}</span></div>
-                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Género</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.gender || '—'}</span></div>
-                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Estado Civil</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.civil_status || '—'}</span></div>
-                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Medio de Contacto</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.heard_from || '—'}</span></div>
-                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Contacto Adicional</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.contacto_adicional || '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Fecha de Nacimiento</span><span style={{ color: '#171717', fontWeight: 600 }}>{viewingFormData.birth_date ? new Date(viewingFormData.birth_date + 'T12:00:00').toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Edad</span><span style={{ color: '#171717', fontWeight: 600 }}>{viewingFormData.age ? `${viewingFormData.age} años` : '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Género</span><span style={{ color: '#171717', fontWeight: 600 }}>{viewingFormData.gender || '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Estado Civil</span><span style={{ color: '#171717', fontWeight: 600 }}>{viewingFormData.civil_status || '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Medio de Contacto</span><span style={{ color: '#171717', fontWeight: 600 }}>{viewingFormData.heard_from || '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Contacto Adicional</span><span style={{ color: '#171717', fontWeight: 600 }}>{viewingFormData.contacto_adicional || '—'}</span></div>
                 </div>
               </section>
 
@@ -2318,10 +2318,10 @@ export default function CandidatesAdmin() {
               <section>
                 <h3 style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>📍 Dirección y Residencia</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13.5px' }}>
-                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Ciudad</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.city || '—'}</span></div>
-                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Sector</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.sector || '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Ciudad</span><span style={{ color: '#171717', fontWeight: 600 }}>{viewingFormData.city || '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Sector</span><span style={{ color: '#171717', fontWeight: 600 }}>{viewingFormData.sector || '—'}</span></div>
                   {viewingFormData.home_address && (
-                    <div style={{ gridColumn: '1 / -1' }}><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Dirección</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.home_address}</span></div>
+                    <div style={{ gridColumn: '1 / -1' }}><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Dirección</span><span style={{ color: '#171717', fontWeight: 600 }}>{viewingFormData.home_address}</span></div>
                   )}
                 </div>
               </section>
@@ -2330,9 +2330,9 @@ export default function CandidatesAdmin() {
               <section>
                 <h3 style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>💼 Perfil y Experiencia</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13.5px' }}>
-                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Cargo al que Postula</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.position || '—'}</span></div>
-                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Años de Experiencia</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.experience_years ? `${viewingFormData.experience_years} años` : '—'}</span></div>
-                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>¿Laboró en SEPRIBE?</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.worked_in_sepribe || '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Cargo al que Postula</span><span style={{ color: '#171717', fontWeight: 600 }}>{viewingFormData.position || '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Años de Experiencia</span><span style={{ color: '#171717', fontWeight: 600 }}>{viewingFormData.experience_years ? `${viewingFormData.experience_years} años` : '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>¿Laboró en SEPRIBE?</span><span style={{ color: '#171717', fontWeight: 600 }}>{viewingFormData.worked_in_sepribe || '—'}</span></div>
                   <div style={{ gridColumn: '1 / -1', marginTop: '4px' }}>
                     <span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>Cursos y Licencias</span>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -2342,7 +2342,7 @@ export default function CandidatesAdmin() {
                       {viewingFormData.supervisor_course?.includes('Sí') && <span style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>C. Supervisor</span>}
                       {viewingFormData.console_course?.includes('Sí') && <span style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>C. Consola</span>}
                       {viewingFormData.vip_course?.includes('Sí') && <span style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>C. VIP</span>}
-                      {viewingFormData.skills && viewingFormData.skills.includes('Licencia') && <span style={{ background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>{viewingFormData.skills.split(',').find((s: string) => s.includes('Licencia'))?.trim()}</span>}
+                      {viewingFormData.skills && viewingFormData.skills.includes('Licencia') && <span style={{ background: '#fef9c3', color: '#171717', border: '1px solid #bfdbfe', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>{viewingFormData.skills.split(',').find((s: string) => s.includes('Licencia'))?.trim()}</span>}
                     </div>
                   </div>
                 </div>
@@ -2352,9 +2352,9 @@ export default function CandidatesAdmin() {
               <section>
                 <h3 style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>🎓 Educación</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13.5px' }}>
-                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Nivel de Estudios</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.education_level || '—'}</span></div>
-                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Institución</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.education_institution || '—'}</span></div>
-                  <div style={{ gridColumn: '1 / -1' }}><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Título Obtenido</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.education_title || '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Nivel de Estudios</span><span style={{ color: '#171717', fontWeight: 600 }}>{viewingFormData.education_level || '—'}</span></div>
+                  <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Institución</span><span style={{ color: '#171717', fontWeight: 600 }}>{viewingFormData.education_institution || '—'}</span></div>
+                  <div style={{ gridColumn: '1 / -1' }}><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Título Obtenido</span><span style={{ color: '#171717', fontWeight: 600 }}>{viewingFormData.education_title || '—'}</span></div>
                 </div>
               </section>
 
@@ -2364,10 +2364,10 @@ export default function CandidatesAdmin() {
                   <h3 style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>✨ Información Adicional</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13.5px' }}>
                     {viewingFormData.own_transport && (
-                      <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>¿Movilidad Propia?</span><span style={{ color: '#1e293b', fontWeight: 600 }}>{viewingFormData.own_transport}</span></div>
+                      <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>¿Movilidad Propia?</span><span style={{ color: '#171717', fontWeight: 600 }}>{viewingFormData.own_transport}</span></div>
                     )}
                     {viewingFormData.work_culture_motivation && (
-                      <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Motivación Laboral</span><span style={{ color: '#1e293b', fontWeight: 600, lineHeight: 1.5, display: 'block' }}>{viewingFormData.work_culture_motivation}</span></div>
+                      <div><span style={{ color: '#94a3b8', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Motivación Laboral</span><span style={{ color: '#171717', fontWeight: 600, lineHeight: 1.5, display: 'block' }}>{viewingFormData.work_culture_motivation}</span></div>
                     )}
                   </div>
                 </section>
@@ -2384,7 +2384,7 @@ export default function CandidatesAdmin() {
               {/* Evaluaciones Psicológicas */}
               {viewingFormData.evaluations && viewingFormData.evaluations.length > 0 && (
                 <section style={{ marginTop: '16px', background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                  <h3 style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h3 style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 800, color: '#27272a', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     🧠 Evaluaciones Psicométricas
                   </h3>
                   {viewingFormData.evaluations.map((evalRecord: any) => (
@@ -2393,13 +2393,13 @@ export default function CandidatesAdmin() {
                         {evalRecord.score?.etica !== undefined && (
                           <div style={{ background: 'white', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
                             <span style={{ color: '#64748b', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Ética y Confidencialidad</span>
-                            <span style={{ color: '#0f172a', fontWeight: 800, fontSize: '18px' }}>{evalRecord.score.etica} pts</span>
+                            <span style={{ color: '#111111', fontWeight: 800, fontSize: '18px' }}>{evalRecord.score.etica} pts</span>
                           </div>
                         )}
                         {evalRecord.score?.disc && (
                           <div style={{ background: 'white', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
                             <span style={{ color: '#64748b', fontSize: '11px', display: 'block', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Perfil DISC</span>
-                            <div style={{ display: 'flex', gap: '8px', fontWeight: 700, color: '#0f172a' }}>
+                            <div style={{ display: 'flex', gap: '8px', fontWeight: 700, color: '#111111' }}>
                               <span>D:{evalRecord.score.disc.D || 0}</span>
                               <span>I:{evalRecord.score.disc.I || 0}</span>
                               <span>S:{evalRecord.score.disc.S || 0}</span>
@@ -2418,37 +2418,37 @@ export default function CandidatesAdmin() {
                 <h3 style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>📎 Documentos Adjuntos</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   {viewingFormData.pdf_url && (
-                    <a href={viewingFormData.pdf_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '10px 14px', borderRadius: '8px', fontWeight: 700, fontSize: '12.5px', textDecoration: 'none' }}>
+                    <a href={viewingFormData.pdf_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fef9c3', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '10px 14px', borderRadius: '8px', fontWeight: 700, fontSize: '12.5px', textDecoration: 'none' }}>
                       <FileText size={14} /> Hoja de Vida
                     </a>
                   )}
                   {viewingFormData.cedula_pdf_url && (
-                    <a href={viewingFormData.cedula_pdf_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', color: '#334155', border: '1px solid #cbd5e1', padding: '10px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '12.5px', textDecoration: 'none' }}>
+                    <a href={viewingFormData.cedula_pdf_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', color: '#27272a', border: '1px solid #cbd5e1', padding: '10px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '12.5px', textDecoration: 'none' }}>
                       <FileText size={14} /> Cédula de Identidad
                     </a>
                   )}
                   {viewingFormData.historial_laboral_url && (
-                    <a href={viewingFormData.historial_laboral_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', color: '#334155', border: '1px solid #cbd5e1', padding: '10px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '12.5px', textDecoration: 'none' }}>
+                    <a href={viewingFormData.historial_laboral_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', color: '#27272a', border: '1px solid #cbd5e1', padding: '10px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '12.5px', textDecoration: 'none' }}>
                       <FileText size={14} /> Historial Laboral
                     </a>
                   )}
                   {viewingFormData.diploma_120h_url && (
-                    <a href={viewingFormData.diploma_120h_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', color: '#334155', border: '1px solid #cbd5e1', padding: '10px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '12.5px', textDecoration: 'none' }}>
+                    <a href={viewingFormData.diploma_120h_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', color: '#27272a', border: '1px solid #cbd5e1', padding: '10px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '12.5px', textDecoration: 'none' }}>
                       <FileText size={14} /> Curso 120H
                     </a>
                   )}
                   {viewingFormData.diploma_nivel_ii_url && (
-                    <a href={viewingFormData.diploma_nivel_ii_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', color: '#334155', border: '1px solid #cbd5e1', padding: '10px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '12.5px', textDecoration: 'none' }}>
+                    <a href={viewingFormData.diploma_nivel_ii_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', color: '#27272a', border: '1px solid #cbd5e1', padding: '10px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '12.5px', textDecoration: 'none' }}>
                       <FileText size={14} /> Curso Nivel II
                     </a>
                   )}
                   {viewingFormData.diploma_reentrenamiento_url && (
-                    <a href={viewingFormData.diploma_reentrenamiento_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', color: '#334155', border: '1px solid #cbd5e1', padding: '10px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '12.5px', textDecoration: 'none' }}>
+                    <a href={viewingFormData.diploma_reentrenamiento_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', color: '#27272a', border: '1px solid #cbd5e1', padding: '10px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '12.5px', textDecoration: 'none' }}>
                       <FileText size={14} /> Reentrenamiento
                     </a>
                   )}
                   {viewingFormData.certificados_trabajo_url && (
-                    <a href={viewingFormData.certificados_trabajo_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', color: '#334155', border: '1px solid #cbd5e1', padding: '10px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '12.5px', textDecoration: 'none' }}>
+                    <a href={viewingFormData.certificados_trabajo_url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', color: '#27272a', border: '1px solid #cbd5e1', padding: '10px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '12.5px', textDecoration: 'none' }}>
                       <FileText size={14} /> Cert. Trabajo / Honorabilidad
                     </a>
                   )}
@@ -2462,7 +2462,7 @@ export default function CandidatesAdmin() {
       {passToRankingModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ background: 'white', padding: '28px', borderRadius: '12px', width: '420px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' }}>
-            <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 800, color: '#1e293b' }}>🏆 Pasar Candidato a Ranking</h3>
+            <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 800, color: '#171717' }}>🏆 Pasar Candidato a Ranking</h3>
             <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '20px' }}>
               Selecciona o escribe el cargo para asignar a <strong>{passToRankingModal.name}</strong> en el Ranking IA y Pipeline.
             </p>
@@ -2634,12 +2634,12 @@ export default function CandidatesAdmin() {
                 ].map(comp => {
                   const isEnabled = companySettings[comp.slug] !== false;
                   return (
-                    <label key={comp.slug} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', fontWeight: '800', cursor: 'pointer', color: '#1e293b' }}>
+                    <label key={comp.slug} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', fontWeight: '800', cursor: 'pointer', color: '#171717' }}>
                       <input
                         type="checkbox"
                         checked={isEnabled}
                         onChange={() => toggleCompanyPostulation(comp.slug, isEnabled)}
-                        style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#2563eb' }}
+                        style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#fbbf24' }}
                       />
                       <span>{comp.name}</span>
                     </label>
@@ -2679,12 +2679,12 @@ export default function CandidatesAdmin() {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginBottom: '16px' }}>
               <button onClick={() => setShowSettings(true)} style={{ background: 'white', border: '1px solid #ddd', padding: '8px', borderRadius: '6px' }}><Settings size={16}/></button>
               {/* BOTÓN DESACTIVADO TEMPORALMENTE - para reactivar quitar display:none */}
-              <button onClick={handleScanEmails} disabled={scanning} className="ai-btn" style={{ background: '#3b82f6', display: 'none' }}><RefreshCw size={16} className={scanning ? "animate-spin" : ""}/> {scanning ? 'Escaneando...' : 'Buscar Nuevos Correos'}</button>
+              <button onClick={handleScanEmails} disabled={scanning} className="ai-btn" style={{ background: '#fbbf24', display: 'none' }}><RefreshCw size={16} className={scanning ? "animate-spin" : ""}/> {scanning ? 'Escaneando...' : 'Buscar Nuevos Correos'}</button>
             </div>
 
             {/* Metricas de Candidatos por Cargo y Ciudad */}
             <div style={{ 
-              background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', 
+              background: 'linear-gradient(135deg, #171717 0%, #111111 100%)', 
               color: 'white', 
               padding: '20px 24px', 
               borderRadius: '16px', 
@@ -2704,7 +2704,7 @@ export default function CandidatesAdmin() {
                 justifyContent: 'center'
               }}>
                 <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Candidatos</span>
-                <span style={{ fontSize: '42px', fontWeight: 900, color: '#3b82f6', lineHeight: 1, margin: '6px 0 2px' }}>{inboxMetrics.total}</span>
+                <span style={{ fontSize: '42px', fontWeight: 900, color: '#fbbf24', lineHeight: 1, margin: '6px 0 2px' }}>{inboxMetrics.total}</span>
                 <span style={{ fontSize: '12px', color: '#64748b' }}>Postulantes registrados</span>
               </div>
 
@@ -2724,7 +2724,7 @@ export default function CandidatesAdmin() {
                       fontSize: '12px'
                     }}>
                       <span style={{ fontWeight: 700, color: '#e2e8f0' }}>{cargo}</span>
-                      <span style={{ background: '#3b82f6', color: 'white', padding: '1px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 800 }}>{count}</span>
+                      <span style={{ background: '#fbbf24', color: 'white', padding: '1px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 800 }}>{count}</span>
                     </div>
                   ))}
                   {inboxMetrics.topCargos.length === 0 && <span style={{ fontSize: '12px', color: '#64748b' }}>Sin datos disponibles</span>}
@@ -2840,7 +2840,7 @@ export default function CandidatesAdmin() {
                 </button>
                 <button 
                   className="track-btn" 
-                  style={{ background: '#f8fafc', color: '#2563eb', borderColor: '#dbeafe' }}
+                  style={{ background: '#f8fafc', color: '#fbbf24', borderColor: '#dbeafe' }}
                   onClick={() => fetchResumes()}
                   disabled={loadingResumes}
                 >
@@ -2873,8 +2873,8 @@ export default function CandidatesAdmin() {
                             onClick={() => r.email_uid?.startsWith('WEB') ? handleViewFormData(r) : undefined}
                             title={r.email_uid?.startsWith('WEB') ? 'Ver formulario completo' : ''}
                             style={{ 
-                              background: r.email_uid?.startsWith('WEB') ? '#eff6ff' : (r.classification_status === 'REVIEWED' ? '#f0fdf4' : '#f3e8ff'), 
-                              color: r.email_uid?.startsWith('WEB') ? '#3b82f6' : (r.classification_status === 'REVIEWED' ? '#16a34a' : '#9333ea'),
+                              background: r.email_uid?.startsWith('WEB') ? '#fef9c3' : (r.classification_status === 'REVIEWED' ? '#f0fdf4' : '#fef9c3'), 
+                              color: r.email_uid?.startsWith('WEB') ? '#fbbf24' : (r.classification_status === 'REVIEWED' ? '#16a34a' : '#854d0e'),
                               cursor: r.email_uid?.startsWith('WEB') ? 'pointer' : 'default',
                               transition: 'transform 0.15s, box-shadow 0.15s',
                               boxShadow: r.email_uid?.startsWith('WEB') ? '0 0 0 2px rgba(59,130,246,0.15)' : 'none'
@@ -2890,7 +2890,7 @@ export default function CandidatesAdmin() {
                                 padding: '2px 6px', 
                                 borderRadius: '4px', 
                                 background: r.email_uid?.startsWith('WEB') ? '#dbeafe' : '#f1f5f9',
-                                color: r.email_uid?.startsWith('WEB') ? '#1e40af' : '#475569',
+                                color: r.email_uid?.startsWith('WEB') ? '#171717' : '#475569',
                                 fontWeight: 'bold'
                               }}>
                                 {r.email_uid?.startsWith('WEB') ? 'WEB' : 'EMAIL'}
@@ -2908,7 +2908,7 @@ export default function CandidatesAdmin() {
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                               {r.sender_phone ? (
-                                <p style={{ color: '#3b82f6', fontSize: '12px', fontWeight: 'bold', margin: 0 }}>📞 {r.sender_phone}</p>
+                                <p style={{ color: '#fbbf24', fontSize: '12px', fontWeight: 'bold', margin: 0 }}>📞 {r.sender_phone}</p>
                               ) : (
                                 <p style={{ color: '#94a3b8', fontSize: '11px', margin: 0 }}>Sín teléfono</p>
                               )}
@@ -2949,7 +2949,7 @@ export default function CandidatesAdmin() {
                                     borderRadius: '10px', 
                                     border: '1px solid #e2e8f0',
                                     fontSize: '12px',
-                                    color: '#334155'
+                                    color: '#27272a'
                                   }}>
                                     <div style={{ gridColumn: '1 / -1', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px', marginBottom: '2px', fontWeight: '800', color: '#002f6c', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                       📝 Datos Adicionales Formulario
@@ -3006,7 +3006,7 @@ export default function CandidatesAdmin() {
                                       borderRadius: '10px', 
                                       border: '1px solid #bae6fd',
                                       fontSize: '12px',
-                                      color: '#0f172a'
+                                      color: '#111111'
                                     }}>
                                       <div style={{ borderBottom: '1px solid #bfdbfe', paddingBottom: '4px', marginBottom: '8px', fontWeight: '800', color: '#0369a1', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                         🧠 Pruebas Psicométricas
@@ -3063,8 +3063,8 @@ export default function CandidatesAdmin() {
                             display: 'flex',
                             alignItems: 'center',
                             gap: '5px',
-                            background: '#eff6ff',
-                            color: '#2563eb',
+                            background: '#fef9c3',
+                            color: '#fbbf24',
                             border: '1px solid #bfdbfe',
                             borderRadius: '8px',
                             padding: '5px 10px',
@@ -3113,7 +3113,7 @@ export default function CandidatesAdmin() {
         {activeTab === 'ranking' && (
           <div className="ranking-layout">
             <div className="ranking-form-card">
-              <p style={{ fontWeight: 700, margin: '0 0 16px' }}><Trophy size={18} color="#7c3aed" /> Evaluación por Cargo</p>
+              <p style={{ fontWeight: 700, margin: '0 0 16px' }}><Trophy size={18} color="#fbbf24" /> Evaluación por Cargo</p>
               <label className="ranking-label">Seleccionar Cargo</label>
               <select className="ranking-select" value={editingPositionId || ''} onChange={e => {
                 const p = jobPositions.find(pos => pos.id === e.target.value);
@@ -3221,9 +3221,9 @@ export default function CandidatesAdmin() {
                             </td>
                             <td>
                               <div className="user-cell" style={{ alignItems: 'flex-start' }}>
-                                <div className="user-avatar" style={{ background: '#f3e8ff', color: '#9333ea', width: '36px', height: '36px' }}><User size={18}/></div>
+                                <div className="user-avatar" style={{ background: '#fef9c3', color: '#854d0e', width: '36px', height: '36px' }}><User size={18}/></div>
                                 <div>
-                                  <p style={{ fontWeight: 700, margin: '0 0 2px', fontSize: '15px', color: '#1e293b' }}>{r.name || r.sender_name || 'Sin Nombre'}</p>
+                                  <p style={{ fontWeight: 700, margin: '0 0 2px', fontSize: '15px', color: '#171717' }}>{r.name || r.sender_name || 'Sin Nombre'}</p>
                                   <p className="justification-text" style={{ fontSize: '12px', lineHeight: '1.4', color: '#64748b' }}>{r.justification}</p>
                                 </div>
                               </div>
@@ -3236,7 +3236,7 @@ export default function CandidatesAdmin() {
                                 <div className="score-bar-wrap">
                                   <div className="score-bar-fill" style={{ width: `${r.score}%`, background: scoreColor }} />
                                 </div>
-                                <span style={{ fontWeight: 800, fontSize: '15px', color: '#1e293b' }}>{r.score}</span>
+                                <span style={{ fontWeight: 800, fontSize: '15px', color: '#171717' }}>{r.score}</span>
                               </div>
                             </td>
                             <td>{r.pdf_url && <a href={r.pdf_url} target="_blank" className="pdf-link" style={{ fontWeight: 600 }}><FileText size={16}/> CV</a>}</td>
@@ -3293,7 +3293,7 @@ export default function CandidatesAdmin() {
               ) : rankingCargo ? (
                 <div style={{ background: 'white', padding: '48px', borderRadius: '16px', textAlign: 'center', border: '1px dashed #cbd5e1', color: '#64748b' }}>
                   <Trophy size={48} color="#cbd5e1" style={{ marginBottom: '16px', display: 'block', marginLeft: 'auto', marginRight: 'auto' }} />
-                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#334155', marginBottom: '8px' }}>No hay candidatos en este ranking</h3>
+                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#27272a', marginBottom: '8px' }}>No hay candidatos en este ranking</h3>
                   <p style={{ fontSize: '13px', color: '#64748b', maxWidth: '320px', margin: '0 auto' }}>
                     Agrega candidatos desde el <strong>Inbox</strong> usando el botón "Pasar a Ranking", o haz clic en <strong>Evaluar con IA</strong> para analizar a todos los postulantes.
                   </p>
@@ -3319,10 +3319,10 @@ export default function CandidatesAdmin() {
                 {/* KPI Cards Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
                   <div style={{ background: 'white', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{ background: '#eff6ff', color: '#2563eb', padding: '12px', borderRadius: '12px' }}><Users size={24} /></div>
+                    <div style={{ background: '#fef9c3', color: '#fbbf24', padding: '12px', borderRadius: '12px' }}><Users size={24} /></div>
                     <div>
                       <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Total Postulantes</span>
-                      <h3 style={{ margin: '4px 0 0', fontSize: '24px', fontWeight: 900, color: '#1e293b' }}>{stats.total}</h3>
+                      <h3 style={{ margin: '4px 0 0', fontSize: '24px', fontWeight: 900, color: '#171717' }}>{stats.total}</h3>
                     </div>
                   </div>
 
@@ -3330,7 +3330,7 @@ export default function CandidatesAdmin() {
                     <div style={{ background: '#fdf2f8', color: '#db2777', padding: '12px', borderRadius: '12px' }}><User size={24} /></div>
                     <div>
                       <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Edad Promedio</span>
-                      <h3 style={{ margin: '4px 0 0', fontSize: '24px', fontWeight: 900, color: '#1e293b' }}>{stats.averageAge} años</h3>
+                      <h3 style={{ margin: '4px 0 0', fontSize: '24px', fontWeight: 900, color: '#171717' }}>{stats.averageAge} años</h3>
                     </div>
                   </div>
 
@@ -3338,7 +3338,7 @@ export default function CandidatesAdmin() {
                     <div style={{ background: '#f0fdf4', color: '#16a34a', padding: '12px', borderRadius: '12px' }}><Activity size={24} /></div>
                     <div>
                       <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Afinidad Deporte</span>
-                      <h3 style={{ margin: '4px 0 0', fontSize: '24px', fontWeight: 900, color: '#1e293b' }}>{stats.likesSportsPct}% Sí</h3>
+                      <h3 style={{ margin: '4px 0 0', fontSize: '24px', fontWeight: 900, color: '#171717' }}>{stats.likesSportsPct}% Sí</h3>
                     </div>
                   </div>
 
@@ -3346,7 +3346,7 @@ export default function CandidatesAdmin() {
                     <div style={{ background: '#f7fee7', color: '#4d7c0f', padding: '12px', borderRadius: '12px' }}><Award size={24} /></div>
                     <div>
                       <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Cargo Top</span>
-                      <h3 style={{ margin: '4px 0 0', fontSize: '15px', fontWeight: 800, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '160px' }}>
+                      <h3 style={{ margin: '4px 0 0', fontSize: '15px', fontWeight: 800, color: '#171717', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '160px' }}>
                         {stats.topPositions[0]?.name || 'N/A'}
                       </h3>
                     </div>
@@ -3355,7 +3355,7 @@ export default function CandidatesAdmin() {
 
                 {/* Embudo de Selección y Conversión */}
                 <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
-                  <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 800, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 800, color: '#171717', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     📊 Embudo de Selección y Conversión de Procesos
                   </h3>
                   <p style={{ margin: '0 0 24px', fontSize: '13px', color: '#64748b' }}>
@@ -3369,7 +3369,7 @@ export default function CandidatesAdmin() {
                         subtitle: 'Inbox General', 
                         count: stats.total, 
                         pct: 100, 
-                        color: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', 
+                        color: 'linear-gradient(135deg, #fbbf24 0%, #1d4ed8 100%)', 
                         desc: 'CVs recibidos' 
                       },
                       { 
@@ -3377,7 +3377,7 @@ export default function CandidatesAdmin() {
                         subtitle: 'Pipeline Activo', 
                         count: stats.pipelineCount, 
                         pct: stats.total > 0 ? Math.round((stats.pipelineCount / stats.total) * 100) : 0, 
-                        color: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)', 
+                        color: 'linear-gradient(135deg, #fbbf24 0%, #eab308 100%)', 
                         desc: 'Pre-seleccionados' 
                       },
                       { 
@@ -3428,7 +3428,7 @@ export default function CandidatesAdmin() {
                         
                         <div>
                           <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{step.title}</span>
-                          <div style={{ fontSize: '28px', fontWeight: 900, color: '#1e293b', margin: '4px 0' }}>{step.count}</div>
+                          <div style={{ fontSize: '28px', fontWeight: 900, color: '#171717', margin: '4px 0' }}>{step.count}</div>
                           <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '8px' }}>{step.subtitle}</span>
                         </div>
                         
@@ -3453,7 +3453,7 @@ export default function CandidatesAdmin() {
                   
                   {/* 1. Medios de Adquisición */}
                   <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
-                    <h3 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 800, color: '#1e293b' }}>Medios de Adquisición</h3>
+                    <h3 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 800, color: '#171717' }}>Medios de Adquisición</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       {Object.entries(stats.heardFromMap).map(([key, val]) => {
                         const pct = stats.total > 0 ? Math.round((val / stats.total) * 100) : 0;
@@ -3464,7 +3464,7 @@ export default function CandidatesAdmin() {
                               <strong>{val} ({pct}%)</strong>
                             </div>
                             <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '999px', overflow: 'hidden' }}>
-                              <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #3b82f6, #6366f1)', borderRadius: '999px', transition: 'width 0.6s ease' }} />
+                              <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #fbbf24, #fbbf24)', borderRadius: '999px', transition: 'width 0.6s ease' }} />
                             </div>
                           </div>
                         );
@@ -3474,7 +3474,7 @@ export default function CandidatesAdmin() {
 
                   {/* 2. Distribución de Sectores */}
                   <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
-                    <h3 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 800, color: '#1e293b' }}>Distribución por Sectores</h3>
+                    <h3 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 800, color: '#171717' }}>Distribución por Sectores</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       {Object.entries(stats.sectorsMap).map(([key, val]) => {
                         const pct = stats.total > 0 ? Math.round((val / stats.total) * 100) : 0;
@@ -3495,7 +3495,7 @@ export default function CandidatesAdmin() {
 
                   {/* 3. Niveles de Educación */}
                   <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
-                    <h3 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 800, color: '#1e293b' }}>Nivel de Educación</h3>
+                    <h3 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 800, color: '#171717' }}>Nivel de Educación</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       {Object.entries(stats.educationMap).map(([key, val]) => {
                         const pct = stats.total > 0 ? Math.round((val / stats.total) * 100) : 0;
@@ -3516,7 +3516,7 @@ export default function CandidatesAdmin() {
 
                   {/* 4. Rangos de Edad */}
                   <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
-                    <h3 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 800, color: '#1e293b' }}>Distribución por Rangos de Edad</h3>
+                    <h3 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 800, color: '#171717' }}>Distribución por Rangos de Edad</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       {Object.entries(stats.ageRanges).map(([key, val]) => {
                         const pct = stats.total > 0 ? Math.round((val / stats.total) * 100) : 0;
@@ -3527,7 +3527,7 @@ export default function CandidatesAdmin() {
                               <strong>{val} ({pct}%)</strong>
                             </div>
                             <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '999px', overflow: 'hidden' }}>
-                              <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #8b5cf6, #d946ef)', borderRadius: '999px', transition: 'width 0.6s ease' }} />
+                              <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #fbbf24, #d946ef)', borderRadius: '999px', transition: 'width 0.6s ease' }} />
                             </div>
                           </div>
                         );
@@ -3538,7 +3538,7 @@ export default function CandidatesAdmin() {
 
                 {/* Top Positions Section */}
                 <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
-                  <h3 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 800, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h3 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 800, color: '#171717', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     🏆 Cargos Más Solicitados
                   </h3>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
@@ -3548,7 +3548,7 @@ export default function CandidatesAdmin() {
                           <span style={{ fontSize: '11px', fontWeight: 900, color: idx === 0 ? '#b45309' : idx === 1 ? '#475569' : '#7c2d12', background: idx === 0 ? '#fef3c7' : idx === 1 ? '#f1f5f9' : '#ffedd5', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
                             Top {idx + 1}
                           </span>
-                          <h4 style={{ margin: '8px 0 0', fontSize: '14px', fontWeight: 800, color: '#1e293b' }}>{pos.name}</h4>
+                          <h4 style={{ margin: '8px 0 0', fontSize: '14px', fontWeight: 800, color: '#171717' }}>{pos.name}</h4>
                         </div>
                         <span style={{ fontSize: '20px', fontWeight: 900, color: '#475569' }}>{pos.count}</span>
                       </div>
@@ -3626,7 +3626,7 @@ export default function CandidatesAdmin() {
                             if (isSelected) {
                               // Ya está en formativas: mostrar badge, sin checkbox
                               return (
-                                <span style={{ fontSize: '10px', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '3px 7px', borderRadius: '6px', fontWeight: 'bold', display: 'inline-block' }}>
+                                <span style={{ fontSize: '10px', background: '#fef9c3', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '3px 7px', borderRadius: '6px', fontWeight: 'bold', display: 'inline-block' }}>
                                   🎯 En Formativas
                                 </span>
                               );
@@ -3642,7 +3642,7 @@ export default function CandidatesAdmin() {
                                     width: '18px',
                                     height: '18px',
                                     cursor: 'pointer',
-                                    accentColor: '#2563eb'
+                                    accentColor: '#fbbf24'
                                   }}
                                 />
                                 {isCompleted ? (
@@ -3656,7 +3656,7 @@ export default function CandidatesAdmin() {
                         </td>
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                            <p style={{ fontWeight: 700, margin: 0, color: '#1e293b' }}>{p.candidate?.sender_name || 'Candidato'}</p>
+                            <p style={{ fontWeight: 700, margin: 0, color: '#171717' }}>{p.candidate?.sender_name || 'Candidato'}</p>
                             {(() => {
                               const formativeCand = formativeCandidates.find(c => c.resume_id === p.resume_id);
                               if (formativeCand) {
@@ -3688,7 +3688,7 @@ export default function CandidatesAdmin() {
                                   <div style={{ display: 'flex', gap: '4px' }}>
                                     <button 
                                       className="track-btn" 
-                                      style={{ padding: '4px 8px', fontSize: '11px', color: '#2563eb', borderColor: '#dbeafe', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                      style={{ padding: '4px 8px', fontSize: '11px', color: '#fbbf24', borderColor: '#dbeafe', display: 'flex', alignItems: 'center', gap: '4px' }}
                                       onClick={() => handleSendPsychometricEmail(p.candidate, p.cargo)}
                                       disabled={sendingPsychometricId === p.candidate?.id}
                                     >
@@ -3696,7 +3696,7 @@ export default function CandidatesAdmin() {
                                     </button>
                                     <button 
                                       className="track-btn" 
-                                      style={{ padding: '4px 8px', fontSize: '11px', color: '#8b5cf6', borderColor: '#ddd6fe', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                      style={{ padding: '4px 8px', fontSize: '11px', color: '#fbbf24', borderColor: '#ddd6fe', display: 'flex', alignItems: 'center', gap: '4px' }}
                                       onClick={() => {
                                         const protocol = window.location.protocol;
                                         const host = window.location.host;
@@ -3762,7 +3762,7 @@ export default function CandidatesAdmin() {
                                     <>
                                       <button 
                                         className="track-btn" 
-                                        style={{ padding: '4px 8px', fontSize: '11px', color: '#2563eb', borderColor: '#dbeafe', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                        style={{ padding: '4px 8px', fontSize: '11px', color: '#fbbf24', borderColor: '#dbeafe', display: 'flex', alignItems: 'center', gap: '4px' }}
                                         onClick={() => handleSendPsychometricEmail(p.candidate, p.cargo)}
                                         disabled={sendingPsychometricId === p.candidate?.id}
                                       >
@@ -3770,7 +3770,7 @@ export default function CandidatesAdmin() {
                                       </button>
                                       <button 
                                         className="track-btn" 
-                                        style={{ padding: '4px 8px', fontSize: '11px', color: '#8b5cf6', borderColor: '#ddd6fe', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                        style={{ padding: '4px 8px', fontSize: '11px', color: '#fbbf24', borderColor: '#ddd6fe', display: 'flex', alignItems: 'center', gap: '4px' }}
                                         onClick={() => {
                                           const protocol = window.location.protocol;
                                           const host = window.location.host;
@@ -3815,7 +3815,7 @@ export default function CandidatesAdmin() {
                               style={{ 
                                 fontSize: '11px', 
                                 padding: '6px 8px', 
-                                color: (p.status === 'PENDIENTE' || p.status === 'ENTREVISTA_APROBADA' || p.status === 'RECHAZADO') ? '#94a3b8' : '#2563eb', 
+                                color: (p.status === 'PENDIENTE' || p.status === 'ENTREVISTA_APROBADA' || p.status === 'RECHAZADO') ? '#94a3b8' : '#fbbf24', 
                                 borderColor: (p.status === 'PENDIENTE' || p.status === 'ENTREVISTA_APROBADA' || p.status === 'RECHAZADO') ? '#e2e8f0' : '#dbeafe',
                                 cursor: (p.status === 'PENDIENTE' || p.status === 'ENTREVISTA_APROBADA' || p.status === 'RECHAZADO') ? 'not-allowed' : 'pointer',
                                 justifyContent: 'center'
@@ -3934,7 +3934,7 @@ export default function CandidatesAdmin() {
                       <div key={d} className={`calendar-day ${isToday ? 'today' : ''}`} style={{ minHeight: '120px', padding: '8px' }}>
                         <div className="calendar-date" style={{ marginBottom: '4px', fontSize: '12px' }}>
                           <span style={{ 
-                            background: isToday ? '#2563eb' : 'transparent', 
+                            background: isToday ? '#fbbf24' : 'transparent', 
                             color: isToday ? 'white' : '#64748b', 
                             width: '22px', 
                             height: '22px', 
@@ -3989,8 +3989,8 @@ export default function CandidatesAdmin() {
                     <td>{c.cedula?.startsWith('PENDIENTE') ? <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Por completar</span> : <strong>{c.cedula}</strong>}</td>
                     <td>
                       <span className="pipeline-badge" style={{ 
-                         background: c.status === 'SYNCED' ? '#f0fdf4' : c.status === 'LLENADO' ? '#f5f3ff' : '#eff6ff', 
-                         color: c.status === 'SYNCED' ? '#166534' : c.status === 'LLENADO' ? '#5b21b6' : '#1e40af',
+                         background: c.status === 'SYNCED' ? '#f0fdf4' : c.status === 'LLENADO' ? '#f5f3ff' : '#fef9c3', 
+                         color: c.status === 'SYNCED' ? '#166534' : c.status === 'LLENADO' ? '#5b21b6' : '#171717',
                          border: '1px solid currentColor',
                          opacity: 0.8
                        }}>
@@ -4002,8 +4002,8 @@ export default function CandidatesAdmin() {
                       <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                         {(c.status === 'LLENADO' || c.status === 'SYNCED') && (
                           <div style={{ display: 'flex', gap: '4px' }}>
-                            <button onClick={() => setViewingOnboarding(c)} className="track-btn" style={{ color: '#3b82f6', borderColor: '#dbeafe', padding: '4px 8px', fontSize: '11px' }}>👁️ Ver</button>
-                            <button onClick={() => alert('Ventana de Nómina próximamente...')} className="track-btn" style={{ color: '#8b5cf6', borderColor: '#ddd6fe', padding: '4px 8px', fontSize: '11px' }}>🏦 Nómina</button>
+                            <button onClick={() => setViewingOnboarding(c)} className="track-btn" style={{ color: '#fbbf24', borderColor: '#dbeafe', padding: '4px 8px', fontSize: '11px' }}>👁️ Ver</button>
+                            <button onClick={() => alert('Ventana de Nómina próximamente...')} className="track-btn" style={{ color: '#fbbf24', borderColor: '#ddd6fe', padding: '4px 8px', fontSize: '11px' }}>🏦 Nómina</button>
                             <button onClick={() => setRejectionModal({ id: c.id, email: c.email, name: `${c.nombres} ${c.apellidos}` })} className="track-btn" style={{ color: '#ef4444', borderColor: '#fecaca', padding: '4px 8px', fontSize: '11px' }}>❌ Rechazar</button>
                             {c.status !== 'SYNCED' && (
                               <button onClick={() => handleApproveOnboarding(c.id)} className="track-btn" style={{ color: '#002f6c', borderColor: '#002f6c', padding: '4px 8px', fontSize: '11px' }}>🌟 Aprobar</button>
@@ -4080,7 +4080,7 @@ export default function CandidatesAdmin() {
                   <div style={{ fontSize: '13px', display: 'grid', gap: '12px', marginTop: '12px' }}>
                     {viewingOnboarding.estudios?.map((e: any, idx: number) => (
                       <div key={idx} style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px' }}>
-                        <p style={{ fontWeight: 800, margin: '0 0 4px', color: '#1e293b' }}>{e.nivel}</p>
+                        <p style={{ fontWeight: 800, margin: '0 0 4px', color: '#171717' }}>{e.nivel}</p>
                         <p style={{ fontWeight: 600, margin: 0 }}>{e.titulo}</p>
                         <p style={{ margin: '2px 0', color: '#475569' }}>{e.institucion}</p>
                         <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>{e.fecha_inicio} - {e.fecha_fin || 'Presente'}</p>
@@ -4093,7 +4093,7 @@ export default function CandidatesAdmin() {
                   <h3 style={{ fontSize: '16px', color: '#002f6c', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>Documentos Adjuntos</h3>
                   <div style={{ display: 'grid', gap: '8px', marginTop: '12px' }}>
                     {viewingOnboarding.documentos && Object.entries(viewingOnboarding.documentos).map(([name, url]: [string, any]) => (
-                      <a key={name} href={url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: '#f8fafc', borderRadius: '6px', fontSize: '12px', color: '#3b82f6', textDecoration: 'none', border: '1px solid #e2e8f0' }}>
+                      <a key={name} href={url} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: '#f8fafc', borderRadius: '6px', fontSize: '12px', color: '#fbbf24', textDecoration: 'none', border: '1px solid #e2e8f0' }}>
                         <FileText size={14} /> {name}
                       </a>
                     ))}
@@ -4131,7 +4131,7 @@ export default function CandidatesAdmin() {
         {/* --- NÓMINA --- */}
         {activeTab === 'nomina' && (
           <div className="table-container" style={{ padding: '40px', textAlign: 'center' }}>
-            <Briefcase size={48} color="#2563eb" style={{ marginBottom: '16px' }} />
+            <Briefcase size={48} color="#fbbf24" style={{ marginBottom: '16px' }} />
             <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '8px' }}>Módulo de Nómina</h2>
             <p style={{ color: '#64748b' }}>Bienvenido al panel de gestión de nómina para {(user?.company_name || 'SEPRIBE CIA.LTDA.').replace(/SUPERDEPORTE S\.A\./gi, 'SEPRIBE CIA.LTDA.').replace(/SUPERDEPORTE/gi, 'SEPRIBE CIA.LTDA.')}.</p>
           </div>
@@ -4145,7 +4145,7 @@ export default function CandidatesAdmin() {
             <div style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
                 <div>
-                  <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 800, color: '#111111', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Star style={{ color: '#f59e0b', fill: '#f59e0b' }} size={24} /> Módulo de Evaluaciones Formativas
                   </h2>
                   <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '14px' }}>
@@ -4156,7 +4156,7 @@ export default function CandidatesAdmin() {
                   <button 
                     onClick={() => setShowMassCitationModal(true)} 
                     className="ranking-btn-primary" 
-                    style={{ width: 'auto', background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', padding: '10px 20px', borderRadius: '10px', fontSize: '13px' }}
+                    style={{ width: 'auto', background: 'linear-gradient(135deg, #fbbf24, #1d4ed8)', padding: '10px 20px', borderRadius: '10px', fontSize: '13px' }}
                   >
                     📅 Citar Grupo ({formativeSessionFilter === 'ALL' ? formativeCandidates.length : formativeCandidates.filter(c => c.session_title === formativeSessionFilter).length})
                   </button>
@@ -4171,7 +4171,7 @@ export default function CandidatesAdmin() {
                   <button
                     onClick={() => handleBulkEvaluating(true)}
                     className="ranking-btn-primary"
-                    style={{ width: 'auto', background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', padding: '10px 20px', borderRadius: '10px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                    style={{ width: 'auto', background: 'linear-gradient(135deg, #fbbf24, #6d28d9)', padding: '10px 20px', borderRadius: '10px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
                   >
                     🎯 Iniciar Evaluación Grupal
                     {(() => { const n = (formativeSessionFilter === 'ALL' ? formativeCandidates : formativeCandidates.filter(c => c.session_title === formativeSessionFilter)).length; return n > 0 ? <span style={{ background: 'rgba(255,255,255,0.2)', borderRadius: '999px', padding: '1px 7px', fontWeight: 900 }}>{n}</span> : null })()}
@@ -4213,7 +4213,7 @@ export default function CandidatesAdmin() {
                       value={formativeSessionTitle}
                       onChange={e => setFormativeSessionTitle(e.target.value)}
                       placeholder="Ej: Formativas 20260604"
-                      style={{ flex: 1, border: '1.5px solid #7c3aed', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', fontWeight: 600, background: '#faf5ff', color: '#5b21b6', outline: 'none' }}
+                      style={{ flex: 1, border: '1.5px solid #fbbf24', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', fontWeight: 600, background: '#faf5ff', color: '#5b21b6', outline: 'none' }}
                     />
                   </div>
                   <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#94a3b8' }}>Los candidatos que agregues irán a esta sesión</p>
@@ -4227,7 +4227,7 @@ export default function CandidatesAdmin() {
                   <select
                     value={formativeSessionFilter}
                     onChange={e => setFormativeSessionFilter(e.target.value)}
-                    style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', background: '#f8fafc', color: '#1e293b', cursor: 'pointer' }}
+                    style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', background: '#f8fafc', color: '#171717', cursor: 'pointer' }}
                   >
                     <option value="ALL">Todas las sesiones ({formativeCandidates.length})</option>
                     {formativeSessions.map(s => (
@@ -4258,7 +4258,7 @@ export default function CandidatesAdmin() {
                     fontSize: '13px',
                     fontWeight: formativasSubTab === tab.key ? 800 : 500,
                     background: formativasSubTab === tab.key ? 'white' : 'transparent',
-                    color: formativasSubTab === tab.key ? '#7c3aed' : '#64748b',
+                    color: formativasSubTab === tab.key ? '#fbbf24' : '#64748b',
                     boxShadow: formativasSubTab === tab.key ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
                     transition: 'all 0.15s'
                   }}
@@ -4278,9 +4278,9 @@ export default function CandidatesAdmin() {
                 <div className="table-container">
                   <div style={{ padding: '18px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                     <div>
-                      <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#1e293b' }}>Postulantes en Formativas</h3>
+                      <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#171717' }}>Postulantes en Formativas</h3>
                       {formativeSessionFilter !== 'ALL' && (
-                        <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#7c3aed', fontWeight: 600 }}>
+                        <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#fbbf24', fontWeight: 600 }}>
                           📋 Sesión: {formativeSessionFilter}
                         </p>
                       )}
@@ -4294,7 +4294,7 @@ export default function CandidatesAdmin() {
                           value={formativeNameFilter}
                           onChange={e => setFormativeNameFilter(e.target.value)}
                           placeholder="Buscar por nombre..."
-                          style={{ width: '100%', border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '8px 12px 8px 32px', fontSize: '13px', color: '#1e293b', background: '#f8fafc', outline: 'none', boxSizing: 'border-box' }}
+                          style={{ width: '100%', border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '8px 12px 8px 32px', fontSize: '13px', color: '#171717', background: '#f8fafc', outline: 'none', boxSizing: 'border-box' }}
                         />
                         {formativeNameFilter && (
                           <button
@@ -4305,7 +4305,7 @@ export default function CandidatesAdmin() {
                         )}
                       </div>
                     </div>
-                    <span style={{ fontSize: '12px', background: '#eff6ff', color: '#1e40af', padding: '4px 8px', borderRadius: '6px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                    <span style={{ fontSize: '12px', background: '#fef9c3', color: '#171717', padding: '4px 8px', borderRadius: '6px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                       {formativeSessionFilter === 'ALL' 
                         ? `${formativeCandidates.length} candidatos`
                         : `${formativeCandidates.filter(c => c.session_title === formativeSessionFilter).length} de ${formativeCandidates.length}`
@@ -4352,10 +4352,10 @@ export default function CandidatesAdmin() {
                             return (
                               <tr key={c.id} style={{ background: isCurrentlyActive ? 'rgba(59, 130, 246, 0.03)' : 'inherit' }}>
                                 <td>
-                                  <p style={{ fontWeight: 700, margin: 0, color: '#1e293b' }}>{c.email_resumes?.sender_name || 'Candidato'}</p>
+                                  <p style={{ fontWeight: 700, margin: 0, color: '#171717' }}>{c.email_resumes?.sender_name || 'Candidato'}</p>
                                   <p style={{ fontSize: '12px', color: '#64748b', margin: '1px 0 0' }}>{c.email_resumes?.sender_email || '—'}</p>
                                   {c.session_title && (
-                                    <span style={{ fontSize: '9px', background: '#f3e8ff', color: '#7c3aed', border: '1px solid #ddd6fe', padding: '1px 6px', borderRadius: '4px', fontWeight: 800, display: 'inline-block', marginTop: '2px' }}>
+                                    <span style={{ fontSize: '9px', background: '#fef9c3', color: '#fbbf24', border: '1px solid #ddd6fe', padding: '1px 6px', borderRadius: '4px', fontWeight: 800, display: 'inline-block', marginTop: '2px' }}>
                                       {c.session_title}
                                     </span>
                                   )}
@@ -4364,7 +4364,7 @@ export default function CandidatesAdmin() {
                                 <td>
                                   {c.interview_date ? (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                      <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#0f172a' }}>
+                                      <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#111111' }}>
                                         {new Date(c.interview_date + 'T00:00:00').toLocaleDateString('es-EC', { day: 'numeric', month: 'short' })}
                                       </span>
                                       <span style={{ fontSize: '11px', color: '#64748b' }}>{c.interview_time || '—'}</span>
@@ -4413,7 +4413,7 @@ export default function CandidatesAdmin() {
                                           alert('Error al actualizar asistencia: ' + err.message);
                                         }
                                       }}
-                                      style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#2563eb' }}
+                                      style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#fbbf24' }}
                                     />
                                   </div>
                                 </td>
@@ -4443,7 +4443,7 @@ export default function CandidatesAdmin() {
                                       width: 'auto',
                                       background: c.is_evaluating
                                         ? 'linear-gradient(135deg, #ef4444, #dc2626)'
-                                        : 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+                                        : 'linear-gradient(135deg, #fbbf24, #6d28d9)',
                                       color: 'white',
                                       border: 'none',
                                       borderRadius: '8px',
@@ -4459,8 +4459,8 @@ export default function CandidatesAdmin() {
                                     {c.is_evaluating ? '⏹ Quitar' : '🎯 Evaluar'}
                                   </button>
                                   {c.is_evaluating && (
-                                    <span style={{ fontSize: '10px', color: '#7c3aed', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '4px', justifyContent: 'flex-end' }}>
-                                      <span className="animate-pulse" style={{ width: '5px', height: '5px', background: '#7c3aed', borderRadius: '50%', display: 'inline-block' }}></span>
+                                    <span style={{ fontSize: '10px', color: '#fbbf24', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '4px', justifyContent: 'flex-end' }}>
+                                      <span className="animate-pulse" style={{ width: '5px', height: '5px', background: '#fbbf24', borderRadius: '50%', display: 'inline-block' }}></span>
                                       En evaluación
                                     </span>
                                   )}
@@ -4482,7 +4482,7 @@ export default function CandidatesAdmin() {
                 
                 {/* Registrar Supervisor */}
                 <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                  <h3 style={{ margin: '0 0 16px', fontSize: '14px', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <h3 style={{ margin: '0 0 16px', fontSize: '14px', fontWeight: 800, color: '#111111', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     + Registrar Supervisor
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -4521,7 +4521,7 @@ export default function CandidatesAdmin() {
 
                 {/* Listado de Supervisores */}
                 <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                  <h3 style={{ margin: '0 0 16px', fontSize: '14px', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <h3 style={{ margin: '0 0 16px', fontSize: '14px', fontWeight: 800, color: '#111111', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Supervisores Activos
                   </h3>
                   {formativeSupervisors.length === 0 ? (
@@ -4531,7 +4531,7 @@ export default function CandidatesAdmin() {
                       {formativeSupervisors.map(s => (
                         <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', padding: '10px 14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
                           <div>
-                            <p style={{ margin: 0, fontSize: '13px', fontWeight: 'bold', color: '#1e293b' }}>{s.name}</p>
+                            <p style={{ margin: 0, fontSize: '13px', fontWeight: 'bold', color: '#171717' }}>{s.name}</p>
                             <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>{s.email}</p>
                           </div>
                           <button 
@@ -4572,10 +4572,10 @@ export default function CandidatesAdmin() {
                   <div className="table-container">
                     <div style={{ padding: '18px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                       <div>
-                        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#1e293b' }}>Resultados de Evaluación</h3>
+                        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#171717' }}>Resultados de Evaluación</h3>
                         <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#64748b' }}>Todos los supervisores · ordenado por puntaje total</p>
                       </div>
-                      <span style={{ fontSize: '12px', background: '#eff6ff', color: '#1e40af', padding: '4px 10px', borderRadius: '6px', fontWeight: 'bold' }}>
+                      <span style={{ fontSize: '12px', background: '#fef9c3', color: '#171717', padding: '4px 10px', borderRadius: '6px', fontWeight: 'bold' }}>
                         {resultsData.length} candidatos
                       </span>
                     </div>
@@ -4586,11 +4586,11 @@ export default function CandidatesAdmin() {
                             <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', minWidth: '180px' }}>Candidato</th>
                             <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' }}>Sesión</th>
                             {formativeSupervisors.map((s: any) => (
-                              <th key={s.id} style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 800, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', minWidth: '110px' }}>
+                              <th key={s.id} style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 800, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', minWidth: '110px' }}>
                                 {s.name.split(' ')[0]}
                               </th>
                             ))}
-                            <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', minWidth: '90px' }}>Total</th>
+                            <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 800, color: '#111111', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', minWidth: '90px' }}>Total</th>
                             <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', minWidth: '80px' }}>Fase</th>
                             <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', minWidth: '130px' }}>Acciones</th>
                           </tr>
@@ -4601,12 +4601,12 @@ export default function CandidatesAdmin() {
                           ) : resultsData.map((c: any, idx: number) => (
                             <tr key={c.id} style={{ background: idx % 2 === 0 ? 'white' : '#fafafa', borderBottom: '1px solid #f1f5f9' }}>
                               <td style={{ padding: '12px 16px' }}>
-                                <p style={{ margin: 0, fontWeight: 700, fontSize: '13px', color: '#1e293b' }}>{c.email_resumes?.sender_name || '—'}</p>
+                                <p style={{ margin: 0, fontWeight: 700, fontSize: '13px', color: '#171717' }}>{c.email_resumes?.sender_name || '—'}</p>
                                 <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>{c.email_resumes?.position || '—'}</p>
                               </td>
                               <td style={{ padding: '12px 16px' }}>
                                 {c.session_title ? (
-                                  <span style={{ fontSize: '10px', background: '#f3e8ff', color: '#7c3aed', border: '1px solid #ddd6fe', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>{c.session_title}</span>
+                                  <span style={{ fontSize: '10px', background: '#fef9c3', color: '#fbbf24', border: '1px solid #ddd6fe', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>{c.session_title}</span>
                                 ) : <span style={{ color: '#94a3b8', fontSize: '11px' }}>—</span>}
                               </td>
                               {formativeSupervisors.map((s: any) => {
@@ -4614,7 +4614,7 @@ export default function CandidatesAdmin() {
                                 return (
                                   <td key={s.id} style={{ padding: '12px 16px', textAlign: 'center' }}>
                                     {ev ? (
-                                      <span style={{ fontWeight: 800, fontSize: '14px', color: ev.score > 0 ? '#7c3aed' : '#ef4444' }}>{ev.score} pts</span>
+                                      <span style={{ fontWeight: 800, fontSize: '14px', color: ev.score > 0 ? '#fbbf24' : '#ef4444' }}>{ev.score} pts</span>
                                     ) : (
                                       <span style={{ color: '#d1d5db', fontSize: '12px' }}>—</span>
                                     )}
@@ -4622,7 +4622,7 @@ export default function CandidatesAdmin() {
                                 )
                               })}
                               <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                <span style={{ fontWeight: 900, fontSize: '16px', color: c.totalScore > 0 ? '#1e293b' : '#94a3b8' }}>{c.totalScore > 0 ? `${c.totalScore}` : '—'}</span>
+                                <span style={{ fontWeight: 900, fontSize: '16px', color: c.totalScore > 0 ? '#171717' : '#94a3b8' }}>{c.totalScore > 0 ? `${c.totalScore}` : '—'}</span>
                                 {c.evals.length > 1 && <span style={{ display: 'block', fontSize: '10px', color: '#64748b' }}>prom. {c.avgScore}</span>}
                               </td>
                               <td style={{ padding: '12px 16px', textAlign: 'center' }}>
@@ -4679,7 +4679,7 @@ export default function CandidatesAdmin() {
                                       }
                                     }}
                                     style={{
-                                      background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+                                      background: 'linear-gradient(135deg, #fbbf24, #6d28d9)',
                                       color: 'white',
                                       border: 'none',
                                       borderRadius: '8px',
@@ -4720,13 +4720,13 @@ export default function CandidatesAdmin() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
                   {/* Encabezado informativo */}
-                  <div style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', border: '1px solid #bfdbfe', borderRadius: '16px', padding: '18px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                  <div style={{ background: 'linear-gradient(135deg, #fef9c3 0%, #dbeafe 100%)', border: '1px solid #bfdbfe', borderRadius: '16px', padding: '18px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                     <div>
-                      <h4 style={{ margin: 0, color: '#1e40af', fontSize: '14px', fontWeight: 800 }}>🏆 Candidatos Seleccionados para Fase 2</h4>
-                      <p style={{ margin: '4px 0 0', color: '#1e3a8a', fontSize: '12.5px' }}>Estos candidatos han sido promovidos desde la pestaña de Resultados. Presiona el botón para enviar los accesos de Onboarding a todos.</p>
+                      <h4 style={{ margin: 0, color: '#171717', fontSize: '14px', fontWeight: 800 }}>🏆 Candidatos Seleccionados para Fase 2</h4>
+                      <p style={{ margin: '4px 0 0', color: '#09090b', fontSize: '12.5px' }}>Estos candidatos han sido promovidos desde la pestaña de Resultados. Presiona el botón para enviar los accesos de Onboarding a todos.</p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ fontSize: '13px', color: '#1e40af', background: '#dbeafe', padding: '10px 16px', borderRadius: '10px', fontWeight: 800 }}>
+                      <div style={{ fontSize: '13px', color: '#171717', background: '#dbeafe', padding: '10px 16px', borderRadius: '10px', fontWeight: 800 }}>
                         📋 Total: {ranked.length}
                       </div>
                       <button
@@ -4754,7 +4754,7 @@ export default function CandidatesAdmin() {
                   {/* Ranking */}
                   <div className="table-container">
                     <div style={{ padding: '18px 24px', borderBottom: '1px solid #e2e8f0' }}>
-                      <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#1e293b' }}>Ranking de Candidatos</h3>
+                      <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#171717' }}>Ranking de Candidatos</h3>
                       <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#64748b' }}>Ordenados por puntaje total (suma de todos los supervisores)</p>
                     </div>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -4779,15 +4779,15 @@ export default function CandidatesAdmin() {
                                 </span>
                               </td>
                               <td style={{ padding: '12px 16px' }}>
-                                <p style={{ margin: 0, fontWeight: 700, fontSize: '13px', color: '#1e293b' }}>{c.email_resumes?.sender_name || '—'}</p>
+                                <p style={{ margin: 0, fontWeight: 700, fontSize: '13px', color: '#171717' }}>{c.email_resumes?.sender_name || '—'}</p>
                                 <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>{c.email_resumes?.position || '—'}</p>
-                                {c.session_title && <span style={{ fontSize: '9px', background: '#f3e8ff', color: '#7c3aed', border: '1px solid #ddd6fe', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>{c.session_title}</span>}
+                                {c.session_title && <span style={{ fontSize: '9px', background: '#fef9c3', color: '#fbbf24', border: '1px solid #ddd6fe', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>{c.session_title}</span>}
                               </td>
                               <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                                 <span style={{ fontSize: '13px', fontWeight: 700, color: c.evalCount > 0 ? '#475569' : '#cbd5e1' }}>{c.evalCount > 0 ? `${c.evalCount} sup.` : '—'}</span>
                               </td>
                               <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                <span style={{ fontWeight: 900, fontSize: '18px', color: c.totalScore > 0 ? '#1e293b' : '#94a3b8' }}>{c.totalScore > 0 ? c.totalScore : '—'}</span>
+                                <span style={{ fontWeight: 900, fontSize: '18px', color: c.totalScore > 0 ? '#171717' : '#94a3b8' }}>{c.totalScore > 0 ? c.totalScore : '—'}</span>
                                 <span style={{ display: 'block', fontSize: '10px', color: '#94a3b8' }}>pts</span>
                               </td>
                               <td style={{ padding: '12px 16px', textAlign: 'center' }}>
@@ -4806,7 +4806,7 @@ export default function CandidatesAdmin() {
                                         </span>
                                         <button
                                           onClick={() => handleSendApprovalEmail(c.resume_id)}
-                                          style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: '10.5px', textDecoration: 'underline', cursor: 'pointer', fontWeight: 700 }}
+                                          style={{ background: 'none', border: 'none', color: '#fbbf24', fontSize: '10.5px', textDecoration: 'underline', cursor: 'pointer', fontWeight: 700 }}
                                         >
                                           Reenviar Correo
                                         </button>
@@ -4848,7 +4848,7 @@ export default function CandidatesAdmin() {
           {/* Modales de Evaluación Psicométrica */}
           {qrModalUrl && (
             <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
-              <div style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '90%', maxWidth: '400px', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', color: '#0f172a' }}>
+              <div style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '90%', maxWidth: '400px', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', color: '#111111' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                   <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>Código QR de Evaluación</h3>
                   <button onClick={() => setQrModalUrl(null)} className="track-btn" style={{ padding: '6px' }}><X size={16} /></button>
@@ -4862,7 +4862,7 @@ export default function CandidatesAdmin() {
                   />
                 </div>
                 <div style={{ marginTop: '20px' }}>
-                  <a href={qrModalUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: '#2563eb', fontWeight: 'bold', textDecoration: 'underline' }}>Abrir enlace directo en el navegador</a>
+                  <a href={qrModalUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: '#fbbf24', fontWeight: 'bold', textDecoration: 'underline' }}>Abrir enlace directo en el navegador</a>
                 </div>
               </div>
             </div>
@@ -4870,12 +4870,12 @@ export default function CandidatesAdmin() {
 
           {viewingPsychometric && (
             <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
-              <div style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '95%', maxWidth: '750px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', color: '#0f172a' }}>
+              <div style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '95%', maxWidth: '750px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', color: '#111111' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #f1f5f9', paddingBottom: '16px' }}>
                   <div>
-                    <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 900, background: 'linear-gradient(90deg, #1e3a8a, #3b82f6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Evaluación Psicométrica</h2>
+                    <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 900, background: 'linear-gradient(90deg, #09090b, #fbbf24)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Evaluación Psicométrica</h2>
                     <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '13.5px' }}>
-                      Candidato: <strong style={{ color: '#1e293b' }}>{viewingPsychometric.candidate?.sender_name}</strong> · Cargo Postulado: <strong style={{ color: '#1e293b' }}>{viewingPsychometric.candidate?.position}</strong>
+                      Candidato: <strong style={{ color: '#171717' }}>{viewingPsychometric.candidate?.sender_name}</strong> · Cargo Postulado: <strong style={{ color: '#171717' }}>{viewingPsychometric.candidate?.position}</strong>
                     </p>
                   </div>
                   <button onClick={() => setViewingPsychometric(null)} className="track-btn" style={{ padding: '8px', borderRadius: '50%', background: '#f1f5f9', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} /></button>
@@ -4908,7 +4908,7 @@ export default function CandidatesAdmin() {
                             width: '56px', 
                             height: '56px', 
                             borderRadius: '50%', 
-                            background: 'linear-gradient(135deg, #3b82f6, #6366f1)', 
+                            background: 'linear-gradient(135deg, #fbbf24, #fbbf24)', 
                             display: 'flex', 
                             alignItems: 'center', 
                             justifyContent: 'center',
@@ -4922,8 +4922,8 @@ export default function CandidatesAdmin() {
                           </div>
                           <div>
                             <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Promedio Aptitudes Técnicas</span>
-                            <h3 style={{ margin: '2px 0 0', fontSize: '20px', fontWeight: 900, color: '#1e293b' }}>
-                              Cognición: <span style={{ color: '#2563eb' }}>{avgAptitude >= 75 ? 'Excelente' : avgAptitude >= 50 ? 'Adecuado' : 'Bajo'}</span>
+                            <h3 style={{ margin: '2px 0 0', fontSize: '20px', fontWeight: 900, color: '#171717' }}>
+                              Cognición: <span style={{ color: '#fbbf24' }}>{avgAptitude >= 75 ? 'Excelente' : avgAptitude >= 50 ? 'Adecuado' : 'Bajo'}</span>
                             </h3>
                           </div>
                         </div>
@@ -4952,9 +4952,9 @@ export default function CandidatesAdmin() {
                               border: 'none',
                               fontSize: '13.5px',
                               fontWeight: 800,
-                              color: activeResultsTab === t.id ? '#2563eb' : '#64748b',
+                              color: activeResultsTab === t.id ? '#fbbf24' : '#64748b',
                               cursor: 'pointer',
-                              borderBottom: `3px solid ${activeResultsTab === t.id ? '#2563eb' : 'transparent'}`,
+                              borderBottom: `3px solid ${activeResultsTab === t.id ? '#fbbf24' : 'transparent'}`,
                               transition: 'all 0.2s',
                               display: 'flex',
                               alignItems: 'center',
@@ -4984,7 +4984,7 @@ export default function CandidatesAdmin() {
                               { label: 'D', name: 'Decisión', val: viewingPsychometric.test.kudert_disc?.D || 0, desc: 'Liderazgo, orientación a resultados y empuje ante retos.', color: '#ef4444' },
                               { label: 'I', name: 'Interacción', val: viewingPsychometric.test.kudert_disc?.I || 0, desc: 'Comunicación, sociabilidad y capacidad de persuasión.', color: '#f59e0b' },
                               { label: 'S', name: 'Serenidad', val: viewingPsychometric.test.kudert_disc?.S || 0, desc: 'Paciencia, trabajo en equipo y resistencia a la presión.', color: '#10b981' },
-                              { label: 'C', name: 'Cumplimiento', val: viewingPsychometric.test.kudert_disc?.C || 0, desc: 'Análisis, disciplina y apego a normas y calidad.', color: '#3b82f6' }
+                              { label: 'C', name: 'Cumplimiento', val: viewingPsychometric.test.kudert_disc?.C || 0, desc: 'Análisis, disciplina y apego a normas y calidad.', color: '#fbbf24' }
                             ].map((item, idx) => (
                               <div key={idx} style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', gap: '10px', alignItems: 'center' }}>
                                 <span style={{ width: '22px', height: '22px', borderRadius: '4px', background: item.color, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '11px', flexShrink: 0 }}>
@@ -4992,7 +4992,7 @@ export default function CandidatesAdmin() {
                                 </span>
                                 <div style={{ flex: 1 }}>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <strong style={{ fontSize: '12px', color: '#1e293b' }}>{item.name}</strong>
+                                    <strong style={{ fontSize: '12px', color: '#171717' }}>{item.name}</strong>
                                     <span style={{ fontSize: '12px', fontWeight: 800, color: item.color }}>{item.val}%</span>
                                   </div>
                                   <p style={{ margin: '2px 0 0', fontSize: '10px', color: '#64748b', lineHeight: 1.2 }}>{item.desc}</p>
@@ -5013,14 +5013,14 @@ export default function CandidatesAdmin() {
                           <CognitiveFlowRow letter="N" name="Razonamiento Numérico" desc="Agilidad en operaciones matemáticas y resolución de problemas" score={viewingPsychometric.test.numerico_score || 0} />
                           <CognitiveFlowRow letter="A" name="Razonamiento Abstracto" desc="Deducir y continuar secuencias de figuras complejas" score={viewingPsychometric.test.abstracto_score || 0} />
                           
-                          <div style={{ marginTop: '16px', display: 'flex', gap: '8px', alignItems: 'center', background: '#eff6ff', padding: '12px', borderRadius: '12px', border: '1px solid #dbeafe' }}>
+                          <div style={{ marginTop: '16px', display: 'flex', gap: '8px', alignItems: 'center', background: '#fef9c3', padding: '12px', borderRadius: '12px', border: '1px solid #dbeafe' }}>
                             <span style={{ fontSize: '14px' }}>🛡️</span>
                             <div style={{ flex: 1 }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <strong style={{ fontSize: '12px', color: '#1e40af' }}>Ética y Cumplimiento de Normas</strong>
+                                <strong style={{ fontSize: '12px', color: '#171717' }}>Ética y Cumplimiento de Normas</strong>
                                 <span style={{ fontSize: '13px', fontWeight: 900, color: '#1d4ed8' }}>{viewingPsychometric.test.ethics_score || 0}/100</span>
                               </div>
-                              <p style={{ margin: '2px 0 0', fontSize: '10px', color: '#1e3a8a', lineHeight: 1.2 }}>Estudio de dilemas éticos y apego a políticas corporativas.</p>
+                              <p style={{ margin: '2px 0 0', fontSize: '10px', color: '#09090b', lineHeight: 1.2 }}>Estudio de dilemas éticos y apego a políticas corporativas.</p>
                             </div>
                           </div>
                         </div>
@@ -5032,7 +5032,7 @@ export default function CandidatesAdmin() {
                           <span style={{ fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Guía de Entrevista Recomendada</span>
                           {loadingRecommendation ? (
                             <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                              <div className="animate-spin" style={{ width: '24px', height: '24px', border: '3px solid #3b82f6', borderTopColor: 'transparent', borderRadius: '50%' }} />
+                              <div className="animate-spin" style={{ width: '24px', height: '24px', border: '3px solid #fbbf24', borderTopColor: 'transparent', borderRadius: '50%' }} />
                               <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '500' }}>Generando preguntas de entrevista...</span>
                             </div>
                           ) : (() => {
@@ -5042,17 +5042,17 @@ export default function CandidatesAdmin() {
                                 <div key={i} style={{ 
                                   display: 'flex', 
                                   gap: '12px', 
-                                  background: '#eff6ff', 
+                                  background: '#fef9c3', 
                                   border: '1px solid #dbeafe', 
                                   padding: '16px', 
                                   borderRadius: '16px',
-                                  borderLeft: '4px solid #3b82f6',
+                                  borderLeft: '4px solid #fbbf24',
                                   boxShadow: '0 2px 4px rgba(59,130,246,0.02)'
                                 }}>
-                                  <span style={{ fontSize: '20px', color: '#3b82f6', alignSelf: 'flex-start', flexShrink: 0 }}>💬</span>
+                                  <span style={{ fontSize: '20px', color: '#fbbf24', alignSelf: 'flex-start', flexShrink: 0 }}>💬</span>
                                   <div>
-                                    <p style={{ margin: 0, fontSize: '13px', color: '#1e40af', fontWeight: 700 }}>Pregunta sugerida {i + 1}</p>
-                                    <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#334155', fontStyle: 'italic', fontWeight: 500, lineHeight: 1.5 }}>
+                                    <p style={{ margin: 0, fontSize: '13px', color: '#171717', fontWeight: 700 }}>Pregunta sugerida {i + 1}</p>
+                                    <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#27272a', fontStyle: 'italic', fontWeight: 500, lineHeight: 1.5 }}>
                                       "{q}"
                                     </p>
                                   </div>
@@ -5072,7 +5072,7 @@ export default function CandidatesAdmin() {
                 })()}
 
                 <div style={{ marginTop: '28px', borderTop: '1px solid #f1f5f9', paddingTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
-                  <button onClick={() => setViewingPsychometric(null)} className="track-btn" style={{ background: '#0f172a', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 800 }}>Cerrar Reporte</button>
+                  <button onClick={() => setViewingPsychometric(null)} className="track-btn" style={{ background: '#111111', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 800 }}>Cerrar Reporte</button>
                 </div>
               </div>
             </div>
@@ -5138,7 +5138,7 @@ export default function CandidatesAdmin() {
                         alignSelf: isUser ? 'flex-end' : 'flex-start',
                         maxWidth: '85%',
                         background: isUser ? '#002f6c' : 'white',
-                        color: isUser ? 'white' : '#1e293b',
+                        color: isUser ? 'white' : '#171717',
                         padding: '12px 16px',
                         borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                         fontSize: '12.5px',

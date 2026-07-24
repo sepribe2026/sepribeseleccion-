@@ -7,7 +7,7 @@ export default function ZeroPaperLanding() {
     return (
         <div style={{
             minHeight: '100vh',
-            backgroundColor: '#0f172a',
+            backgroundColor: '#111111',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -16,7 +16,7 @@ export default function ZeroPaperLanding() {
             <div style={{ textAlign: 'center', maxWidth: '600px', padding: '2rem' }}>
                 <div style={{
                     width: '80px', height: '80px',
-                    backgroundColor: '#3b82f6',
+                    backgroundColor: '#fbbf24',
                     borderRadius: '20px',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     margin: '0 auto 2rem auto',
@@ -36,7 +36,7 @@ export default function ZeroPaperLanding() {
                 <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
                     <Link href="/zero-paper/login" style={{
                         padding: '1rem 2rem',
-                        backgroundColor: '#3b82f6',
+                        backgroundColor: '#fbbf24',
                         color: 'white',
                         borderRadius: '12px',
                         fontWeight: '600',

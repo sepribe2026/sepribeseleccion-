@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
     const htmlMessage = isInterview 
       ? `<div style="font-family: sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
-          <div style="background: #0f172a; padding: 24px; text-align: center;">
+          <div style="background: #111111; padding: 24px; text-align: center;">
             <h2 style="color: white; margin: 0; font-size: 20px;">Proceso de Selección</h2>
             <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px;">SEPRIBE CIA.LTDA.</p>
           </div>

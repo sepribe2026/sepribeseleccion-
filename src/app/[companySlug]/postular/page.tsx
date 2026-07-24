@@ -384,7 +384,7 @@ export default function ApplyPage() {
   if (!postulationEnabled) {
     return (
       <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at top, #0b0f19 0%, #020617 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'system-ui, sans-serif' }}>
-        <div style={{ background: 'rgba(30, 41, 59, 0.45)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '48px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', textAlign: 'center', maxWidth: '500px', width: '100%' }}>
+        <div style={{ background: 'rgba(23, 23, 23, 0.45)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '48px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', textAlign: 'center', maxWidth: '500px', width: '100%' }}>
           <div style={{ background: 'rgba(251, 191, 36, 0.1)', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
             <Clock size={44} color="#fbbf24" />
           </div>
@@ -392,7 +392,7 @@ export default function ApplyPage() {
           <p style={{ color: '#94a3b8', fontSize: '15px', lineHeight: '1.6', margin: '0 0 24px' }}>
             En este momento, la recepción de nuevas solicitudes de postulación para <strong>{companyInfo.name}</strong> no está activa.
           </p>
-          <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '16px', borderRadius: '12px', fontSize: '13px', color: '#94a3b8', border: '1px solid rgba(255, 255, 255, 0.05)', margin: '0 0 12px' }}>
+          <div style={{ background: 'rgba(17, 17, 17, 0.5)', padding: '16px', borderRadius: '12px', fontSize: '13px', color: '#94a3b8', border: '1px solid rgba(255, 255, 255, 0.05)', margin: '0 0 12px' }}>
             Pronto habilitaremos el portal para recibir más candidatos. ¡Muchas gracias por tu interés en formar parte de nuestro equipo!
           </div>
         </div>
@@ -406,7 +406,7 @@ export default function ApplyPage() {
 
     return (
       <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at top, #0b0f19 0%, #020617 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'system-ui, sans-serif' }}>
-        <div style={{ background: 'rgba(30, 41, 59, 0.45)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '48px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', textAlign: 'center', maxWidth: '550px', width: '100%' }}>
+        <div style={{ background: 'rgba(23, 23, 23, 0.45)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '48px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', textAlign: 'center', maxWidth: '550px', width: '100%' }}>
           <div style={{ background: 'rgba(34, 197, 94, 0.1)', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
             <CheckCircle2 size={48} color="#22c55e" />
           </div>
@@ -431,7 +431,7 @@ export default function ApplyPage() {
                   href={`/${companySlug}/evaluacion/${insertedId}`}
                   style={{ 
                     background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', 
-                    color: '#0f172a', 
+                    color: '#111111', 
                     padding: '16px 32px', 
                     borderRadius: '12px', 
                     fontWeight: '900', 
@@ -482,7 +482,7 @@ export default function ApplyPage() {
           <p style={{ color: '#fbbf24', fontSize: '16px', fontWeight: '700', letterSpacing: '0.05em' }}>{companyInfo.name} | Reclutamiento de Seguridad</p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ background: 'rgba(30, 41, 59, 0.45)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '40px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+        <form onSubmit={handleSubmit} style={{ background: 'rgba(23, 23, 23, 0.45)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '40px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
           
           {error && (
             <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#fca5a5', padding: '16px', borderRadius: '12px', marginBottom: '24px', display: 'flex', gap: '12px', alignItems: 'center', fontSize: '14px' }}>
@@ -494,7 +494,7 @@ export default function ApplyPage() {
           <div style={{ display: 'grid', gap: '32px' }}>
             
             {/* Sección 1: Información Personal */}
-            <div style={{ background: 'rgba(15, 23, 42, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+            <div style={{ background: 'rgba(17, 17, 17, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'white', letterSpacing: '0.05em', borderLeft: '4px solid #fbbf24', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <User size={18} color="#fbbf24" /> Datos Personales
               </h3>
@@ -505,14 +505,14 @@ export default function ApplyPage() {
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Nombre Completo *</label>
                     <div style={{ position: 'relative' }}>
                       <User size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
-                      <input type="text" name="nombre" required placeholder="Ej: JUAN PÉREZ" value={formData.nombre} onChange={(e) => setFormData({...formData, nombre: e.target.value.toUpperCase()})} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
+                      <input type="text" name="nombre" required placeholder="Ej: JUAN PÉREZ" value={formData.nombre} onChange={(e) => setFormData({...formData, nombre: e.target.value.toUpperCase()})} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                     </div>
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Número de Cédula *</label>
                     <div style={{ position: 'relative' }}>
                       <User size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
-                      <input type="text" name="cedula" required placeholder="10 dígitos" maxLength={10} value={formData.cedula} onChange={handleChange} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
+                      <input type="text" name="cedula" required placeholder="10 dígitos" maxLength={10} value={formData.cedula} onChange={handleChange} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                     </div>
                   </div>
                 </div>
@@ -522,14 +522,14 @@ export default function ApplyPage() {
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Correo Electrónico *</label>
                     <div style={{ position: 'relative' }}>
                       <Mail size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
-                      <input type="email" name="email" required placeholder="tu@email.com" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value.toLowerCase()})} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
+                      <input type="email" name="email" required placeholder="tu@email.com" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value.toLowerCase()})} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                     </div>
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Celular / WhatsApp *</label>
                     <div style={{ position: 'relative' }}>
                       <Clock size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
-                      <input type="text" name="celular" required placeholder="Ej: 0987654321" value={formData.celular} onChange={handleChange} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
+                      <input type="text" name="celular" required placeholder="Ej: 0987654321" value={formData.celular} onChange={handleChange} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                     </div>
                   </div>
                 </div>
@@ -539,7 +539,7 @@ export default function ApplyPage() {
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Contacto Adicional (Opcional)</label>
                     <div style={{ position: 'relative' }}>
                       <Clock size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
-                      <input type="text" name="contacto_adicional" placeholder="Ej: 0987654322 (Hermano)" value={formData.contacto_adicional} onChange={handleChange} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
+                      <input type="text" name="contacto_adicional" placeholder="Ej: 0987654322 (Hermano)" value={formData.contacto_adicional} onChange={handleChange} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                     </div>
                   </div>
                 </div>
@@ -547,22 +547,22 @@ export default function ApplyPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Nombre Referencia 1 *</label>
-                    <input type="text" name="ref1_nombre" required placeholder="Ej: María Gómez" value={formData.ref1_nombre} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
+                    <input type="text" name="ref1_nombre" required placeholder="Ej: María Gómez" value={formData.ref1_nombre} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Teléfono Referencia 1 *</label>
-                    <input type="text" name="ref1_telefono" required placeholder="Ej: 0981234567" value={formData.ref1_telefono} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
+                    <input type="text" name="ref1_telefono" required placeholder="Ej: 0981234567" value={formData.ref1_telefono} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Nombre Referencia 2 *</label>
-                    <input type="text" name="ref2_nombre" required placeholder="Ej: Carlos Silva" value={formData.ref2_nombre} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
+                    <input type="text" name="ref2_nombre" required placeholder="Ej: Carlos Silva" value={formData.ref2_nombre} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Teléfono Referencia 2 *</label>
-                    <input type="text" name="ref2_telefono" required placeholder="Ej: 0998765432" value={formData.ref2_telefono} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
+                    <input type="text" name="ref2_telefono" required placeholder="Ej: 0998765432" value={formData.ref2_telefono} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                   </div>
                 </div>
 
@@ -570,14 +570,14 @@ export default function ApplyPage() {
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Fecha de Nacimiento *</label>
                     <div style={{ position: 'relative' }}>
-                      <input type="date" name="birth_date" required value={formData.birth_date} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
+                      <input type="date" name="birth_date" required value={formData.birth_date} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                     </div>
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Edad</label>
                     <div style={{ position: 'relative' }}>
                       <User size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
-                      <input type="number" name="edad" readOnly placeholder="Auto" value={formData.edad} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '14px', outline: 'none', backgroundColor: 'rgba(15, 23, 42, 0.4)', color: '#94a3b8', cursor: 'not-allowed' }} />
+                      <input type="number" name="edad" readOnly placeholder="Auto" value={formData.edad} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '14px', outline: 'none', backgroundColor: 'rgba(17, 17, 17, 0.4)', color: '#94a3b8', cursor: 'not-allowed' }} />
                     </div>
                   </div>
                 </div>
@@ -591,7 +591,7 @@ export default function ApplyPage() {
                         required 
                         value={formData.civil_status}
                         onChange={handleChange}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
                         <option value="Soltero/a">Soltero/a</option>
@@ -611,7 +611,7 @@ export default function ApplyPage() {
                         required 
                         value={formData.genero}
                         onChange={handleChange}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
                         <option value="Masculino">Masculino</option>
@@ -626,7 +626,7 @@ export default function ApplyPage() {
             </div>
 
             {/* Sección 2: Dirección y Residencia */}
-            <div style={{ background: 'rgba(15, 23, 42, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+            <div style={{ background: 'rgba(17, 17, 17, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'white', letterSpacing: '0.05em', borderLeft: '4px solid #fbbf24', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <MapPin size={18} color="#fbbf24" /> Ubicación y Residencia
               </h3>
@@ -644,7 +644,7 @@ export default function ApplyPage() {
                           const val = e.target.value;
                           setFormData(prev => ({ ...prev, ciudad: val, sector: '' }));
                         }}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
                         {Object.keys(PROVINCIAS_CIUDADES).map(prov => (
@@ -662,7 +662,7 @@ export default function ApplyPage() {
                         required 
                         value={formData.sector}
                         onChange={handleChange}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                         disabled={!formData.ciudad}
                       >
                         <option value="">Seleccionar...</option>
@@ -681,7 +681,7 @@ export default function ApplyPage() {
                         required 
                         value={formData.zona_sector}
                         onChange={handleChange}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
                         <option value="Norte">Norte</option>
@@ -697,14 +697,14 @@ export default function ApplyPage() {
                 <div>
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Dirección Domiciliaria Completa *</label>
                   <div style={{ position: 'relative' }}>
-                    <input type="text" name="home_address" required placeholder="Calle principal, numeración de casa y calle transversal" value={formData.home_address} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
+                    <input type="text" name="home_address" required placeholder="Calle principal, numeración de casa y calle transversal" value={formData.home_address} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Sección 3: Perfil y Experiencia */}
-            <div style={{ background: 'rgba(15, 23, 42, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+            <div style={{ background: 'rgba(17, 17, 17, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'white', letterSpacing: '0.05em', borderLeft: '4px solid #fbbf24', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Briefcase size={18} color="#fbbf24" /> Perfil y Cargo
               </h3>
@@ -717,7 +717,7 @@ export default function ApplyPage() {
                     <select 
                       required 
                       onChange={handleJobSelect} 
-                      style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                      style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                     >
                       <option value="">Seleccionar...</option>
                       {jobPositions.map(job => (
@@ -735,7 +735,7 @@ export default function ApplyPage() {
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Años de Experiencia en Seguridad *</label>
                     <div style={{ position: 'relative' }}>
                       <Clock size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
-                      <input type="number" name="experiencia" required min="0" max="15" placeholder="Ej: 2" value={formData.experiencia} onChange={handleChange} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
+                      <input type="number" name="experiencia" required min="0" max="15" placeholder="Ej: 2" value={formData.experiencia} onChange={handleChange} style={{ width: '100%', padding: '10px 12px 10px 42px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                     </div>
                   </div>
                   <div>
@@ -746,7 +746,7 @@ export default function ApplyPage() {
                         required 
                         value={formData.worked_in_sepribe}
                         onChange={handleChange}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
                         <option value="Sí">Sí</option>
@@ -760,7 +760,7 @@ export default function ApplyPage() {
             </div>
 
             {/* SECCIÓN NUEVA: REQUISITOS ESPECÍFICOS DE SEGURIDAD */}
-            <div style={{ background: 'rgba(15, 23, 42, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(251, 191, 36, 0.15)' }}>
+            <div style={{ background: 'rgba(17, 17, 17, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(251, 191, 36, 0.15)' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'white', letterSpacing: '0.05em', borderLeft: '4px solid #fbbf24', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Shield size={18} color="#fbbf24" /> Requisitos y Perfil de Seguridad
               </h3>
@@ -775,7 +775,7 @@ export default function ApplyPage() {
                         required 
                         value={formData.guard_course}
                         onChange={handleChange}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
                         <option value="Sí">Sí, aprobado y registrado</option>
@@ -793,7 +793,7 @@ export default function ApplyPage() {
                         required 
                         value={formData.nivel_ii_course}
                         onChange={handleChange}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
                         <option value="Sí">Sí, aprobado y registrado</option>
@@ -813,7 +813,7 @@ export default function ApplyPage() {
                         required 
                         value={formData.reentrenamiento_vigente}
                         onChange={handleChange}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
                         <option value="Sí">Sí, aprobado y registrado</option>
@@ -836,7 +836,7 @@ export default function ApplyPage() {
                       placeholder="Ej: 175" 
                       value={formData.estatura} 
                       onChange={handleChange} 
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} 
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} 
                     />
                   </div>
 
@@ -848,7 +848,7 @@ export default function ApplyPage() {
                         required 
                         value={formData.driving_license}
                         onChange={handleChange}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
                         <option value="No posee">No poseo licencia</option>
@@ -871,7 +871,7 @@ export default function ApplyPage() {
                         required 
                         value={formData.own_transport}
                         onChange={handleChange}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
                         <option value="Sí">Sí</option>
@@ -885,7 +885,7 @@ export default function ApplyPage() {
             </div>
 
             {/* SECCIÓN NUEVA: CURSOS ADICIONALES */}
-            <div style={{ background: 'rgba(15, 23, 42, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(251, 191, 36, 0.15)' }}>
+            <div style={{ background: 'rgba(17, 17, 17, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(251, 191, 36, 0.15)' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'white', letterSpacing: '0.05em', borderLeft: '4px solid #fbbf24', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Shield size={18} color="#fbbf24" /> Cursos Adicionales
               </h3>
@@ -899,7 +899,7 @@ export default function ApplyPage() {
                         name="supervisor_course"
                         value={formData.supervisor_course}
                         onChange={handleChange}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
                         <option value="Sí">Sí, aprobado y registrado</option>
@@ -915,7 +915,7 @@ export default function ApplyPage() {
                         name="console_course"
                         value={formData.console_course}
                         onChange={handleChange}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
                         <option value="Sí">Sí, aprobado y registrado</option>
@@ -934,7 +934,7 @@ export default function ApplyPage() {
                         name="vip_course"
                         value={formData.vip_course}
                         onChange={handleChange}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                       >
                         <option value="">Seleccionar...</option>
                         <option value="Sí">Sí, aprobado y registrado</option>
@@ -948,7 +948,7 @@ export default function ApplyPage() {
             </div>
 
             {/* Sección 5: Educación y Estudios */}
-            <div style={{ background: 'rgba(15, 23, 42, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+            <div style={{ background: 'rgba(17, 17, 17, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'white', letterSpacing: '0.05em', borderLeft: '4px solid #fbbf24', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 🎓 Nivel de Estudios
               </h3>
@@ -962,7 +962,7 @@ export default function ApplyPage() {
                       required 
                       value={formData.education_level}
                       onChange={handleChange}
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                     >
                       <option value="">Seleccionar...</option>
                       <option value="Ciclo Básico">Ciclo Básico</option>
@@ -979,18 +979,18 @@ export default function ApplyPage() {
                 <div style={{ display: 'none', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Institución Educativa</label>
-                    <input type="text" name="education_institution" placeholder="Nombre de la institución" value={formData.education_institution} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
+                    <input type="text" name="education_institution" placeholder="Nombre de la institución" value={formData.education_institution} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Título Obtenido</label>
-                    <input type="text" name="education_title" placeholder="Ej: Bachiller en Ciencias, Técnico, etc" value={formData.education_title} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
+                    <input type="text" name="education_title" placeholder="Ej: Bachiller en Ciencias, Técnico, etc" value={formData.education_title} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none' }} />
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Sección 6: Información Adicional */}
-            <div style={{ background: 'rgba(15, 23, 42, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+            <div style={{ background: 'rgba(17, 17, 17, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'white', letterSpacing: '0.05em', borderLeft: '4px solid #fbbf24', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 📋 Información de Contexto
               </h3>
@@ -1005,7 +1005,7 @@ export default function ApplyPage() {
                       required 
                       value={formData.heard_from}
                       onChange={handleChange}
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
                     >
                       <option value="">Seleccionar...</option>
                       <option value="LinkedIn">LinkedIn</option>
@@ -1025,14 +1025,14 @@ export default function ApplyPage() {
                     placeholder="Describe brevemente tus expectativas, principios y motivación" 
                     value={formData.work_culture_motivation} 
                     onChange={handleChange} 
-                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', minHeight: '80px', fontFamily: 'inherit', resize: 'vertical' }} 
+                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #27272a', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', minHeight: '80px', fontFamily: 'inherit', resize: 'vertical' }} 
                   />
                 </div>
               </div>
             </div>
 
             {/* Sección 7: Documentación */}
-            <div style={{ background: 'rgba(15, 23, 42, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+            <div style={{ background: 'rgba(17, 17, 17, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'white', letterSpacing: '0.05em', borderLeft: '4px solid #fbbf24', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <UploadCloud size={18} color="#fbbf24" /> Adjuntar Documentación
               </h3>
@@ -1044,13 +1044,13 @@ export default function ApplyPage() {
                   <div 
                     onClick={() => document.getElementById('cv-upload')?.click()}
                     style={{ 
-                      border: '2px dashed #334155', 
+                      border: '2px dashed #27272a', 
                       borderRadius: '12px', 
                       padding: '24px', 
                       textAlign: 'center', 
                       cursor: 'pointer', 
                       background: file ? 'rgba(34, 197, 94, 0.08)' : '#090d16',
-                      borderColor: file ? '#22c55e' : '#334155',
+                      borderColor: file ? '#22c55e' : '#27272a',
                       transition: 'all 0.2s',
                       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
                     }}
@@ -1074,13 +1074,13 @@ export default function ApplyPage() {
                   <div 
                     onClick={() => document.getElementById('cedula-upload')?.click()}
                     style={{ 
-                      border: '2px dashed #334155', 
+                      border: '2px dashed #27272a', 
                       borderRadius: '12px', 
                       padding: '20px', 
                       textAlign: 'center', 
                       cursor: 'pointer', 
                       background: cedulaFile ? 'rgba(34, 197, 94, 0.08)' : '#090d16',
-                      borderColor: cedulaFile ? '#22c55e' : '#334155',
+                      borderColor: cedulaFile ? '#22c55e' : '#27272a',
                       transition: 'all 0.2s',
                       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
                     }}
@@ -1101,13 +1101,13 @@ export default function ApplyPage() {
                   <div 
                     onClick={() => document.getElementById('historial-upload')?.click()}
                     style={{ 
-                      border: '2px dashed #334155', 
+                      border: '2px dashed #27272a', 
                       borderRadius: '12px', 
                       padding: '20px', 
                       textAlign: 'center', 
                       cursor: 'pointer', 
                       background: historialLaboralFile ? 'rgba(34, 197, 94, 0.08)' : '#090d16',
-                      borderColor: historialLaboralFile ? '#22c55e' : '#334155',
+                      borderColor: historialLaboralFile ? '#22c55e' : '#27272a',
                       transition: 'all 0.2s',
                       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
                     }}
@@ -1127,7 +1127,7 @@ export default function ApplyPage() {
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '8px', marginLeft: '4px' }}>Cargar Diploma de 120 horas</label>
                   <div 
                     onClick={() => document.getElementById('diploma120-upload')?.click()}
-                    style={{ border: '2px dashed #334155', borderRadius: '12px', padding: '20px', textAlign: 'center', cursor: 'pointer', background: diploma120hFile ? 'rgba(34, 197, 94, 0.08)' : '#090d16', borderColor: diploma120hFile ? '#22c55e' : '#334155' }}
+                    style={{ border: '2px dashed #27272a', borderRadius: '12px', padding: '20px', textAlign: 'center', cursor: 'pointer', background: diploma120hFile ? 'rgba(34, 197, 94, 0.08)' : '#090d16', borderColor: diploma120hFile ? '#22c55e' : '#27272a' }}
                   >
                     <input type="file" id="diploma120-upload" accept=".pdf" style={{ display: 'none' }} onChange={(e) => setDiploma120hFile(e.target.files?.[0] || null)} />
                     <UploadCloud size={28} color={diploma120hFile ? '#22c55e' : '#64748b'} style={{ marginBottom: '8px', margin: '0 auto 8px' }} />
@@ -1140,7 +1140,7 @@ export default function ApplyPage() {
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '8px', marginLeft: '4px' }}>Cargar Diploma Nivel II</label>
                   <div 
                     onClick={() => document.getElementById('diplomaNivel2-upload')?.click()}
-                    style={{ border: '2px dashed #334155', borderRadius: '12px', padding: '20px', textAlign: 'center', cursor: 'pointer', background: diplomaNivel2File ? 'rgba(34, 197, 94, 0.08)' : '#090d16', borderColor: diplomaNivel2File ? '#22c55e' : '#334155' }}
+                    style={{ border: '2px dashed #27272a', borderRadius: '12px', padding: '20px', textAlign: 'center', cursor: 'pointer', background: diplomaNivel2File ? 'rgba(34, 197, 94, 0.08)' : '#090d16', borderColor: diplomaNivel2File ? '#22c55e' : '#27272a' }}
                   >
                     <input type="file" id="diplomaNivel2-upload" accept=".pdf" style={{ display: 'none' }} onChange={(e) => setDiplomaNivel2File(e.target.files?.[0] || null)} />
                     <UploadCloud size={28} color={diplomaNivel2File ? '#22c55e' : '#64748b'} style={{ marginBottom: '8px', margin: '0 auto 8px' }} />
@@ -1153,7 +1153,7 @@ export default function ApplyPage() {
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '8px', marginLeft: '4px' }}>Cargar Diploma de Reentrenamiento</label>
                   <div 
                     onClick={() => document.getElementById('diplomaReentrenamiento-upload')?.click()}
-                    style={{ border: '2px dashed #334155', borderRadius: '12px', padding: '20px', textAlign: 'center', cursor: 'pointer', background: diplomaReentrenamientoFile ? 'rgba(34, 197, 94, 0.08)' : '#090d16', borderColor: diplomaReentrenamientoFile ? '#22c55e' : '#334155' }}
+                    style={{ border: '2px dashed #27272a', borderRadius: '12px', padding: '20px', textAlign: 'center', cursor: 'pointer', background: diplomaReentrenamientoFile ? 'rgba(34, 197, 94, 0.08)' : '#090d16', borderColor: diplomaReentrenamientoFile ? '#22c55e' : '#27272a' }}
                   >
                     <input type="file" id="diplomaReentrenamiento-upload" accept=".pdf" style={{ display: 'none' }} onChange={(e) => setDiplomaReentrenamientoFile(e.target.files?.[0] || null)} />
                     <UploadCloud size={28} color={diplomaReentrenamientoFile ? '#22c55e' : '#64748b'} style={{ marginBottom: '8px', margin: '0 auto 8px' }} />
@@ -1166,7 +1166,7 @@ export default function ApplyPage() {
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '8px', marginLeft: '4px' }}>Cargar Certificados de Trabajo</label>
                   <div 
                     onClick={() => document.getElementById('certificados-upload')?.click()}
-                    style={{ border: '2px dashed #334155', borderRadius: '12px', padding: '20px', textAlign: 'center', cursor: 'pointer', background: certificadosFile ? 'rgba(34, 197, 94, 0.08)' : '#090d16', borderColor: certificadosFile ? '#22c55e' : '#334155' }}
+                    style={{ border: '2px dashed #27272a', borderRadius: '12px', padding: '20px', textAlign: 'center', cursor: 'pointer', background: certificadosFile ? 'rgba(34, 197, 94, 0.08)' : '#090d16', borderColor: certificadosFile ? '#22c55e' : '#27272a' }}
                   >
                     <input type="file" id="certificados-upload" accept=".pdf" style={{ display: 'none' }} onChange={(e) => setCertificadosFile(e.target.files?.[0] || null)} />
                     <UploadCloud size={28} color={certificadosFile ? '#22c55e' : '#64748b'} style={{ marginBottom: '8px', margin: '0 auto 8px' }} />
@@ -1177,12 +1177,12 @@ export default function ApplyPage() {
             </div>
 
             {/* Sección 8: Consentimiento de Datos LOPDP */}
-            <div style={{ background: 'rgba(15, 23, 42, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+            <div style={{ background: 'rgba(17, 17, 17, 0.45)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'white', letterSpacing: '0.05em', borderLeft: '4px solid #fbbf24', paddingLeft: '10px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <FileText size={18} color="#fbbf24" /> Autorización de Datos LOPDP
               </h3>
               
-              <div style={{ maxHeight: '180px', overflowY: 'auto', fontSize: '13px', color: '#94a3b8', lineHeight: '1.6', marginBottom: '20px', padding: '12px', background: '#090d16', borderRadius: '8px', border: '1px solid #334155' }}>
+              <div style={{ maxHeight: '180px', overflowY: 'auto', fontSize: '13px', color: '#94a3b8', lineHeight: '1.6', marginBottom: '20px', padding: '12px', background: '#090d16', borderRadius: '8px', border: '1px solid #27272a' }}>
                 {CONSENT_TEXT(companyInfo.name, getPrivacyEmail(companySlug)).split('\n\n').map((para, i) => (
                   <p key={i} style={{ marginBottom: para.includes(':') ? '8px' : '12px', fontWeight: para.startsWith('CONSENTIMIENTO') ? '800' : 'normal' }}>
                     {para}
@@ -1224,7 +1224,7 @@ export default function ApplyPage() {
               disabled={loading || !formData.consentimiento}
               style={{ 
                 background: (loading || !formData.consentimiento) ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', 
-                color: (loading || !formData.consentimiento) ? '#64748b' : '#0f172a', 
+                color: (loading || !formData.consentimiento) ? '#64748b' : '#111111', 
                 border: 'none', 
                 padding: '16px', 
                 borderRadius: '12px', 
