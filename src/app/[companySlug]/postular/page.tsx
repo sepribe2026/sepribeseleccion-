@@ -103,6 +103,7 @@ export default function ApplyPage() {
     ref2_telefono: '',
     home_address: '',
     sector: '',
+    zona_sector: '',
     education_level: '',
     education_institution: '',
     education_title: '',
@@ -326,7 +327,7 @@ export default function ApplyPage() {
         company_slug: companySlug,
         birth_date: formData.birth_date || null,
         civil_status: formData.civil_status || null,
-        home_address: formData.home_address || null,
+        home_address: formData.zona_sector ? `${formData.zona_sector} - ${formData.home_address}` : (formData.home_address || null),
         sector: formData.sector || null,
         education_level: formData.education_level || null,
         education_institution: formData.education_institution || null,
@@ -632,7 +633,7 @@ export default function ApplyPage() {
               </h3>
               
               <div style={{ display: 'grid', gap: '20px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Provincia de Residencia *</label>
                     <div style={{ position: 'relative' }}>
@@ -669,6 +670,25 @@ export default function ApplyPage() {
                         {formData.ciudad && PROVINCIAS_CIUDADES[formData.ciudad] && PROVINCIAS_CIUDADES[formData.ciudad].map(city => (
                           <option key={city} value={city}>{city}</option>
                         ))}
+                      </select>
+                      <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px', marginLeft: '4px' }}>Sector *</label>
+                    <div style={{ position: 'relative' }}>
+                      <select 
+                        name="zona_sector"
+                        required 
+                        value={formData.zona_sector}
+                        onChange={handleChange}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #334155', background: '#090d16', color: 'white', fontSize: '14px', outline: 'none', appearance: 'none' }}
+                      >
+                        <option value="">Seleccionar...</option>
+                        <option value="Norte">Norte</option>
+                        <option value="Centro">Centro</option>
+                        <option value="Sur">Sur</option>
+                        <option value="Valles">Valles / Alrededores</option>
                       </select>
                       <ChevronDown size={16} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
                     </div>
