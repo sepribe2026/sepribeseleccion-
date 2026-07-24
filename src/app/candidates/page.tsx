@@ -3064,7 +3064,7 @@ export default function CandidatesAdmin() {
                 else { setEditingPositionId(null); setRankingCargo(''); setRankingFunciones(''); }
               }}>
                 <option value="">Seleccionar...</option>
-                {jobPositions.map(p => <option key={p.id} value={p.id}>{p.cargo} {p.ciudad ? `· ${p.ciudad}` : ''}</option>)}
+                {jobPositions.map(p => <option key={p.id} value={p.id}>{p.cargo}</option>)}
               </select>
               <button onClick={() => setShowJobMaintenance(true)} style={{ width: '100%', padding: '8px', background: '#f3f4f6', border: 'none', borderRadius: '8px', marginBottom: '12px' }}>⚙️ Ajustar Perfil</button>
               
