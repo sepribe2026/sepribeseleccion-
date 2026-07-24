@@ -3167,16 +3167,6 @@ export default function CandidatesAdmin() {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="ranking-label" style={{ margin: 0, fontSize: '10px' }}>Región</label>
-                    <select className="ranking-select" style={{ marginBottom: 0, padding: '8px 12px' }} value={rankingFilterRegion} onChange={e => setRankingFilterRegion(e.target.value)}>
-                      <option value="ALL">Todas las Regiones</option>
-                      <option value="Costa">Costa</option>
-                      <option value="Sierra">Sierra</option>
-                      <option value="Oriente">Oriente</option>
-                      <option value="Insular">Insular</option>
-                    </select>
-                  </div>
 
                   <div>
                     <label className="ranking-label" style={{ margin: 0, fontSize: '10px' }}>Edad</label>
