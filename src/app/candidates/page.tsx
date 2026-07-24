@@ -1498,7 +1498,7 @@ export default function CandidatesAdmin() {
       setTrackingMap(prev => ({ ...prev, [resume_id]: data.data }))
       if (status === 'ENTREVISTA_APROBADA') handleSendApprovalEmail(resume_id)
       // Marcar como revisado para que pase a Resumen como "Procesado"
-      handleMarkReviewed(resume_id)
+      handleMarkAsReviewed(resume_id)
     }
     setTrackingUpdating(null)
   }
