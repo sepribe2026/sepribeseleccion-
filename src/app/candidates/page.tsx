@@ -1081,14 +1081,15 @@ export default function CandidatesAdmin() {
   const fetchPipeline = async () => {
     if (!user) return
     setPipelineLoading(true)
-    const res = await fetch(`/api/candidate-tracking?company_slug=${user.company_slug}&cedula=${user.cedula}`)
+    const cedulaParam = user.cedula ? `&cedula=${user.cedula}` : '';
+    const res = await fetch(`/api/candidate-tracking?company_slug=${user.company_slug || ''}${cedulaParam}`)
     const data = await res.json()
     if (data.data) {
-      // Filtrar por empresa y por usuario individual para el resumen
-      setPipelineData(data.data.filter((p: any) => 
-        p.candidate?.company_slug === user.company_slug && 
-        p.created_by_cedula === user.cedula
-      ))
+      setPipelineData(data.data.filter((p: any) => {
+        const matchesCompany = p.candidate?.company_slug === user.company_slug || p.company_slug === user.company_slug;
+        const matchesCedula = user.role === 'admin' ? p.created_by_cedula === user.cedula : true;
+        return matchesCompany && matchesCedula;
+      }))
     }
     // Cargar pruebas psicométricas
     const { data: psychData } = await supabase.from('candidate_psychometric_tests').select('*')
@@ -1515,6 +1516,8 @@ export default function CandidatesAdmin() {
       handleMarkAsReviewed(resume_id)
       // Actualizar el pipeline para que desaparezca inmediatamente del Ranking y pase al Resumen
       fetchPipeline()
+    } else {
+      alert("Error de BD al actualizar: " + (data.error || ""));
     }
     setTrackingUpdating(null)
   }
