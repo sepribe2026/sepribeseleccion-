@@ -136,8 +136,11 @@ export async function POST(req: NextRequest) {
     CANDIDATOS A EVALUAR:
     ${perfiles}
     
-    INSTRUCCIÓN CRÍTICA: Debes incluir obligatoriamente a los ${finalResumes.length} candidatos en tu respuesta. No omitas a ninguno.
-    Responde ÚNICAMENTE con un objeto JSON que tenga una propiedad "rankings": [{"id": "...", "score": 0-100, "justification": "..."}]`;
+    INSTRUCCIÓN CRÍTICA: 
+    1. Debes evaluar obligatoriamente a los ${finalResumes.length} candidatos, sin omitir a ninguno.
+    2. En el campo "justification", escribe obligatoriamente un párrafo de al menos 2 oraciones explicando técnicamente el porqué de la calificación. PROHIBIDO poner solo el nombre del candidato o dejarlo vacío.
+    3. Responde ÚNICAMENTE con un objeto JSON válido con esta estructura exacta:
+    { "rankings": [{"id": "identificador", "score": número, "justification": "texto detallado de la justificación"}] }`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
