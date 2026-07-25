@@ -1087,7 +1087,7 @@ export default function CandidatesAdmin() {
     if (data.data) {
       setPipelineData(data.data.filter((p: any) => {
         const matchesCompany = p.candidate?.company_slug === user.company_slug || p.company_slug === user.company_slug;
-        const matchesCedula = user.role === 'admin' ? p.created_by_cedula === user.cedula : true;
+        const matchesCedula = user.cedula ? p.created_by_cedula === user.cedula : true;
         return matchesCompany && matchesCedula;
       }))
     }
