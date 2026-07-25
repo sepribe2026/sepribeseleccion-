@@ -968,8 +968,11 @@ export default function CandidatesAdmin() {
       if (typeof val === 'string') return val;
       if (typeof val === 'number') return String(val);
       if (typeof val === 'object' && val !== null) {
-        const vals = Object.values(val);
-        if (vals.length > 0 && typeof vals[0] === 'string') return vals[0];
+        const strings = Object.values(val).filter((v: any) => typeof v === 'string');
+        if (strings.length > 0) {
+          // Devuelve el texto más largo, que casi siempre es la justificación real
+          return strings.sort((a: any, b: any) => b.length - a.length)[0];
+        }
         return JSON.stringify(val);
       }
       return fallback;
