@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Client } from '@microsoft/microsoft-graph-client';
-import { ConfidentialClientApplication } from '@azure/msal-node';
+import nodemailer from 'nodemailer';
 
 export async function POST(req: NextRequest) {
-  const clientId = process.env.AZURE_CLIENT_ID || '69f4a759-9537-4f11-b398-47a7f6ef8e83';
-  const tenantId = process.env.AZURE_TENANT_ID || 'a25466cf-9db0-4555-b90b-3b29d4097ff2';
-  const clientSecret = process.env.AZURE_CLIENT_SECRET || 'vg98Q~Zt5MJ2ui6mpjM~CCFiPGB8o5fObGM4ZbXm';
-  const senderEmail = process.env.SMTP_USER || 'uneteanuestroequipo@sepribe.com.ec';
-
   try {
     const { 
       candidateName,
@@ -21,21 +15,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Faltan datos del candidato' }, { status: 400 });
     }
 
-    // 1. Obtener Token de Acceso
-    const msalConfig = {
-      auth: { clientId, authority: `https://login.microsoftonline.com/${tenantId}`, clientSecret }
-    };
-    const cca = new ConfidentialClientApplication(msalConfig);
-    const authResponse = await cca.acquireTokenByClientCredential({
-      scopes: ['https://graph.microsoft.com/.default']
-    });
-
-    if (!authResponse || !authResponse.accessToken) {
-      throw new Error('No se pudo obtener el token de acceso de Azure');
-    }
-
-    const client = Client.init({
-      authProvider: (done) => done(null, authResponse.accessToken)
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'sepribe2026@gmail.com',
+        pass: 'egennqljsajttxiy'
+      }
     });
 
     const checksHtml = Object.entries(backgroundChecks || {}).map(([key, value]) => {
@@ -66,20 +51,18 @@ export async function POST(req: NextRequest) {
       </div>
     `;
 
-    const sendMail = {
-      message: {
-        subject: `Verificación Legal Requerida: ${candidateName} - ${candidateCedula}`,
-        body: { contentType: 'HTML', content: htmlContent },
-        toRecipients: [{ emailAddress: { address: 'sepribe.legal@gmail.com' } }]
-      }
+    const mailOptions = {
+      from: 'Talento Humano SEPRIBE <sepribe2026@gmail.com>',
+      to: 'sepribe.legal@gmail.com',
+      subject: `Verificación Legal Requerida: ${candidateName} - ${candidateCedula}`,
+      html: htmlContent
     };
 
-    await client.api(`/users/${senderEmail}/sendMail`).post(sendMail);
+    await transporter.sendMail(mailOptions);
 
     return NextResponse.json({ success: true, message: 'Correo enviado a Legal' });
   } catch (error: any) {
-    console.error('Error enviando correo a Legal con Graph API:', error);
-    const errorDetail = error.response?.data?.error?.message || error.message;
-    return NextResponse.json({ error: 'Error Graph API: ' + errorDetail }, { status: 500 });
+    console.error('Error enviando correo a Legal con Nodemailer:', error);
+    return NextResponse.json({ error: 'Error Nodemailer: ' + error.message }, { status: 500 });
   }
 }

@@ -17,9 +17,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Se requiere el email del candidato.' }, { status: 400 });
     }
 
-    // URL de onboarding dinámica según empresa
+    // URL de onboarding dinámica según empresa y dominio actual
     const slug = companySlug || 'sepribe';
-    const onboardingUrl = `https://uneteanuestroequipo.ec.aseyco.com/${slug}/onboarding`;
+    const protocol = req.headers.get('x-forwarded-proto') || 'https';
+    const host = req.headers.get('host') || 'postulacion.sepribe.com.ec';
+    const onboardingUrl = `${protocol}://${host}/${slug}/onboarding`;
 
     // 1. Obtener Token de Acceso
     const msalConfig = {

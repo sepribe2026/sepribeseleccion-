@@ -3991,9 +3991,11 @@ export default function CandidatesAdmin() {
                             {p.candidate?.sender_phone && (
                               <a 
                                 href={p.status === 'PENDIENTE' ? '#' : `https://wa.me/${String(p.candidate.sender_phone).replace(/\D/g, '').replace(/^0/, '593')}?text=${encodeURIComponent(
-                                  p.status === 'ENTREVISTA_PROGRAMADA' 
-                                  ? `Hola ${p.candidate?.sender_name || 'candidat@'}, nos complace informarte que has pasado la primera etapa de nuestro proceso de selección para SEPRIBE CIA.LTDA. Para la siguiente fase, deberás asistir a una entrevista presencial y/o virtual.\n\nTe enviamos los detalles para que puedas asistir:\n📅Fecha: ${p.interview_date ? new Date(p.interview_date.split(' ')[0] + 'T12:00:00').toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long' }) : '—'}\n⏰Hora: ${p.interview_date?.split(' ')[1] || '09:00'}\n📍Lugar: Galo Plaza Lasso 13205 y de los Cerezos.`
-                                  : `Hola ${p.candidate?.sender_name || 'candidat@'}, te saludamos de RRHH de SEPRIBE CIA.LTDA. Estamos revisando tu perfil para el cargo de ${p.cargo} y nos gustaría agendar una entrevista.`
+                                  (() => {
+                                    const dateText = p.interview_date ? new Date(p.interview_date.split(' ')[0] + 'T12:00:00').toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '____________________';
+                                    const timeText = p.interview_date ? (p.interview_date.split(' ')[1] || '09:00') : '____________________';
+                                    return `¡Hola! 😊\n\nGracias por tu interés en formar parte de SEPRIBE Cía. Ltda. Nos complace informarte que tu perfil ha sido preseleccionado y queremos invitarte a una entrevista presencial.\n\n📅 Fecha: ${dateText}\n🕒 Hora: ${timeText}\n\n📍 Dirección:\nSEPRIBE Cía. Ltda.\nFélix Saura N46-114 y Marcos Jofre.\n\nAl llegar, por favor acércate al área de Monitoreo, donde te indicarán cómo continuar con el proceso.\n\nSi por algún motivo no puedes asistir o tienes alguna duda, comunícate con nosotros al 099 702 6597.\n\n¡Esperamos conocerte pronto y te deseamos mucho éxito en esta etapa del proceso de selección!`;
+                                  })()
                                 )}`} 
                                 onClick={(e) => (p.status === 'PENDIENTE' || p.status === 'ENTREVISTA_APROBADA' || p.status === 'RECHAZADO') && e.preventDefault()}
                                 target={(p.status === 'PENDIENTE' || p.status === 'ENTREVISTA_APROBADA' || p.status === 'RECHAZADO') ? undefined : "_blank"} 

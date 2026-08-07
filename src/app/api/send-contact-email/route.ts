@@ -1,89 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Client } from '@microsoft/microsoft-graph-client';
-import { ConfidentialClientApplication } from '@azure/msal-node';
+import nodemailer from 'nodemailer';
 
 export async function POST(req: NextRequest) {
-  const clientId = process.env.AZURE_CLIENT_ID || '69f4a759-9537-4f11-b398-47a7f6ef8e83';
-  const tenantId = process.env.AZURE_TENANT_ID || 'a25466cf-9db0-4555-b90b-3b29d4097ff2';
-  const clientSecret = process.env.AZURE_CLIENT_SECRET || 'vg98Q~Zt5MJ2ui6mpjM~CCFiPGB8o5fObGM4ZbXm';
-  const senderEmail = process.env.SMTP_USER || 'uneteanuestroequipo@sepribe.com.ec';
-
   try {
     const { email, name, cargo, interviewDate, notes } = await req.json();
     const isInterview = !!interviewDate;
 
     if (!email) return NextResponse.json({ error: 'Email requerido' }, { status: 400 });
 
-    // 1. Obtener Token de Acceso
-    const msalConfig = {
-      auth: { clientId, authority: `https://login.microsoftonline.com/${tenantId}`, clientSecret }
-    };
-    const cca = new ConfidentialClientApplication(msalConfig);
-    const authResponse = await cca.acquireTokenByClientCredential({
-      scopes: ['https://graph.microsoft.com/.default']
-    });
-
-    if (!authResponse || !authResponse.accessToken) {
-      throw new Error('No se pudo obtener el token de acceso de Azure');
-    }
-
-    const client = Client.init({
-      authProvider: (done) => done(null, authResponse.accessToken)
-    });
-
-    const formattedDate = isInterview ? new Date(interviewDate.split(' ')[0] + 'T12:00:00').toLocaleDateString('es-EC', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '';
-    const time = isInterview ? interviewDate.split(' ')[1] || '09:00' : '';
-
-    const htmlMessage = isInterview 
-      ? `<div style="font-family: sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
-          <div style="background: #111111; padding: 24px; text-align: center;">
-            <h2 style="color: white; margin: 0; font-size: 20px;">Proceso de Selección</h2>
-            <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px;">SEPRIBE CIA.LTDA.</p>
-          </div>
-          <div style="padding: 32px; background: white;">
-            <p>Hola <strong>${name || 'candidat@'}</strong>,</p>
-            <p>Nos complace informarte que <strong>has pasado la primera etapa</strong> de nuestro proceso de selección. Para la siguiente fase, deberás asistir a una entrevista presencial y/o virtual.</p>
-            
-            <div style="background: #f8fafc; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; margin: 24px 0;">
-              <p style="margin: 0 0 12px; font-size: 15px;">📅 <strong>Fecha:</strong> ${formattedDate}</p>
-              <p style="margin: 0 0 12px; font-size: 15px;">⏰ <strong>Hora:</strong> ${time}</p>
-              <p style="margin: 0; font-size: 15px;">📍 <strong>Lugar:</strong> Galo Plaza Lasso 13205 y de los Cerezos.</p>
-            </div>
-            
-            <p>Por favor, confirma tu asistencia respondiendo a este correo. Te esperamos puntualmente.</p>
-            <br/>
-            <p style="margin-bottom: 4px;">Saludos cordiales,</p>
-            <p><strong>Equipo de Selección Talentos</strong><br/>SEPRIBE CIA.LTDA.</p>
-          </div>
-        </div>`
-      : `<div style="font-family: sans-serif; line-height: 1.6; color: #333;">
-          <p>Hola <strong>${name || 'Candidato'}</strong>,</p>
-          <p>Te saludamos de RRHH de <strong>SEPRIBE CIA.LTDA.</strong></p>
-          <p>Estamos revisando tu perfil para el cargo de <strong>${cargo}</strong> y nos gustaría agendar una entrevista.</p>
-          <p>Por favor, confírmanos tu disponibilidad respondiendo a este correo.</p>
-          <br/>
-          <p>Saludos cordiales,<br/><strong>Equipo de Selección</strong></p>
-        </div>`;
-
-    const sendMail = {
-      message: {
-        subject: isInterview ? `Citación a Entrevista: ${cargo}` : `Proceso de Selección: ${cargo}`,
-        body: { contentType: 'HTML', content: htmlMessage },
-        toRecipients: [{ emailAddress: { address: email } }]
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'sepribe2026@gmail.com',
+        pass: 'egennqljsajttxiy'
       }
+    });
+
+    const formattedDate = isInterview ? new Date(interviewDate.split(' ')[0] + 'T12:00:00').toLocaleDateString('es-EC', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '____________________';
+    const time = isInterview ? (interviewDate.split(' ')[1] || '09:00') : '____________________';
+
+    const htmlMessage = `
+      <div style="font-family: sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+        <div style="background: #111111; padding: 24px; text-align: center;">
+          <h2 style="color: white; margin: 0; font-size: 20px;">Proceso de Selección</h2>
+          <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px;">SEPRIBE CIA.LTDA.</p>
+        </div>
+        <div style="padding: 32px; background: white;">
+          <p>¡Hola <strong>${name || 'candidat@'}</strong>! 😊</p>
+          <p>Gracias por tu interés en formar parte de SEPRIBE Cía. Ltda. Nos complace informarte que tu perfil ha sido preseleccionado y queremos invitarte a una entrevista presencial.</p>
+          
+          <div style="background: #f8fafc; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; margin: 24px 0;">
+            <p style="margin: 0 0 12px; font-size: 15px;">📅 <strong>Fecha:</strong> ${formattedDate}</p>
+            <p style="margin: 0 0 12px; font-size: 15px;">🕒 <strong>Hora:</strong> ${time}</p>
+            <p style="margin: 0; font-size: 15px;">📍 <strong>Dirección:</strong><br/>SEPRIBE Cía. Ltda.<br/>Félix Saura N46-114 y Marcos Jofre.</p>
+          </div>
+          
+          <p>Al llegar, por favor acércate al área de Monitoreo, donde te indicarán cómo continuar con el proceso.</p>
+          <p>Si por algún motivo no puedes asistir o tienes alguna duda, comunícate con nosotros al <strong>099 702 6597</strong>.</p>
+          
+          <p>¡Esperamos conocerte pronto y te deseamos mucho éxito en esta etapa del proceso de selección!</p>
+        </div>
+        <div style="background: #f8fafc; padding: 16px 32px; text-align: center; border-top: 1px solid #e2e8f0;">
+          <p style="margin: 0; font-size: 12px; color: #94a3b8;">Este correo fue enviado por el equipo de Talento Humano de SEPRIBE CIA.LTDA.</p>
+        </div>
+      </div>`;
+
+    const mailOptions = {
+      from: 'Talento Humano SEPRIBE <sepribe2026@gmail.com>',
+      to: email,
+      subject: `Citación a Entrevista: ${cargo || 'Candidato'}`,
+      html: htmlMessage
     };
 
-    await client.api(`/users/${senderEmail}/sendMail`).post(sendMail);
+    await transporter.sendMail(mailOptions);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('Error enviando mail con Graph API:', error);
-    // Extraemos más info del error de Graph si existe
-    const errorDetail = error.response?.data?.error?.message || error.message;
-    const errorCode = error.response?.data?.error?.code || 'UNKNOWN';
+    console.error('Error enviando mail con Nodemailer:', error);
     return NextResponse.json({ 
-      error: `Error Graph API (${errorCode}): ${errorDetail}`,
-      debug: { senderEmail, clientId, tenantId } 
+      error: `Error Nodemailer: ${error.message}`
     }, { status: 500 });
   }
 }

@@ -9,16 +9,20 @@ const GET_WELCOME_TEXT = (companyName: string) => `A nombre de ${companyName} es
 
 const REQUIRED_DOCS = [
   "Hoja de vida actualizada",
-  "Foto tamaño carnet",
-  "Fotocopias de cédula de identidad y papeleta de votación",
-  "Certificado de antecedentes penales",
-  "Carnet de vacunación (3 dosis)",
-  "Certificados de trabajos anteriores",
-  "Acta de grado o copia de título",
-  "Partida de matrimonio (si aplica)",
-  "Copia de cédula del cónyuge",
-  "Partida de nacimiento (hijos)",
-  "Certificado de cuenta Produbanco"
+  "Croquis de la direccion domiciliaria",
+  "Planilla de servicios basicos",
+  "Papeleta de votacion",
+  "Carnet de guardia de primer nivel",
+  "Licencia de conducir",
+  "Certificado de cuenta Bancario",
+  "Certificados de honorabilidad",
+  "Copia a color del título académico",
+  "Certificado de trabajos anteriores",
+  "Diploma curso de primer nivel",
+  "Diploma y copia de credencial curso de segundo nivel",
+  "Diploma de reentrenamiento",
+  "Certificados de otros cursos",
+  "Copia del Carnet de tipo de sangre"
 ]
 
 const TABS = [
@@ -156,25 +160,19 @@ export default function OnboardingTabs() {
   }
 
   const getDynamicDocs = () => {
-    let docs = [...REQUIRED_DOCS.filter(d => 
-      d !== "Partida de nacimiento (hijos)" && 
-      d !== "Copia de cédula del cónyuge" && 
-      d !== "Partida de matrimonio (si aplica)"
-    )];
+    let docs = [...REQUIRED_DOCS];
 
     // Si tiene cónyuge, agregar documentos de cónyuge
     if (conyuge.tiene) {
-      docs.push("Copia de cédula del cónyuge");
-      docs.push("Partida de matrimonio (si aplica)");
+      docs.push("Copia a color de la cédula del conyugue");
+      docs.push("Certificado de matrimonio actualizado o declaracion juramentada si es union libre");
     }
 
     // Manejo de hijos
     if (hijos.length > 0) {
       hijos.forEach((_, idx) => {
-        docs.push(`Partida de nacimiento - Hijo ${idx + 1}`);
+        docs.push(`Copia partida de nacimiento o copia de cédula de identidad - Hijo ${idx + 1}`);
       });
-    } else {
-      docs.push("Partida de nacimiento (si aplica)");
     }
     return docs;
   };
@@ -210,36 +208,35 @@ export default function OnboardingTabs() {
       return; 
     }
     
-    // 2. Validar documentos obligatorios (todos menos "si aplica")
-    for (const doc of currentDocs) {
-      if (!doc.includes('(si aplica)') && !files[doc]) {
-        setActiveTab(5);
-        setError(`El documento "${doc}" es obligatorio.`);
-        return;
-      }
-    }
+    // 2. Validar documentos obligatorios (Eliminado según requerimiento, ahora todos son opcionales)
+    // No validamos obligatoriedad de archivos
 
     setLoading(true)
     setError('')
 
     const getPrefix = (docName: string) => {
-      if (docName.startsWith("Partida de nacimiento - Hijo")) {
+      if (docName.includes("Hijo")) {
         const num = docName.split(' ').pop();
         return `nacimiento_hijo_${num}`;
       }
       const map: Record<string, string> = {
         "Hoja de vida actualizada": "cv",
-        "Foto tamaño carnet": "foto",
-        "Fotocopias de cédula de identidad y papeleta de votación": "cedula_pap_vot",
-        "Certificado de antecedentes penales": "antecedentes",
-        "Carnet de vacunación (3 dosis)": "vacuna",
-        "Certificados de trabajos anteriores": "cert_trabajo",
-        "Acta de grado o copia de título": "titulo",
-        "Partida de matrimonio (si aplica)": "matrimonio",
-        "Copia de cédula del cónyuge": "cedula_conyuge",
-        "Partida de nacimiento (hijos)": "nacimiento_hijos",
-        "Partida de nacimiento (si aplica)": "nacimiento_hijos",
-        "Certificado de cuenta Produbanco": "cuenta_banco"
+        "Croquis de la direccion domiciliaria": "croquis",
+        "Planilla de servicios basicos": "servicios_basicos",
+        "Papeleta de votacion": "papeleta_votacion",
+        "Carnet de guardia de primer nivel": "carnet_primer_nivel",
+        "Licencia de conducir": "licencia",
+        "Certificado de cuenta Bancario": "cuenta_banco",
+        "Certificado de matrimonio actualizado o declaracion juramentada si es union libre": "matrimonio",
+        "Copia a color de la cédula del conyugue": "cedula_conyuge",
+        "Certificados de honorabilidad": "honorabilidad",
+        "Copia a color del título académico": "titulo",
+        "Certificado de trabajos anteriores": "cert_trabajo",
+        "Diploma curso de primer nivel": "diploma_primer_nivel",
+        "Diploma y copia de credencial curso de segundo nivel": "diploma_segundo_nivel",
+        "Diploma de reentrenamiento": "reentrenamiento",
+        "Certificados de otros cursos": "otros_cursos",
+        "Copia del Carnet de tipo de sangre": "tipo_sangre"
       };
       return map[docName] || "doc";
     };
@@ -337,23 +334,23 @@ export default function OnboardingTabs() {
   return (
     <>
       <style>{`
-        .onboarding-container { font-family: system-ui, -apple-system, sans-serif; background-color: #f3f4f6; min-height: 100vh; color: #1f2937; }
-        .onboarding-header { background-color: #002f6c; color: white; padding: 16px 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .onboarding-title { margin: 0; font-size: 20px; font-weight: bold; letter-spacing: 1px; color: white !important; }
-        .onboarding-subtitle { margin: 4px 0 0; font-size: 13px; color: #93c5fd; }
+        .onboarding-container { font-family: system-ui, -apple-system, sans-serif; background-color: #000000; min-height: 100vh; color: #e5e7eb; }
+        .onboarding-header { background-color: #111111; color: white; padding: 16px 24px; border-bottom: 2px solid #fbbf24; }
+        .onboarding-title { margin: 0; font-size: 20px; font-weight: bold; letter-spacing: 1px; color: #fbbf24 !important; }
+        .onboarding-subtitle { margin: 4px 0 0; font-size: 13px; color: #e5e7eb; }
         .onboarding-main { max-width: 1000px; margin: 32px auto; padding: 0 16px; }
-        .onboarding-card { background-color: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #e5e7eb; }
+        .onboarding-card { background-color: #111111; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); overflow: hidden; border: 1px solid #333; }
         
-        .tabs-container { display: flex; overflow-x: auto; border-bottom: 1px solid #e5e7eb; background-color: #f9fafb; }
-        .tab-btn { flex: 1; min-width: 120px; padding: 16px; border: none; background: transparent; font-size: 14px; font-weight: 600; cursor: pointer; color: #6b7280; position: relative; transition: color 0.2s; }
-        .tab-btn:hover { color: #111827; background-color: #f3f4f6; }
-        .tab-btn.active { color: #002f6c; background-color: white; }
-        .tab-indicator { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background-color: #002f6c; }
+        .tabs-container { display: flex; overflow-x: auto; border-bottom: 1px solid #333; background-color: #0a0a0a; }
+        .tab-btn { flex: 1; min-width: 120px; padding: 16px; border: none; background: transparent; font-size: 14px; font-weight: 600; cursor: pointer; color: #9ca3af; position: relative; transition: all 0.2s; }
+        .tab-btn:hover { color: #f3f4f6; background-color: #1a1a1a; }
+        .tab-btn.active { color: #fbbf24; background-color: #111111; }
+        .tab-indicator { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background-color: #fbbf24; }
         
         .content-area { padding: 40px; }
-        .error-box { background-color: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 16px; border-radius: 6px; margin-bottom: 24px; display: flex; align-items: flex-start; gap: 12px; font-size: 14px; }
+        .error-box { background-color: #450a0a; border: 1px solid #dc2626; color: #fca5a5; padding: 16px; border-radius: 6px; margin-bottom: 24px; display: flex; align-items: flex-start; gap: 12px; font-size: 14px; }
         
-        .section-title { font-size: 20px; font-weight: bold; margin: 0 0 24px; color: #111827; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; }
+        .section-title { font-size: 20px; font-weight: bold; margin: 0 0 24px; color: #fbbf24; border-bottom: 1px solid #333; padding-bottom: 8px; }
         
         .grid-1 { display: grid; grid-template-columns: 1fr; gap: 20px; }
         .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
@@ -361,33 +358,34 @@ export default function OnboardingTabs() {
         @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
         
         .form-group { display: flex; flex-direction: column; }
-        .form-label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: #4b5563; margin-bottom: 6px; }
-        .form-input { padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; color: #1f2937; transition: border-color 0.2s; }
-        .form-input:focus { outline: none; border-color: #002f6c; box-shadow: 0 0 0 3px rgba(0, 47, 108, 0.1); }
+        .form-label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: #9ca3af; margin-bottom: 6px; }
+        .form-input { padding: 10px 12px; border: 1px solid #333; border-radius: 6px; font-size: 14px; color: #ffffff; background-color: #1a1a1a; transition: border-color 0.2s; }
+        .form-input:focus { outline: none; border-color: #fbbf24; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1); }
+        select.form-input option { background-color: #1a1a1a; color: white; }
         
-        .btn-primary { background-color: #002f6c; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background-color 0.2s; }
-        .btn-primary:hover { background-color: #001f4a; }
+        .btn-primary { background-color: #fbbf24; color: #000000; border: none; padding: 10px 24px; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer; transition: background-color 0.2s; }
+        .btn-primary:hover { background-color: #f59e0b; }
         .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
         
-        .btn-secondary { background-color: #f3f4f6; color: #374151; border: 1px solid #d1d5db; padding: 10px 24px; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; }
-        .btn-secondary:hover { background-color: #e5e7eb; }
+        .btn-secondary { background-color: #333; color: #e5e7eb; border: 1px solid #4b5563; padding: 10px 24px; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; }
+        .btn-secondary:hover { background-color: #4b5563; }
         
         .actions-bar { margin-top: 40px; display: flex; justify-content: flex-end; }
         
-        .req-box { background-color: #fef9c3; border: 1px solid #bfdbfe; padding: 24px; border-radius: 8px; margin-bottom: 32px; }
-        .req-title { color: #09090b; font-weight: bold; margin: 0 0 16px; display: flex; align-items: center; gap: 8px; }
+        .req-box { background-color: #1a1a1a; border: 1px solid #333; padding: 24px; border-radius: 8px; margin-bottom: 32px; }
+        .req-title { color: #fbbf24; font-weight: bold; margin: 0 0 16px; display: flex; align-items: center; gap: 8px; }
         
-        .upload-area { border: 2px dashed #d1d5db; border-radius: 8px; padding: 48px; text-align: center; cursor: pointer; background-color: #f9fafb; transition: all 0.2s; }
-        .upload-area:hover { background-color: #f3f4f6; border-color: #9ca3af; }
-        .upload-area.has-file { border-color: #10b981; background-color: #ecfdf5; }
+        .upload-area { border: 2px dashed #4b5563; border-radius: 8px; padding: 48px; text-align: center; cursor: pointer; background-color: #1a1a1a; transition: all 0.2s; }
+        .upload-area:hover { background-color: #262626; border-color: #9ca3af; }
+        .upload-area.has-file { border-color: #10b981; background-color: #064e3b; }
 
-        .consent-box { background-color: #f9fafb; border: 1px solid #e5e7eb; padding: 24px; border-radius: 8px; margin-top: 32px; }
-        .consent-text-container { max-height: 200px; overflow-y: auto; background-color: white; border: 1px solid #f1f5f9; padding: 12px; border-radius: 8px; font-size: 13px; line-height: 1.6; color: #4b5563; margin-bottom: 20px; }
+        .consent-box { background-color: #1a1a1a; border: 1px solid #333; padding: 24px; border-radius: 8px; margin-top: 32px; }
+        .consent-text-container { max-height: 200px; overflow-y: auto; background-color: #0a0a0a; border: 1px solid #333; padding: 12px; border-radius: 8px; font-size: 13px; line-height: 1.6; color: #d1d5db; margin-bottom: 20px; }
         .consent-options { display: grid; gap: 12px; }
         .consent-option { display: flex; gap: 12px; alignItems: center; cursor: pointer; padding: 12px; border-radius: 8px; transition: all 0.2s; border: 1px solid transparent; }
-        .consent-option.accepted { background-color: #f0fdf4; border-color: #22c55e; }
-        .consent-option.rejected { background-color: #fef2f2; border-color: #ef4444; }
-        .consent-option-text { font-size: 13px; color: #171717; font-weight: 500; }
+        .consent-option.accepted { background-color: #064e3b; border-color: #10b981; }
+        .consent-option.rejected { background-color: #450a0a; border-color: #ef4444; }
+        .consent-option-text { font-size: 13px; color: #f3f4f6; font-weight: 500; }
       `}</style>
 
       <div className="onboarding-container">
@@ -399,15 +397,15 @@ export default function OnboardingTabs() {
           <button 
             onClick={() => window.location.reload()} 
             style={{ 
-              background: '#f0f7ff', 
-              border: '1px solid #cce3ff', 
+              background: '#1a1a1a', 
+              border: '1px solid #fbbf24', 
               color: '#fbbf24', 
               padding: '10px 24px', 
               borderRadius: '12px', 
               cursor: 'pointer',
               fontSize: '15px',
               fontWeight: '600',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
               transition: 'all 0.2s'
             }}
           >
@@ -440,12 +438,12 @@ export default function OnboardingTabs() {
               {activeTab === 1 && (
                 <div>
                   <h2 className="section-title">Bienvenido/a al equipo</h2>
-                  <p style={{ color: '#4b5563', lineHeight: 1.6, marginBottom: '32px' }}>{GET_WELCOME_TEXT(companyInfo.name)}</p>
+                  <p style={{ color: '#d1d5db', lineHeight: 1.6, marginBottom: '32px' }}>{GET_WELCOME_TEXT(companyInfo.name)}</p>
 
                   <div className="req-box">
-                    <div className="req-title"><FileCheck size={20} /> Requisitos Obligatorios</div>
-                    <p style={{ color: '#171717', fontSize: '14px', marginBottom: '16px' }}>Deberás subir cada uno de los siguientes documentos en la pestaña final:</p>
-                    <div className="grid-2" style={{ color: '#09090b', fontSize: '13px' }}>
+                    <div className="req-title"><FileCheck size={20} /> Documentos Solicitados</div>
+                    <p style={{ color: '#e5e7eb', fontSize: '14px', marginBottom: '16px' }}>Puedes subir los siguientes documentos en la pestaña final (No son obligatorios para enviar la ficha):</p>
+                    <div className="grid-2" style={{ color: '#d1d5db', fontSize: '13px' }}>
                       {getDynamicDocs().map((doc, i) => <div key={i}>• {doc}</div>)}
                     </div>
                   </div>
@@ -488,9 +486,9 @@ export default function OnboardingTabs() {
               {activeTab === 3 && (
                 <div>
                   <h2 className="section-title">Cónyuge o Pareja</h2>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '6px', cursor: 'pointer', marginBottom: '24px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '6px', cursor: 'pointer', marginBottom: '24px' }}>
                     <input type="checkbox" checked={conyuge.tiene} onChange={e => setConyuge({ ...conyuge, tiene: e.target.checked })} style={{ width: '18px', height: '18px' }} />
-                    <span style={{ fontWeight: 600, color: '#374151' }}>Declarar Cónyuge o Pareja en Unión Libre</span>
+                    <span style={{ fontWeight: 600, color: '#f3f4f6' }}>Declarar Cónyuge o Pareja en Unión Libre</span>
                   </label>
 
                   {conyuge.tiene && (
@@ -504,19 +502,19 @@ export default function OnboardingTabs() {
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e5e7eb', paddingBottom: '8px', marginBottom: '24px' }}>
-                    <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0, color: '#111827' }}>Hijos Registrados ({hijos.length})</h2>
-                    <button onClick={() => setHijos([...hijos, { nombres: '', apellidos: '', fecha_nacimiento: '', nacionalidad: 'Ecuador', ciudad_nacimiento: '', cedula: '' }])} style={{ background: '#fef9c3', color: '#1d4ed8', border: 'none', padding: '6px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}><Plus size={16} /> Agregar</button>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #333', paddingBottom: '8px', marginBottom: '24px' }}>
+                    <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0, color: '#fbbf24' }}>Hijos Registrados ({hijos.length})</h2>
+                    <button onClick={() => setHijos([...hijos, { nombres: '', apellidos: '', fecha_nacimiento: '', nacionalidad: 'Ecuador', ciudad_nacimiento: '', cedula: '' }])} style={{ background: '#333', color: '#fbbf24', border: '1px solid #fbbf24', padding: '6px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}><Plus size={16} /> Agregar</button>
                   </div>
 
                   {hijos.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '32px', backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '6px', color: '#6b7280', fontSize: '14px' }}>No hay hijos registrados.</div>
+                    <div style={{ textAlign: 'center', padding: '32px', backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '6px', color: '#9ca3af', fontSize: '14px' }}>No hay hijos registrados.</div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                       {hijos.map((hijo, idx) => (
-                        <div key={idx} style={{ padding: '24px', border: '1px solid #e5e7eb', borderRadius: '6px', backgroundColor: '#f9fafb', position: 'relative' }}>
+                        <div key={idx} style={{ padding: '24px', border: '1px solid #333', borderRadius: '6px', backgroundColor: '#1a1a1a', position: 'relative' }}>
                           <button onClick={() => setHijos(hijos.filter((_, i) => i !== idx))} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={20} /></button>
-                          <h4 style={{ margin: '0 0 16px', color: '#374151' }}>Hijo #{idx + 1}</h4>
+                          <h4 style={{ margin: '0 0 16px', color: '#fbbf24' }}>Hijo #{idx + 1}</h4>
                           <div className="grid-2">
                             <div className="form-group" style={{ gridColumn: '1 / -1' }}><label className="form-label">Nombres Completos</label><input type="text" value={hijo.nombres} onChange={e => { const n = [...hijos]; n[idx].nombres = e.target.value.toUpperCase(); setHijos(n); }} className="form-input" /></div>
                             <div className="form-group" style={{ gridColumn: '1 / -1' }}><label className="form-label">Apellidos Completos</label><input type="text" value={hijo.apellidos} onChange={e => { const n = [...hijos]; n[idx].apellidos = e.target.value.toUpperCase(); setHijos(n); }} className="form-input" /></div>
@@ -565,7 +563,7 @@ export default function OnboardingTabs() {
               {activeTab === 5 && (
                 <div>
                   <h2 className="section-title">Carga de Documentos</h2>
-                  <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '24px' }}>Por favor sube una copia legible de cada documento solicitado.</p>
+                  <p style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '24px' }}>Por favor sube una copia legible de cada documento solicitado.</p>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {getDynamicDocs().map((doc) => (
@@ -574,14 +572,14 @@ export default function OnboardingTabs() {
                         alignItems: 'center', 
                         justifyContent: 'space-between', 
                         padding: '12px 16px', 
-                        border: '1px solid #e5e7eb', 
+                        border: '1px solid #333', 
                         borderRadius: '8px',
-                        background: files[doc] ? '#f0fdf4' : 'white'
+                        background: files[doc] ? '#064e3b' : '#1a1a1a'
                       }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          {files[doc] ? <CheckCircle2 size={18} color="#10b981" /> : <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: '2px solid #d1d5db' }} />}
-                          <span style={{ fontSize: '14px', fontWeight: 500, color: files[doc] ? '#166534' : '#374151' }}>
-                            {doc} {!doc.includes('(si aplica)') && <span style={{ color: '#ef4444' }}>*</span>}
+                          {files[doc] ? <CheckCircle2 size={18} color="#10b981" /> : <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: '2px solid #4b5563' }} />}
+                          <span style={{ fontSize: '14px', fontWeight: 500, color: files[doc] ? '#10b981' : '#e5e7eb' }}>
+                            {doc}
                           </span>
                         </div>
                         
@@ -595,7 +593,7 @@ export default function OnboardingTabs() {
                                   padding: '6px', 
                                   borderRadius: '4px', 
                                   border: '1px solid #fbbf24', 
-                                  background: '#fef9c3', 
+                                  background: '#333', 
                                   color: '#fbbf24',
                                   cursor: 'pointer',
                                   display: 'flex',
@@ -612,8 +610,9 @@ export default function OnboardingTabs() {
                             style={{ 
                               padding: '6px 12px', 
                               borderRadius: '4px', 
-                              border: '1px solid #d1d5db', 
-                              background: 'white', 
+                              border: '1px solid #4b5563', 
+                              background: '#333', 
+                              color: 'white', 
                               fontSize: '12px', 
                               cursor: 'pointer' 
                             }}
@@ -670,7 +669,7 @@ export default function OnboardingTabs() {
                     </div>
                   </div>
 
-                  <div style={{ marginTop: '40px', paddingTop: '24px', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ marginTop: '40px', paddingTop: '24px', borderTop: '1px solid #333', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <button onClick={() => setActiveTab(4)} className="btn-secondary">Regresar</button>
                     <button 
                       onClick={handleSubmit} 

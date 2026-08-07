@@ -1,34 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Client } from '@microsoft/microsoft-graph-client';
-import { ConfidentialClientApplication } from '@azure/msal-node';
+import nodemailer from 'nodemailer';
 
 export async function POST(req: NextRequest) {
-  const clientId = process.env.AZURE_CLIENT_ID || '69f4a759-9537-4f11-b398-47a7f6ef8e83';
-  const tenantId = process.env.AZURE_TENANT_ID || 'a25466cf-9db0-4555-b90b-3b29d4097ff2';
-  const clientSecret = process.env.AZURE_CLIENT_SECRET || 'vg98Q~Zt5MJ2ui6mpjM~CCFiPGB8o5fObGM4ZbXm';
-  const senderEmail = process.env.SMTP_USER || 'uneteanuestroequipo@sepribe.com.ec';
-
   try {
     const { email, name, cargo } = await req.json();
 
     if (!email) return NextResponse.json({ error: 'Email requerido' }, { status: 400 });
-    if (!cargo) return NextResponse.json({ error: 'Cargo requerido' }, { status: 400 });
 
-    // 1. Obtener Token de Acceso Azure
-    const msalConfig = {
-      auth: { clientId, authority: `https://login.microsoftonline.com/${tenantId}`, clientSecret }
-    };
-    const cca = new ConfidentialClientApplication(msalConfig);
-    const authResponse = await cca.acquireTokenByClientCredential({
-      scopes: ['https://graph.microsoft.com/.default']
-    });
-
-    if (!authResponse || !authResponse.accessToken) {
-      throw new Error('No se pudo obtener el token de acceso de Azure');
-    }
-
-    const client = Client.init({
-      authProvider: (done) => done(null, authResponse.accessToken)
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'sepribe2026@gmail.com',
+        pass: 'egennqljsajttxiy'
+      }
     });
 
     const htmlMessage = `
@@ -40,19 +24,19 @@ export async function POST(req: NextRequest) {
         </div>
 
         <div style="padding: 32px; background: white;">
-          <p>Hola <strong>${name || 'Candidato/a'}</strong>,</p>
+          <p>¡Hola <strong>${name || 'Candidato/a'}</strong>! 😊</p>
           
-          <p>Muchas gracias por compartir tu hoja de vida con nosotros. Valoramos mucho el tiempo que dedicaste a postular a la vacante de <strong>${cargo}</strong>.</p>
+          <p>Queremos agradecerte sinceramente por el tiempo que nos brindaste y por el interés demostrado en formar parte de SEPRIBE Cía. Ltda.</p>
 
-          <p>Tras revisar cuidadosamente tu perfil, te informamos que en esta ocasión no continuaremos con tu proceso, ya que estamos buscando una especialización técnica específica para los retos de este rol.</p>
+          <p>Después de revisar cuidadosamente tu perfil y el proceso de selección, en esta ocasión hemos decidido continuar con otros candidatos cuyo perfil se ajusta de mejor manera a los requerimientos de la vacante de <strong>${cargo}</strong>.</p>
 
           <div style="background: #f8fafc; border-left: 4px solid #fbbf24; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 24px 0;">
             <p style="margin: 0; color: #475569; font-size: 14px;">
-              💼 Tu perfil permanecerá en nuestra base de datos para <strong>futuras oportunidades</strong> que se alineen con tu experiencia.
+              Agradecemos tu participación y te deseamos muchos éxitos en tus proyectos profesionales. Conservaremos tu información en nuestra base de datos para futuras oportunidades que puedan ajustarse a tu experiencia y perfil.
             </p>
           </div>
 
-          <p>Te agradecemos nuevamente por el interés en formar parte de nuestro equipo y te deseamos mucho éxito en tus próximos desafíos profesionales.</p>
+          <p>Te deseamos el mayor de los éxitos en tu desarrollo profesional y esperamos que en el futuro podamos coincidir en una nueva oportunidad laboral.</p>
 
           <br/>
           <p style="margin-bottom: 4px;">Saludos cordiales,</p>
@@ -64,23 +48,20 @@ export async function POST(req: NextRequest) {
         </div>
       </div>`;
 
-    const sendMail = {
-      message: {
-        subject: `Agradecimiento por tu postulación: ${cargo}`,
-        body: { contentType: 'HTML', content: htmlMessage },
-        toRecipients: [{ emailAddress: { address: email } }]
-      }
+    const mailOptions = {
+      from: 'Talento Humano SEPRIBE <sepribe2026@gmail.com>',
+      to: email,
+      subject: `Agradecimiento por tu postulación: ${cargo || 'Candidato'}`,
+      html: htmlMessage
     };
 
-    await client.api(`/users/${senderEmail}/sendMail`).post(sendMail);
+    await transporter.sendMail(mailOptions);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Error enviando mail de agradecimiento:', error);
-    const errorDetail = error.response?.data?.error?.message || error.message;
-    const errorCode = error.response?.data?.error?.code || 'UNKNOWN';
     return NextResponse.json({
-      error: `Error Graph API (${errorCode}): ${errorDetail}`
+      error: `Error Nodemailer: ${error.message}`
     }, { status: 500 });
   }
 }
