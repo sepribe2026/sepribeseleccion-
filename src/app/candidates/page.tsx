@@ -3846,7 +3846,17 @@ export default function CandidatesAdmin() {
                         </td>
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                            <p style={{ fontWeight: 700, margin: 0, color: '#171717' }}>{p.candidate?.sender_name || 'Candidato'}</p>
+                            <p 
+                              style={{ fontWeight: 700, margin: 0, color: '#2563eb', cursor: 'pointer', textDecoration: 'underline' }}
+                              onClick={() => {
+                                if (p.candidate) {
+                                  handleViewFormData(p.candidate);
+                                }
+                              }}
+                              title="Ver Perfil Completo"
+                            >
+                              {p.candidate?.sender_name || 'Candidato'}
+                            </p>
                             {(() => {
                               const formativeCand = formativeCandidates.find(c => c.resume_id === p.resume_id);
                               if (formativeCand) {
