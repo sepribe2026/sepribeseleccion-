@@ -208,8 +208,15 @@ export default function OnboardingTabs() {
       return; 
     }
     
-    // 2. Validar documentos obligatorios (Eliminado según requerimiento, ahora todos son opcionales)
-    // No validamos obligatoriedad de archivos
+    // 2. Validar documentos específicos obligatorios
+    const mandatoryDocs = ["Hoja de vida actualizada", "Diploma curso de primer nivel"];
+    for (const doc of mandatoryDocs) {
+      if (!files[doc]) {
+        setActiveTab(5);
+        setError(`El documento "${doc}" es obligatorio para poder enviar la ficha.`);
+        return;
+      }
+    }
 
     setLoading(true)
     setError('')
@@ -442,7 +449,7 @@ export default function OnboardingTabs() {
 
                   <div className="req-box">
                     <div className="req-title"><FileCheck size={20} /> Documentos Solicitados</div>
-                    <p style={{ color: '#e5e7eb', fontSize: '14px', marginBottom: '16px' }}>Puedes subir los siguientes documentos en la pestaña final (No son obligatorios para enviar la ficha):</p>
+                    <p style={{ color: '#e5e7eb', fontSize: '14px', marginBottom: '16px' }}>Por favor, prepara los siguientes documentos para subirlos en la pestaña final. (Los marcados con <span style={{ color: '#fbbf24' }}>*</span> son obligatorios):</p>
                     <div className="grid-2" style={{ color: '#d1d5db', fontSize: '13px' }}>
                       {getDynamicDocs().map((doc, i) => <div key={i}>• {doc}</div>)}
                     </div>
@@ -579,7 +586,7 @@ export default function OnboardingTabs() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                           {files[doc] ? <CheckCircle2 size={18} color="#10b981" /> : <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: '2px solid #4b5563' }} />}
                           <span style={{ fontSize: '14px', fontWeight: 500, color: files[doc] ? '#10b981' : '#e5e7eb' }}>
-                            {doc}
+                            {doc} {["Hoja de vida actualizada", "Diploma curso de primer nivel"].includes(doc) && <span style={{ color: '#fbbf24' }}>*</span>}
                           </span>
                         </div>
                         
