@@ -323,6 +323,13 @@ export default function CandidatesAdmin() {
   const [sendingPsychometricId, setSendingPsychometricId] = useState<string | null>(null)
   const [sendingThankYouId, setSendingThankYouId] = useState<string | null>(null)
   const [viewingFormData, setViewingFormData] = useState<any | null>(null)
+  
+  // === VERIFICACIONES RRHH ===
+  const [localWorkReferences, setLocalWorkReferences] = useState<any[]>([{}, {}])
+  const [localBackgroundChecks, setLocalBackgroundChecks] = useState<any>({})
+  const [savingVerifications, setSavingVerifications] = useState(false)
+  const [sendingLegal, setSendingLegal] = useState(false)
+
   const [qrModalUrl, setQrModalUrl] = useState<string | null>(null)
   const [loadingRecommendation, setLoadingRecommendation] = useState(false)
   const [aiRecommendation, setAiRecommendation] = useState<any | null>(null)
@@ -1578,6 +1585,64 @@ export default function CandidatesAdmin() {
     }
   }
 
+  const handleSaveVerifications = async () => {
+    if (!viewingFormData) return;
+    setSavingVerifications(true);
+    try {
+      const { error } = await supabase
+        .from('email_resumes')
+        .update({
+          work_references: localWorkReferences,
+          background_checks: localBackgroundChecks
+        })
+        .eq('id', viewingFormData.id);
+      
+      if (error) throw error;
+      
+      setViewingFormData({
+        ...viewingFormData,
+        work_references: localWorkReferences,
+        background_checks: localBackgroundChecks
+      });
+      alert('Verificaciones y referencias guardadas correctamente.');
+    } catch (error: any) {
+      alert('Error al guardar: ' + error.message);
+    } finally {
+      setSavingVerifications(false);
+    }
+  };
+
+  const handleSendToLegal = async () => {
+    if (!viewingFormData) return;
+    if (!confirm('¿Seguro que deseas enviar esta solicitud de verificación a Legal?')) return;
+    
+    setSendingLegal(true);
+    try {
+      const res = await fetch('/api/send-legal-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          candidateName: viewingFormData.sender_name || 'Sin Nombre',
+          candidateCedula: viewingFormData.cedula || 'Sin Cédula',
+          candidatePosition: viewingFormData.position || 'Sin Cargo',
+          companySlug: user?.company_slug || 'SEPRIBE',
+          backgroundChecks: localBackgroundChecks
+        })
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        alert('Correo enviado a sepribe.legal@gmail.com exitosamente.');
+      } else {
+        alert('Error al enviar: ' + (data.error || 'Desconocido'));
+      }
+    } catch (error: any) {
+      alert('Error en la petición: ' + error.message);
+    } finally {
+      setSendingLegal(false);
+    }
+  };
+
   const handleUpdateName = async (id: string, name: string) => {
     const newName = window.prompt("Editar nombre completo:", name);
     if (newName === null) return;
@@ -1593,6 +1658,15 @@ export default function CandidatesAdmin() {
 
   const handleViewFormData = async (r: any) => {
     const { data, error } = await supabase.from('candidate_evaluations').select('*').eq('resume_id', r.id);
+    
+    // Parse work_references ensuring it is an array of at least 2 objects
+    let wRefs = [{}, {}];
+    if (r.work_references && Array.isArray(r.work_references)) {
+      wRefs = [r.work_references[0] || {}, r.work_references[1] || {}];
+    }
+    
+    setLocalWorkReferences(wRefs);
+    setLocalBackgroundChecks(r.background_checks || {});
     setViewingFormData({ ...r, evaluations: data || [] });
   }
 
@@ -2473,6 +2547,106 @@ export default function CandidatesAdmin() {
                   )}
                 </div>
               </section>
+
+              {/* VERIFICACIONES RRHH */}
+              <section style={{ marginTop: '24px', background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Shield size={20} color="#fbbf24" /> Verificaciones RRHH
+                  </h3>
+                  <button 
+                    onClick={handleSaveVerifications} 
+                    disabled={savingVerifications}
+                    style={{ background: '#10b981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', opacity: savingVerifications ? 0.7 : 1 }}
+                  >
+                    <Save size={14} /> {savingVerifications ? 'Guardando...' : 'Guardar'}
+                  </button>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                  {/* REFERENCIAS LABORALES */}
+                  <div>
+                    <h4 style={{ margin: '0 0 16px', fontSize: '13px', fontWeight: 800, color: '#334155' }}>📞 Referencias Laborales (2 permitidas)</h4>
+                    
+                    {[0, 1].map((index) => (
+                      <div key={index} style={{ marginBottom: '20px', background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                        <h5 style={{ margin: '0 0 12px', fontSize: '12px', color: '#64748b', fontWeight: 800 }}>Referencia {index + 1}</h5>
+                        <div style={{ display: 'grid', gap: '10px' }}>
+                          <input type="text" placeholder="Realizado por" value={localWorkReferences[index]?.realizado_por || ''} onChange={(e) => { const newRefs = [...localWorkReferences]; newRefs[index] = { ...newRefs[index], realizado_por: e.target.value }; setLocalWorkReferences(newRefs); }} style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '12.5px' }} />
+                          <input type="text" placeholder="Empresa" value={localWorkReferences[index]?.empresa || ''} onChange={(e) => { const newRefs = [...localWorkReferences]; newRefs[index] = { ...newRefs[index], empresa: e.target.value }; setLocalWorkReferences(newRefs); }} style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '12.5px' }} />
+                          <input type="text" placeholder="Nombre facilitador" value={localWorkReferences[index]?.facilitador_nombre || ''} onChange={(e) => { const newRefs = [...localWorkReferences]; newRefs[index] = { ...newRefs[index], facilitador_nombre: e.target.value }; setLocalWorkReferences(newRefs); }} style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '12.5px' }} />
+                          <input type="text" placeholder="Cargo facilitador" value={localWorkReferences[index]?.facilitador_cargo || ''} onChange={(e) => { const newRefs = [...localWorkReferences]; newRefs[index] = { ...newRefs[index], facilitador_cargo: e.target.value }; setLocalWorkReferences(newRefs); }} style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '12.5px' }} />
+                          <input type="text" placeholder="Cargo candidato" value={localWorkReferences[index]?.candidato_cargo || ''} onChange={(e) => { const newRefs = [...localWorkReferences]; newRefs[index] = { ...newRefs[index], candidato_cargo: e.target.value }; setLocalWorkReferences(newRefs); }} style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '12.5px' }} />
+                          <input type="text" placeholder="Tiempo en empresa" value={localWorkReferences[index]?.candidato_tiempo || ''} onChange={(e) => { const newRefs = [...localWorkReferences]; newRefs[index] = { ...newRefs[index], candidato_tiempo: e.target.value }; setLocalWorkReferences(newRefs); }} style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '12.5px' }} />
+                          <select value={localWorkReferences[index]?.desempeno || ''} onChange={(e) => { const newRefs = [...localWorkReferences]; newRefs[index] = { ...newRefs[index], desempeno: e.target.value }; setLocalWorkReferences(newRefs); }} style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '12.5px', background: 'white' }}>
+                            <option value="">-- Desempeño --</option>
+                            <option value="BUENO">Bueno</option>
+                            <option value="REGULAR">Regular</option>
+                            <option value="MALO">Malo</option>
+                            <option value="NO PUEDE DAR ESA INFORMACION">No puede dar esa información</option>
+                          </select>
+                          <textarea placeholder="Motivo de salida" value={localWorkReferences[index]?.motivo_salida || ''} onChange={(e) => { const newRefs = [...localWorkReferences]; newRefs[index] = { ...newRefs[index], motivo_salida: e.target.value }; setLocalWorkReferences(newRefs); }} style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '12.5px', minHeight: '60px', fontFamily: 'inherit' }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* ANTECEDENTES Y LINKS */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                      <h4 style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#334155' }}>🔎 Antecedentes Legales</h4>
+                      <button 
+                        onClick={handleSendToLegal}
+                        disabled={sendingLegal}
+                        style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 700, fontSize: '11px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', opacity: sendingLegal ? 0.7 : 1 }}
+                      >
+                        <Mail size={12} /> {sendingLegal ? 'Enviando...' : 'Escalar a Legal'}
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'grid', gap: '8px' }}>
+                      {[
+                        { key: 'judicatura', name: 'Consejo de la Judicatura', url: 'https://consultas.funcionjudicial.gob.ec/informacionjudicialindividual/pages/index.jsf' },
+                        { key: 'sicosep', name: 'SICOSEP', url: 'https://sicosep.ministeriodelinterior.gob.ec/empresas/mdi/mdig/mdi6' },
+                        { key: 'titulos', name: 'Títulos de Bachiller', url: 'https://servicios.educacion.gob.ec/titulacion25-web/faces/paginas/consulta-titulos-refrendados.xhtml' },
+                        { key: 'penales', name: 'Antecedentes Penales', url: 'https://certificados.ministeriodelinterior.gob.ec/gestorcertificados/antecedentes/' },
+                        { key: 'fge', name: 'FGE', url: 'https://www.fiscalia.gob.ec/consulta-de-noticias-del-delito/' },
+                        { key: 'supa', name: 'SUPA', url: 'https://supa.funcionjudicial.gob.ec/pensiones/publico/consulta.jsf' },
+                        { key: 'esatje', name: 'E-SATJE', url: 'https://procesosjudiciales.funcionjudicial.gob.ec/busqueda-filtros' },
+                        { key: 'puntos', name: 'Puntos de Licencia', url: 'https://consultaweb.ant.gob.ec/PortalWEB/paginas/clientes/clp_criterio_consulta.jsp' },
+                        { key: 'sri_estado', name: 'SRI Estado Tributario', url: 'https://srienlinea.sri.gob.ec/sri-en-linea/SriDeclaracionesWeb/EstadoTributario/Consultas/consultaEstadoTributario' },
+                        { key: 'sri_info', name: 'SRI Info Contribuyente', url: 'https://srienlinea.sri.gob.ec/sri-en-linea/SriDeclaracionesWeb/EstadoTributario/Consultas/consultaEstadoTributario' }
+                      ].map((item) => (
+                        <div key={item.key} style={{ display: 'grid', gridTemplateColumns: '1fr 100px', gap: '8px', alignItems: 'center', background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                          <a href={item.url} target="_blank" rel="noreferrer" style={{ fontSize: '12px', fontWeight: 700, color: '#2563eb', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <MapPin size={12} /> {item.name}
+                          </a>
+                          <select 
+                            value={localBackgroundChecks[item.key] || 'PENDIENTE'} 
+                            onChange={(e) => setLocalBackgroundChecks({ ...localBackgroundChecks, [item.key]: e.target.value })}
+                            style={{ 
+                              padding: '4px', 
+                              borderRadius: '4px', 
+                              border: '1px solid #cbd5e1', 
+                              fontSize: '11px', 
+                              fontWeight: 700,
+                              background: localBackgroundChecks[item.key] === 'OK' ? '#dcfce7' : localBackgroundChecks[item.key] === 'NO APTO' ? '#fee2e2' : localBackgroundChecks[item.key] === 'NO APLICA' ? '#f1f5f9' : 'white',
+                              color: localBackgroundChecks[item.key] === 'OK' ? '#166534' : localBackgroundChecks[item.key] === 'NO APTO' ? '#991b1b' : '#334155',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <option value="PENDIENTE">PENDIENTE</option>
+                            <option value="OK">OK</option>
+                            <option value="NO APTO">NO APTO</option>
+                            <option value="NO APLICA">NO APLICA</option>
+                          </select>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </section>
+
             </div>
           </div>
         </div>
