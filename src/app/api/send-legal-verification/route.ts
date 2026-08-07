@@ -1,9 +1,13 @@
-import { NextResponse } from 'next/server'
-import { Resend } from 'resend'
+import { NextRequest, NextResponse } from 'next/server';
+import { Client } from '@microsoft/microsoft-graph-client';
+import { ConfidentialClientApplication } from '@azure/msal-node';
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+export async function POST(req: NextRequest) {
+  const clientId = process.env.AZURE_CLIENT_ID || '69f4a759-9537-4f11-b398-47a7f6ef8e83';
+  const tenantId = process.env.AZURE_TENANT_ID || 'a25466cf-9db0-4555-b90b-3b29d4097ff2';
+  const clientSecret = process.env.AZURE_CLIENT_SECRET || 'vg98Q~Zt5MJ2ui6mpjM~CCFiPGB8o5fObGM4ZbXm';
+  const senderEmail = process.env.SMTP_USER || 'uneteanuestroequipo@sepribe.com.ec';
 
-export async function POST(req: Request) {
   try {
     const { 
       candidateName,
@@ -11,16 +15,33 @@ export async function POST(req: Request) {
       candidatePosition,
       companySlug,
       backgroundChecks
-    } = await req.json()
+    } = await req.json();
 
     if (!candidateName || !candidateCedula) {
-      return NextResponse.json({ error: 'Faltan datos del candidato' }, { status: 400 })
+      return NextResponse.json({ error: 'Faltan datos del candidato' }, { status: 400 });
     }
+
+    // 1. Obtener Token de Acceso
+    const msalConfig = {
+      auth: { clientId, authority: `https://login.microsoftonline.com/${tenantId}`, clientSecret }
+    };
+    const cca = new ConfidentialClientApplication(msalConfig);
+    const authResponse = await cca.acquireTokenByClientCredential({
+      scopes: ['https://graph.microsoft.com/.default']
+    });
+
+    if (!authResponse || !authResponse.accessToken) {
+      throw new Error('No se pudo obtener el token de acceso de Azure');
+    }
+
+    const client = Client.init({
+      authProvider: (done) => done(null, authResponse.accessToken)
+    });
 
     const checksHtml = Object.entries(backgroundChecks || {}).map(([key, value]) => {
       const color = value === 'OK' ? 'green' : value === 'NO APTO' ? 'red' : 'gray';
-      return `<li><strong>${key}:</strong> <span style="color: ${color}; font-weight: bold;">${value}</span></li>`
-    }).join('')
+      return `<li><strong>${key}:</strong> <span style="color: ${color}; font-weight: bold;">${value}</span></li>`;
+    }).join('');
 
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
@@ -43,18 +64,22 @@ export async function POST(req: Request) {
         <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
         <p style="font-size: 12px; color: #999;">Este es un mensaje automático generado por el Sistema de Selección de ${companySlug.toUpperCase()}.</p>
       </div>
-    `
+    `;
 
-    const data = await resend.emails.send({
-      from: 'RRHH Sistema <reclutamiento@sepribe.com>',
-      to: 'sepribe.legal@gmail.com',
-      subject: `Verificación Legal Requerida: ${candidateName} - ${candidateCedula}`,
-      html: htmlContent,
-    })
+    const sendMail = {
+      message: {
+        subject: `Verificación Legal Requerida: ${candidateName} - ${candidateCedula}`,
+        body: { contentType: 'HTML', content: htmlContent },
+        toRecipients: [{ emailAddress: { address: 'sepribe.legal@gmail.com' } }]
+      }
+    };
 
-    return NextResponse.json({ success: true, data })
+    await client.api(`/users/${senderEmail}/sendMail`).post(sendMail);
+
+    return NextResponse.json({ success: true, message: 'Correo enviado a Legal' });
   } catch (error: any) {
-    console.error('Error al enviar correo a Legal:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('Error enviando correo a Legal con Graph API:', error);
+    const errorDetail = error.response?.data?.error?.message || error.message;
+    return NextResponse.json({ error: 'Error Graph API: ' + errorDetail }, { status: 500 });
   }
 }
