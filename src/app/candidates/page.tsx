@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
-import { CheckCircle2, FileText, User, Download, FileSpreadsheet, Trash2, Mail, RefreshCw, Brain, Settings, MapPin, Briefcase, Trophy, Save, X, UploadCloud, Clock, LogOut, TrendingUp, Users, Activity, Award, MessageSquare, Send, Star } from 'lucide-react'
+import { CheckCircle2, FileText, User, Download, FileSpreadsheet, Trash2, Mail, RefreshCw, Brain, Settings, MapPin, Briefcase, Trophy, Save, X, UploadCloud, Clock, LogOut, TrendingUp, Users, Activity, Award, MessageSquare, Send, Star, Shield } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
